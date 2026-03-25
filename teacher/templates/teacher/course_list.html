@@ -1,0 +1,160 @@
+{% extends "teacher/base.html" %}
+
+{% block title %}Courses | Teacher{% endblock %}
+
+{% block content %}
+
+<style>
+
+.page-title{
+font-size:28px;
+font-weight:600;
+margin-bottom:25px;
+}
+
+.create-btn{
+display:inline-block;
+margin-bottom:30px;
+background:#2563eb;
+color:white;
+padding:10px 16px;
+border-radius:6px;
+text-decoration:none;
+font-weight:500;
+}
+
+.create-btn:hover{
+background:#1e40af;
+}
+
+.course-grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+gap:20px;
+}
+
+.course-card{
+background:white;
+border-radius:12px;
+overflow:hidden;
+box-shadow:0 2px 10px rgba(0,0,0,0.06);
+transition:0.2s;
+}
+
+.course-card:hover{
+transform:translateY(-3px);
+}
+
+.course-image{
+width:100%;
+height:180px;
+object-fit:cover;
+background:#e5e7eb;
+}
+
+.course-body{
+padding:18px;
+}
+
+.course-title{
+font-size:18px;
+font-weight:600;
+margin-bottom:6px;
+}
+
+.course-desc{
+font-size:14px;
+color:#6b7280;
+margin-bottom:10px;
+}
+
+.course-footer{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:10px;
+}
+
+.status{
+font-size:13px;
+}
+
+.status.published{
+color:#16a34a;
+font-weight:500;
+}
+
+.status.unpublished{
+color:#dc2626;
+font-weight:500;
+}
+
+.open-btn{
+text-decoration:none;
+font-size:14px;
+color:#2563eb;
+font-weight:500;
+}
+
+.open-btn:hover{
+text-decoration:underline;
+}
+
+</style>
+
+
+<div class="page-title">Manage Courses</div>
+
+
+<a href="{% url 'teacher:create_course' %}" class="create-btn">
++ Create Course
+</a>
+
+
+<div class="course-grid">
+
+{% for course in courses %}
+
+<div class="course-card">
+
+{% if course.image %}
+<img src="{{ course.image.url }}" class="course-image">
+{% else %}
+<img src="https://via.placeholder.com/600x300?text=Course+Image" class="course-image">
+{% endif %}
+
+<div class="course-body">
+
+<div class="course-title">{{ course.title }}</div>
+
+<div class="course-desc">
+{{ course.description|truncatechars:80 }}
+</div>
+
+<div class="course-footer">
+
+{% if course.is_published %}
+<span class="status published">Published</span>
+{% else %}
+<span class="status unpublished">Unpublished</span>
+{% endif %}
+
+<a href="{% url 'teacher:course_detail' course.id %}" class="open-btn">
+Open Course →
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+{% empty %}
+
+<p>No courses created yet.</p>
+
+{% endfor %}
+
+</div>
+
+{% endblock %}

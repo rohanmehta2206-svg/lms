@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ module.title }}</title>
+    <meta charset="utf-8">
+    <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+</head>
+<body style="margin:0; padding:20px; font-family:Arial; background:#ffffff;">
+
+    <h2>{{ module.title }}</h2>
+
+    {% if module.video_mpd %}
+        <video id="videoPlayer" controls style="width:100%; max-width:100%; height:auto;"></video>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const video = document.getElementById("videoPlayer");
+                const url = "{{ request.scheme }}://{{ request.get_host }}{% url 'teacher:serve_dash' path=module.video_mpd %}";
+
+                console.log("MPD URL:", url);
+
+                const player = dashjs.MediaPlayer().create();
+                player.initialize(video, url, false);
+
+                player.on(dashjs.MediaPlayer.events.ERROR, function (e) {
+                    console.error("DASH ERROR:", e);
+                });
+            });
+        </script>
+    {% else %}
+        <p>Video not available.</p>
+    {% endif %}
+
+</body>
+</html>

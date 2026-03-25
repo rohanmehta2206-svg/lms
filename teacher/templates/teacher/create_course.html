@@ -1,0 +1,231 @@
+{% extends "teacher/base.html" %}
+{% block title %}Add New Course{% endblock %}
+
+{% block content %}
+
+<style>
+.form-wrapper {
+    max-width: 950px;
+    margin: auto;
+}
+
+.section-box {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 10px;
+}
+
+.form-row {
+    margin-bottom: 22px;
+}
+
+.form-row label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.form-row input,
+.form-row textarea,
+.form-row select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+}
+
+.inline-fields {
+    display: flex;
+    gap: 20px;
+}
+
+.inline-fields > div {
+    flex: 1;
+}
+
+.submit-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.submit-btn:hover {
+    background: #1e4ed8;
+}
+
+.custom-file-wrapper {
+    border: 2px dashed #d1d5db;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    background: #f9fafb;
+}
+
+.custom-file-wrapper:hover {
+    background: #f3f4f6;
+}
+
+.custom-file-wrapper input[type="file"] {
+    display: none;
+}
+
+.custom-file-btn {
+    display: inline-block;
+    background: #2563eb;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.file-name {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #6b7280;
+}
+</style>
+
+<div class="form-wrapper">
+
+<h1 style="margin-bottom:30px;">Add New Course</h1>
+
+<form method="POST" enctype="multipart/form-data">
+{% csrf_token %}
+
+<div class="section-box">
+
+<div class="section-title">General</div>
+
+<div class="form-row">
+{{ course_form.title.label_tag }}
+{{ course_form.title }}
+</div>
+
+<div class="form-row">
+{{ course_form.short_name.label_tag }}
+{{ course_form.short_name }}
+</div>
+
+<div class="form-row">
+{{ course_form.category.label_tag }}
+{{ course_form.category }}
+</div>
+
+<div class="form-row">
+{{ course_form.is_published.label_tag }}
+{{ course_form.is_published }}
+</div>
+
+<div class="form-row inline-fields">
+
+<div>
+{{ course_form.start_date.label_tag }}
+{{ course_form.start_date }}
+</div>
+
+<div>
+{{ course_form.end_date.label_tag }}
+{{ course_form.end_date }}
+</div>
+
+</div>
+
+<div class="form-row">
+{{ course_form.course_code.label_tag }}
+{{ course_form.course_code }}
+</div>
+
+<div class="form-row">
+{{ course_form.number_of_sections.label_tag }}
+{{ course_form.number_of_sections }}
+<small style="color:#6b7280;">
+Enter how many sections should be created automatically.
+</small>
+</div>
+
+</div>
+
+<div class="section-box">
+
+<div class="section-title">Course Image</div>
+
+<div class="custom-file-wrapper">
+
+<label for="id_image" class="custom-file-btn">
+Choose Course Image
+</label>
+
+{{ course_form.image }}
+
+<div class="file-name" id="fileName">
+No file selected
+</div>
+
+<small style="color:#6b7280;">Accepted: .jpg .jpeg .png</small>
+
+</div>
+
+</div>
+
+<div class="section-box">
+
+<div class="section-title">Completion Tracking</div>
+
+<div class="form-row">
+{{ course_form.completion_tracking.label_tag }}
+{{ course_form.completion_tracking }}
+</div>
+
+</div>
+
+<div class="section-box">
+
+<div class="section-title">Description</div>
+
+<div class="form-row">
+{{ course_form.description.label_tag }}
+{{ course_form.description }}
+</div>
+
+</div>
+
+<div style="margin-top:20px;">
+<button type="submit" class="submit-btn">
+Create Course
+</button>
+</div>
+
+</form>
+</div>
+
+<script>
+document.getElementById("id_image").addEventListener("change", function() {
+
+const fileName = this.files.length > 0
+? this.files[0].name
+: "No file selected";
+
+document.getElementById("fileName").innerText = fileName;
+
+});
+</script>
+
+{% endblock %}

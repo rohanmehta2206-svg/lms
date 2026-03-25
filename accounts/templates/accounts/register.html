@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Account | LMS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+body{
+    margin:0;
+    font-family: Arial, Helvetica, sans-serif;
+    background:#f5f7fa;
+}
+
+/* HEADER */
+
+.header{
+    background:#0f6cbf;
+    color:white;
+    padding:18px 40px;
+    font-size:20px;
+    font-weight:bold;
+}
+
+/* CARD */
+
+.container{
+    max-width:700px;
+    margin:60px auto;
+    background:white;
+    padding:40px;
+    border-radius:6px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+h2{
+    margin-bottom:30px;
+    font-weight:500;
+}
+
+/* FORM */
+
+label{
+    display:block;
+    margin-top:20px;
+    font-weight:600;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin-top:6px;
+    border:1px solid #ccc;
+    border-radius:4px;
+    font-size:14px;
+}
+
+input:focus{
+    border-color:#0f6cbf;
+    outline:none;
+}
+
+/* TWO COLUMN ROW */
+
+.row{
+    display:flex;
+    gap:20px;
+}
+
+.col{
+    flex:1;
+}
+
+/* PASSWORD INFO */
+
+.password-rules{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    padding:15px;
+    margin-top:15px;
+    border-radius:5px;
+    font-size:13px;
+}
+
+.password-rules ul{
+    margin:0;
+    padding-left:18px;
+}
+
+/* ERROR */
+
+.errorlist{
+    color:#e11d48;
+    font-size:13px;
+    margin-top:5px;
+}
+
+/* BUTTON */
+
+button{
+    margin-top:30px;
+    background:#0f6cbf;
+    color:white;
+    border:none;
+    padding:12px 30px;
+    font-size:15px;
+    border-radius:4px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#0c57a1;
+}
+
+/* LOGIN LINK */
+
+.login-link{
+    margin-top:20px;
+}
+
+.login-link a{
+    color:#0f6cbf;
+    text-decoration:none;
+}
+
+/* FOOTER */
+
+.footer{
+    text-align:center;
+    margin-top:40px;
+    padding:20px;
+    font-size:13px;
+    color:#777;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="header">
+    LMS Teacher Portal
+</div>
+
+<div class="container">
+
+<h2>Create New Teacher Account</h2>
+
+<form method="POST">
+{% csrf_token %}
+
+<label>Username</label>
+{{ form.username }}
+{{ form.username.errors }}
+
+<div class="row">
+
+<div class="col">
+<label>First Name</label>
+{{ form.first_name }}
+{{ form.first_name.errors }}
+</div>
+
+<div class="col">
+<label>Last Name</label>
+{{ form.last_name }}
+{{ form.last_name.errors }}
+</div>
+
+</div>
+
+<label>Email Address</label>
+{{ form.email }}
+{{ form.email.errors }}
+
+<label>Password</label>
+{{ form.password1 }}
+{{ form.password1.errors }}
+
+<div class="password-rules">
+<strong>Password Requirements:</strong>
+<ul>
+<li>Your password must contain at least 8 characters</li>
+<li>Your password cannot be too similar to your personal information</li>
+<li>Your password cannot be a commonly used password</li>
+<li>Your password cannot be entirely numeric</li>
+</ul>
+</div>
+
+<label>Confirm Password</label>
+{{ form.password2 }}
+{{ form.password2.errors }}
+
+<button type="submit">
+Create Account
+</button>
+
+</form>
+
+<div class="login-link">
+Already have an account?
+<a href="{% url 'accounts:login' %}">Login here</a>
+</div>
+
+</div>
+
+<div class="footer">
+© 2026 LMS System | Secure Academic Platform
+</div>
+
+</body>
+</html>

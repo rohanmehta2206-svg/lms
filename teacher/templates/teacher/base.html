@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{% block title %}Teacher Panel{% endblock %}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:#f3f4f6;
+}
+
+/* NAVBAR */
+
+.navbar{
+background:white;
+padding:16px 60px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+box-shadow:0 2px 8px rgba(0,0,0,0.06);
+}
+
+.logo{
+font-size:20px;
+font-weight:600;
+color:#111827;
+}
+
+.nav-links{
+display:flex;
+align-items:center;
+gap:26px;
+}
+
+.nav-links a{
+text-decoration:none;
+color:#374151;
+font-weight:500;
+position:relative;
+padding-bottom:6px;
+transition:0.2s;
+}
+
+.nav-links a:hover{
+color:#2563eb;
+}
+
+.nav-links a.active{
+color:#2563eb;
+}
+
+.nav-links a.active::after{
+content:"";
+position:absolute;
+width:100%;
+height:2px;
+background:#2563eb;
+bottom:0;
+left:0;
+}
+
+.logout-form{
+margin:0;
+}
+
+.logout-btn{
+background:#2563eb;
+color:white;
+border:none;
+padding:8px 18px;
+border-radius:20px;
+cursor:pointer;
+font-weight:500;
+transition:0.25s;
+}
+
+.logout-btn:hover{
+background:#1e40af;
+}
+
+/* MAIN CONTAINER */
+
+.container{
+padding:50px 60px;
+max-width:1250px;
+margin:auto;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+
+<div class="navbar">
+
+<div class="logo">
+Cryptographic Adaptive LMS
+</div>
+
+<div class="nav-links">
+
+<a href="{% url 'teacher:teacher_dashboard' %}"
+class="{% if request.resolver_match.url_name == 'teacher_dashboard' %}active{% endif %}">
+Dashboard
+</a>
+
+<a href="{% url 'teacher:course_list' %}"
+class="{% if request.resolver_match.url_name == 'course_list' or request.resolver_match.url_name == 'course_detail' %}active{% endif %}">
+Courses
+</a>
+
+<a href="{% url 'teacher:create_course' %}"
+class="{% if request.resolver_match.url_name == 'create_course' %}active{% endif %}">
+Create
+</a>
+
+<form method="post" action="{% url 'accounts:logout' %}" class="logout-form">
+{% csrf_token %}
+<button type="submit" class="logout-btn">Logout</button>
+</form>
+
+</div>
+
+</div>
+
+<!-- PAGE CONTENT -->
+
+<div class="container">
+
+{% block content %}
+{% endblock %}
+
+</div>
+
+</body>
+</html>
