@@ -8,63 +8,62 @@
     .welcome {
         background: linear-gradient(135deg, #2563eb, #1e40af);
         color: white;
-        padding: 35px 30px;
+        padding: 28px 32px;
         border-radius: 18px;
-        margin-bottom: 35px;
+        margin-bottom: 32px;
         box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
     }
 
     .welcome h2 {
-        margin-bottom: 10px;
-        font-size: 38px;
+        margin: 0 0 8px 0;
+        font-size: 34px;
         font-weight: 700;
+        color: white;
     }
 
     .welcome p {
-        font-size: 16px;
-        opacity: 0.95;
         margin: 0;
+        font-size: 15px;
+        color: rgba(255,255,255,0.95);
     }
 
-    .section {
-        margin-top: 10px;
-    }
-
-    .section h3 {
-        margin-bottom: 22px;
-        font-size: 28px;
-        color: #111827;
+    .section-title {
+        font-size: 26px;
         font-weight: 700;
+        color: #111827;
+        margin-bottom: 22px;
     }
 
-    .grid {
+    .course-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 24px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 22px;
+        align-items: stretch;
     }
 
-    .box {
+    .course-card {
         background: #ffffff;
         border-radius: 18px;
         overflow: hidden;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
         border: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
         display: flex;
         flex-direction: column;
+        transition: 0.3s ease;
         height: 100%;
     }
 
-    .box:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
+    .course-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
     }
 
     .course-image-wrap {
         width: 100%;
-        height: 190px;
+        height: 155px;
         overflow: hidden;
         background: #f3f4f6;
+        border-bottom: 1px solid #f1f5f9;
     }
 
     .course-image {
@@ -76,104 +75,130 @@
 
     .course-image-placeholder {
         width: 100%;
-        height: 190px;
+        height: 100%;
         background: linear-gradient(135deg, #3b82f6, #1d4ed8);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-size: 22px;
-        font-weight: 700;
         text-align: center;
-        padding: 20px;
+        color: white;
+        font-size: 18px;
+        font-weight: 700;
+        padding: 16px;
     }
 
-    .box-content {
-        padding: 22px;
+    .course-body {
+        padding: 18px;
         display: flex;
         flex-direction: column;
         flex: 1;
     }
 
-    .box h4 {
-        font-size: 26px;
-        margin-bottom: 12px;
-        color: #111827;
-        line-height: 1.3;
+    .course-title {
+        font-size: 18px;
         font-weight: 700;
-        text-transform: capitalize;
+        color: #111827;
+        margin: 0 0 10px 0;
+        line-height: 1.4;
+        min-height: 50px;
     }
 
     .course-description {
+        font-size: 14px;
         color: #4b5563;
-        font-size: 15px;
-        line-height: 1.7;
-        margin-bottom: 18px;
-        flex: 1;
+        line-height: 1.6;
+        margin: 0 0 14px 0;
+        min-height: 46px;
     }
 
     .course-meta {
-        font-size: 14px;
-        color: #6b7280;
-        margin-bottom: 18px;
-        line-height: 1.8;
+        margin-bottom: 16px;
     }
 
     .course-meta p {
-        margin: 0 0 4px 0;
+        margin: 0 0 5px 0;
+        font-size: 13px;
+        color: #6b7280;
+        line-height: 1.5;
+    }
+
+    .course-meta strong {
+        color: #374151;
+    }
+
+    .course-actions {
+        margin-top: auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .course-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none !important;
+        padding: 11px 12px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        transition: 0.3s ease;
+        text-align: center;
+        border: none;
     }
 
     .view-btn {
-        display: inline-block;
-        width: 100%;
-        text-decoration: none;
-        background: #2563eb;
-        color: white;
-        padding: 12px 16px;
-        border-radius: 10px;
-        font-size: 15px;
-        font-weight: 600;
-        text-align: center;
-        transition: 0.3s ease;
+        background: #2563eb !important;
+        color: #ffffff !important;
     }
 
     .view-btn:hover {
-        background: #1d4ed8;
+        background: #1d4ed8 !important;
+        color: #ffffff !important;
+    }
+
+    .enroll-btn {
+        background: #16a34a !important;
+        color: #ffffff !important;
+    }
+
+    .enroll-btn:hover {
+        background: #15803d !important;
+        color: #ffffff !important;
     }
 
     .empty-box {
-        background: white;
-        padding: 45px 30px;
-        border-radius: 18px;
-        text-align: center;
+        background: #ffffff;
         border: 1px dashed #cbd5e1;
+        border-radius: 18px;
+        padding: 40px 24px;
+        text-align: center;
         color: #6b7280;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
     }
 
     .empty-box h4 {
+        font-size: 22px;
         color: #111827;
         margin-bottom: 10px;
-        font-size: 24px;
     }
 
     .empty-box p {
+        margin: 0;
         font-size: 15px;
         line-height: 1.6;
-        margin: 0;
     }
 
     @media (max-width: 768px) {
         .welcome h2 {
-            font-size: 30px;
+            font-size: 28px;
         }
 
-        .section h3 {
-            font-size: 24px;
-        }
-
-        .box h4 {
+        .section-title {
             font-size: 22px;
+        }
+
+        .course-actions {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -183,58 +208,56 @@
     <p>View available courses created by teachers and continue your learning journey.</p>
 </div>
 
-<div class="section">
-    <h3>Available Courses</h3>
+<h3 class="section-title">Available Courses</h3>
 
-    {% if courses %}
-        <div class="grid">
-            {% for course in courses %}
-                <div class="box">
+{% if courses %}
+    <div class="course-grid">
+        {% for course in courses %}
+            <div class="course-card">
+                <div class="course-image-wrap">
                     {% if course.image %}
-                        <div class="course-image-wrap">
-                            <img src="{{ course.image.url }}" alt="{{ course.title }}" class="course-image">
-                        </div>
+                        <img src="{{ course.image.url }}" alt="{{ course.title }}" class="course-image">
                     {% else %}
                         <div class="course-image-placeholder">
                             {{ course.title }}
                         </div>
                     {% endif %}
+                </div>
 
-                    <div class="box-content">
-                        <h4>{{ course.title }}</h4>
+                <div class="course-body">
+                    <h4 class="course-title">{{ course.title }}</h4>
 
-                        <p class="course-description">
-                            {% if course.description %}
-                                {{ course.description|truncatechars:120 }}
-                            {% else %}
-                                No course description available yet.
-                            {% endif %}
-                        </p>
+                    <p class="course-description">
+                        {% if course.description %}
+                            {{ course.description|truncatechars:75 }}
+                        {% else %}
+                            No course description available yet.
+                        {% endif %}
+                    </p>
 
-                        <div class="course-meta">
-                            {% if course.course_code %}
-                                <p><strong>Course Code:</strong> {{ course.course_code }}</p>
-                            {% endif %}
+                    <div class="course-meta">
+                        {% if course.course_code %}
+                            <p><strong>Course Code:</strong> {{ course.course_code }}</p>
+                        {% endif %}
 
-                            {% if course.created_at %}
-                                <p><strong>Created:</strong> {{ course.created_at|date:"d M Y" }}</p>
-                            {% endif %}
-                        </div>
+                        {% if course.created_at %}
+                            <p><strong>Created:</strong> {{ course.created_at|date:"d M Y" }}</p>
+                        {% endif %}
+                    </div>
 
-                        <a href="/student/course-detail/" class="view-btn">View Course →</a>
+                    <div class="course-actions">
+                        <a href="{% url 'student:course_detail' course.id %}" class="course-btn view-btn">View Course</a>
+                        <a href="#" class="course-btn enroll-btn">Enroll Now</a>
                     </div>
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty-box">
-            <h4>No Courses Available</h4>
-            <p>
-                No published courses are available right now.
-                When a teacher creates a course, it will appear here.
-            </p>
-        </div>
-    {% endif %}
-</div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-box">
+        <h4>No Courses Available</h4>
+        <p>When a teacher creates a published course, it will appear here.</p>
+    </div>
+{% endif %}
 
 {% endblock %}

@@ -1,14 +1,26 @@
 from django.urls import path
 from . import views
+
 app_name = "student"
+
 urlpatterns = [
     path('dashboard/', views.student_dashboard, name='student_dashboard'),
     path('courses/', views.my_courses, name='my_courses'),
     path('progress/', views.progress_tracker, name='progress_tracker'),
     path('certificates/', views.certificates, name='certificates'),
-    path('course-detail/', views.course_detail, name='course_detail'),
-    path('play-video/', views.play_video, name='play_video'),
-    path('material/', views.material_page, name='material_page'),
-    path('take-quiz/', views.take_quiz, name='take_quiz'),
-    path('read-theory/', views.read_theory, name='read_theory'),
+
+    # Course detail
+    path('course-detail/<int:course_id>/', views.course_detail, name='course_detail'),
+
+    # Dynamic module pages
+    path('play-video/<int:module_id>/', views.play_video, name='play_video'),
+    path('material/<int:module_id>/', views.material_page, name='material_page'),
+    path('take-quiz/<int:module_id>/', views.take_quiz, name='take_quiz'),
+    path('read-theory/<int:module_id>/', views.read_theory, name='read_theory'),
+
+    # Mark module as completed
+    path('mark-complete/<int:module_id>/', views.mark_module_complete, name='mark_module_complete'),
+
+    # Serve material file safely from lms_storage / media
+    path('material-file/<int:module_id>/', views.serve_material_file, name='serve_material_file'),
 ]

@@ -6,10 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             font-family: 'Segoe UI', sans-serif;
             background: #f3f4f6;
+            color: #111827;
         }
 
         /* NAVBAR */
@@ -20,20 +25,47 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .brand {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
         }
 
         .nav-links a {
-            margin-left: 20px;
             text-decoration: none;
             color: #374151;
             font-size: 14px;
+            font-weight: 500;
+            transition: 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #2563eb;
         }
 
         .logout {
             background: #2563eb;
             color: white !important;
-            padding: 6px 12px;
-            border-radius: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .logout:hover {
+            background: #1d4ed8;
+            color: white !important;
         }
 
         /* MAIN */
@@ -41,7 +73,7 @@
             padding: 40px 80px;
         }
 
-        /* WELCOME */
+        /* DEFAULT COMPONENTS */
         .welcome {
             background: linear-gradient(to right, #2563eb, #1e40af);
             color: white;
@@ -50,7 +82,6 @@
             margin-bottom: 30px;
         }
 
-        /* STATS */
         .stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -65,7 +96,6 @@
             text-align: center;
         }
 
-        /* SECTIONS */
         .section {
             margin-top: 30px;
         }
@@ -91,29 +121,61 @@
             text-decoration: none;
             font-size: 14px;
         }
+
+        @media (max-width: 992px) {
+            .navbar {
+                padding: 15px 25px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .container {
+                padding: 25px;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stats,
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                gap: 12px;
+            }
+        }
     </style>
 </head>
 
 <body>
 
-<!-- NAVBAR -->
-<div class="navbar">
-    <div><strong>Cryptographic Adaptive LMS</strong></div>
-    <div class="nav-links">
-        <a href="/student/dashboard/">Dashboard</a>
-        <a href="/student/courses/">My Courses</a>
-        <a href="/student/progress/">Progress</a>
-        <a href="/student/certificates/">Certificates</a>
-        <a href="#" class="logout">Logout</a>
-    </div>
-</div>
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="brand">Cryptographic Adaptive LMS</div>
 
-<!-- CONTENT -->
-<div class="container">
-    {% block content %}
-    {% endblock %}
-</div>
+        <div class="nav-links">
+            <a href="{% url 'student:student_dashboard' %}">Dashboard</a>
+            <a href="{% url 'student:my_courses' %}">My Courses</a>
+            <a href="{% url 'student:progress_tracker' %}">Progress</a>
+            <a href="{% url 'student:certificates' %}">Certificates</a>
+            <a href="{% url 'accounts:logout' %}" class="logout">Logout</a>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
 
 </body>
 </html>
-

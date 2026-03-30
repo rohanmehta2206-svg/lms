@@ -5,11 +5,35 @@
 {% block content %}
 
 <style>
+    .material-header {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+        padding: 28px 32px;
+        border-radius: 18px;
+        margin-bottom: 28px;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
+    }
+
+    .material-header h2 {
+        margin: 0 0 8px 0;
+        font-size: 32px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .material-header p {
+        margin: 0;
+        font-size: 15px;
+        color: rgba(255,255,255,0.95);
+        line-height: 1.6;
+    }
+
     .material-card {
         background: white;
-        border-radius: 14px;
+        border-radius: 16px;
         padding: 28px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+        border: 1px solid #e5e7eb;
     }
 
     .material-meta {
@@ -30,21 +54,43 @@
 
     .material-box {
         border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 22px;
+        border-radius: 14px;
+        padding: 24px;
         background: #f9fafb;
-        margin-bottom: 18px;
     }
 
     .material-box h3 {
-        margin-top: 0;
+        margin: 0 0 14px 0;
         color: #111827;
+        font-size: 28px;
+        font-weight: 700;
     }
 
     .material-box p {
         color: #374151;
-        line-height: 1.7;
+        line-height: 1.8;
         margin-bottom: 14px;
+        font-size: 15px;
+    }
+
+    .file-status {
+        margin-top: 16px;
+        padding: 16px;
+        border-radius: 12px;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .file-available {
+        background: #ecfdf5;
+        border: 1px solid #86efac;
+        color: #166534;
+    }
+
+    .file-missing {
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        color: #9a3412;
     }
 
     .material-actions {
@@ -55,65 +101,100 @@
     }
 
     .material-btn {
-        text-decoration: none;
-        padding: 10px 18px;
-        border-radius: 8px;
+        text-decoration: none !important;
+        padding: 11px 18px;
+        border-radius: 10px;
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700;
         display: inline-block;
+        transition: 0.3s ease;
     }
 
     .btn-open {
         background: #2563eb;
-        color: white;
+        color: white !important;
+    }
+
+    .btn-open:hover {
+        background: #1d4ed8;
     }
 
     .btn-download {
         background: #7c3aed;
-        color: white;
+        color: white !important;
+    }
+
+    .btn-download:hover {
+        background: #6d28d9;
     }
 
     .btn-back {
         background: #e5e7eb;
-        color: #111827;
+        color: #111827 !important;
     }
 
-    .btn-next {
-        background: #16a34a;
-        color: white;
+    .btn-back:hover {
+        background: #d1d5db;
+    }
+
+    @media (max-width: 768px) {
+        .material-header h2 {
+            font-size: 28px;
+        }
+
+        .material-box h3 {
+            font-size: 24px;
+        }
     }
 </style>
 
-<div class="welcome">
-    <h2>Study Material 📂</h2>
-    <p>Open or download the material for this section and continue your learning.</p>
+<div class="material-header">
+    <h2>{{ module.title }} 📂</h2>
+    <p>Open or download the study material for this module and continue your learning.</p>
 </div>
 
 <div class="section">
     <div class="material-card">
         <div class="material-meta">
-            <span class="material-badge">Course: Cryptography Basics</span>
-            <span class="material-badge">Section: Encryption Techniques</span>
+            <span class="material-badge">Course: {{ course.title }}</span>
+            <span class="material-badge">Section: {{ section.title }}</span>
             <span class="material-badge">Status: Available</span>
         </div>
 
         <div class="material-box">
-            <h3>Material: Symmetric Encryption Notes</h3>
+            <h3>{{ module.title }}</h3>
+
             <p>
-                This material contains important notes, diagrams, and examples related to
-                symmetric encryption algorithms and secure key usage.
-            </p>
-            <p>
-                Students should read this material before attempting the section quiz.
-                You can use this page to open PDFs, documents, or downloadable files uploaded by the teacher.
+                {% if section.description %}
+                    {{ section.description }}
+                {% else %}
+                    This material belongs to the selected course section.
+                {% endif %}
             </p>
 
-            <div class="material-actions">
-                <a href="#" class="material-btn btn-open">Open Material</a>
-                <a href="#" class="material-btn btn-download">Download File</a>
-                <a href="/student/course-detail/" class="material-btn btn-back">Back to Course</a>
-                <a href="/student/take-quiz/" class="material-btn btn-next">Next: Quiz →</a>
-            </div>
+            <p>
+                Open the uploaded file to read the teacher-provided notes, documents, or reference material.
+            </p>
+
+            {% if material_file %}
+                <div class="file-status file-available">
+                    Material file is available and ready to open or download.
+                </div>
+
+                <div class="material-actions">
+                    <a href="{{ material_file }}" target="_blank" class="material-btn btn-open">Open Material</a>
+                    <a href="{{ material_file }}" download class="material-btn btn-download">Download File</a>
+                    <a href="{% url 'student:course_detail' course.id %}" class="material-btn btn-back">← Back to Course</a>
+                </div>
+            {% else %}
+                <div class="file-status file-missing">
+                    No material file has been uploaded for this module yet.
+                </div>
+
+                <div class="material-actions">
+                    <a href="{% url 'student:course_detail' course.id %}" class="material-btn btn-back">← Back to Course</a>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>

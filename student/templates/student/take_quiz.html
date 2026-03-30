@@ -5,11 +5,35 @@
 {% block content %}
 
 <style>
+    .quiz-header {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+        padding: 28px 32px;
+        border-radius: 18px;
+        margin-bottom: 28px;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
+    }
+
+    .quiz-header h2 {
+        margin: 0 0 8px 0;
+        font-size: 32px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .quiz-header p {
+        margin: 0;
+        font-size: 15px;
+        color: rgba(255,255,255,0.95);
+        line-height: 1.6;
+    }
+
     .quiz-card {
         background: white;
-        border-radius: 14px;
+        border-radius: 16px;
         padding: 28px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+        border: 1px solid #e5e7eb;
     }
 
     .quiz-meta {
@@ -37,14 +61,35 @@
     }
 
     .question-box h4 {
-        margin-top: 0;
+        margin: 0 0 14px 0;
         color: #111827;
+        font-size: 18px;
+        line-height: 1.5;
     }
 
     .option {
         margin: 10px 0;
         color: #374151;
         font-size: 15px;
+    }
+
+    .option label {
+        cursor: pointer;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        line-height: 1.6;
+    }
+
+    .option input[type="radio"] {
+        margin-top: 4px;
+    }
+
+    .tf-answer {
+        margin-top: 10px;
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
     }
 
     .quiz-actions {
@@ -55,111 +100,132 @@
     }
 
     .quiz-btn {
-        text-decoration: none;
-        padding: 10px 18px;
-        border-radius: 8px;
+        text-decoration: none !important;
+        padding: 11px 18px;
+        border-radius: 10px;
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700;
         display: inline-block;
+        transition: 0.3s ease;
     }
 
     .btn-submit {
         background: #ea580c;
-        color: white;
+        color: white !important;
+    }
+
+    .btn-submit:hover {
+        background: #c2410c;
     }
 
     .btn-back {
         background: #e5e7eb;
-        color: #111827;
+        color: #111827 !important;
     }
 
-    .btn-next {
-        background: #16a34a;
-        color: white;
+    .btn-back:hover {
+        background: #d1d5db;
     }
 
-    .result-box {
-        margin-top: 24px;
-        background: #ecfdf5;
-        border: 1px solid #bbf7d0;
-        color: #166534;
+    .empty-quiz {
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        color: #9a3412;
         padding: 18px;
-        border-radius: 10px;
+        border-radius: 12px;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .info-note {
+        margin-top: 22px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+        padding: 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+        .quiz-header h2 {
+            font-size: 28px;
+        }
     }
 </style>
 
-<div class="welcome">
-    <h2>Quiz Module 📝</h2>
-    <p>Answer the quiz questions and submit to complete this section.</p>
+<div class="quiz-header">
+    <h2>{{ module.title }} 📝</h2>
+    <p>Answer the quiz questions and complete this learning step.</p>
 </div>
 
 <div class="section">
     <div class="quiz-card">
         <div class="quiz-meta">
-            <span class="quiz-badge">Course: Cryptography Basics</span>
-            <span class="quiz-badge">Section 1 Quiz</span>
+            <span class="quiz-badge">Course: {{ course.title }}</span>
+            <span class="quiz-badge">Section: {{ section.title }}</span>
             <span class="quiz-badge">Status: Available</span>
         </div>
 
-        <form>
-            <div class="question-box">
-                <h4>1. What is plaintext?</h4>
-                <div class="option">
-                    <label><input type="radio" name="q1"> Encrypted message</label>
-                </div>
-                <div class="option">
-                    <label><input type="radio" name="q1"> Original readable message</label>
-                </div>
-                <div class="option">
-                    <label><input type="radio" name="q1"> Secret key</label>
-                </div>
-                <div class="option">
-                    <label><input type="radio" name="q1"> Hash value</label>
-                </div>
-            </div>
+        {% if questions %}
+            <form method="post">
+                {% csrf_token %}
 
-            <div class="question-box">
-                <h4>2. What does encryption do?</h4>
-                <div class="option">
-                    <label><input type="radio" name="q2"> Converts ciphertext into plaintext</label>
-                </div>
-                <div class="option">
-                    <label><input type="radio" name="q2"> Deletes the message</label>
-                </div>
-                <div class="option">
-                    <label><input type="radio" name="q2"> Converts plaintext into ciphertext</label>
-                </div>
-                <div class="option">
-                    <label><input type="radio" name="q2"> Breaks the security</label>
-                </div>
-            </div>
+                {% for question in questions %}
+                    <div class="question-box">
+                        <h4>{{ forloop.counter }}. {{ question.question }}</h4>
 
-            <div class="question-box">
-                <h4>3. In symmetric cryptography, how many keys are used?</h4>
-                <div class="option">
-                    <label><input type="radio" name="q3"> One key</label>
+                        {% if question.quiz_type == "mcq" %}
+                            {% if question.options %}
+                                {% for option in question.options.splitlines %}
+                                    <div class="option">
+                                        <label>
+                                            <input type="radio" name="question_{{ question.id }}" value="{{ option }}">
+                                            <span>{{ option }}</span>
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="option">No options available for this MCQ.</div>
+                            {% endif %}
+                        {% elif question.quiz_type == "true_false" %}
+                            <div class="tf-answer">
+                                <label>
+                                    <input type="radio" name="question_{{ question.id }}" value="True">
+                                    True
+                                </label>
+                                <label>
+                                    <input type="radio" name="question_{{ question.id }}" value="False">
+                                    False
+                                </label>
+                            </div>
+                        {% else %}
+                            <div class="option">Question type not supported.</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <div class="quiz-actions">
+                    <button type="submit" class="quiz-btn btn-submit" style="border:none; cursor:pointer;">
+                        Submit Quiz
+                    </button>
+                    <a href="{% url 'student:course_detail' course.id %}" class="quiz-btn btn-back">← Back to Course</a>
                 </div>
-                <div class="option">
-                    <label><input type="radio" name="q3"> Two keys</label>
-                </div>
-                <div class="option">
-                    <label><input type="radio" name="q3"> Three keys</label>
-                </div>
-                <div class="option">
-                    <label><input type="radio" name="q3"> No keys</label>
-                </div>
+            </form>
+
+            <div class="info-note">
+                This page is now showing the real quiz questions from your database. The next step after this is to process answers and calculate score.
+            </div>
+        {% else %}
+            <div class="empty-quiz">
+                No quiz questions are available for this module yet.
             </div>
 
             <div class="quiz-actions">
-                <a href="#" class="quiz-btn btn-submit">Submit Quiz</a>
-                <a href="/student/course-detail/" class="quiz-btn btn-back">Back to Course</a>
-                <a href="/student/course-detail/" class="quiz-btn btn-next">Finish Section →</a>
+                <a href="{% url 'student:course_detail' course.id %}" class="quiz-btn btn-back">← Back to Course</a>
             </div>
-        </form>
-
-        <div class="result-box">
-            <strong>Sample Result:</strong> You scored 3 out of 3. Section completed successfully.
-        </div>
+        {% endif %}
     </div>
 </div>
 

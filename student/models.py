@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib.auth.models import User
+from teacher.models import Module
 
 
 class Student(models.Model):
@@ -10,3 +12,18 @@ class Student(models.Model):
 
     def __str__(self):
         return self.username
+
+
+class StudentModuleProgress(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='student_module_progress')
+    module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='student_progress')
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student', 'module')
+
+    def __str__(self):
+        status = "Completed" if self.is_completed else "Pending"
+        return f"{self.student.username} - {self.module.title} - {status}"

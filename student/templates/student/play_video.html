@@ -4,45 +4,318 @@
 
 {% block content %}
 
-<div class="welcome">
-    <h2>Video Module 🎥</h2>
-    <p>Watch the video carefully and complete this module to unlock the next learning step.</p>
-</div>
+<style>
+    .lesson-page.full-width {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0 40px;
+    }
 
-<div class="section">
-    <div class="box" style="padding: 25px;">
-        <h3 style="margin-top: 0;">Basics of Cryptography</h3>
-        <p><strong>Section:</strong> Introduction to Cryptography</p>
-        <p><strong>Status:</strong> Available</p>
+    .breadcrumb {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 18px;
+    }
 
-        <div style="margin-top: 20px; border-radius: 10px; overflow: hidden; background: #000;">
-            <video width="100%" height="420" controls>
-                <source src="" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
+    .breadcrumb a {
+        color: #2563eb;
+        text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    .lesson-hero {
+        width: 100%;
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+        padding: 32px 40px;
+        border-radius: 14px;
+        margin-bottom: 24px;
+    }
+
+    .lesson-hero h1 {
+        font-size: 36px;
+        margin: 0 0 8px 0;
+        color: white;
+    }
+
+    .lesson-hero p {
+        margin: 0;
+        font-size: 15px;
+        color: rgba(255,255,255,0.94);
+        line-height: 1.7;
+    }
+
+    .lesson-card {
+        width: 100%;
+        background: white;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+        border: 1px solid #e5e7eb;
+    }
+
+    .lesson-top {
+        padding: 24px 30px;
+    }
+
+    .lesson-title {
+        font-size: 28px;
+        margin: 0 0 12px 0;
+        color: #111827;
+        font-weight: 700;
+    }
+
+    .badge-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .badge {
+        background: #eff6ff;
+        color: #1d4ed8;
+        padding: 8px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .video-player {
+        width: 100%;
+        height: 650px;
+        background: black;
+        display: block;
+    }
+
+    .lesson-bottom {
+        padding: 30px;
+    }
+
+    .lesson-bottom h3 {
+        font-size: 22px;
+        margin: 0 0 10px 0;
+        color: #111827;
+    }
+
+    .lesson-bottom p {
+        font-size: 16px;
+        line-height: 1.8;
+        color: #4b5563;
+        margin: 0;
+    }
+
+    .info-grid {
+        display: flex;
+        gap: 20px;
+        margin-top: 25px;
+    }
+
+    .info-box {
+        flex: 1;
+        background: #f9fafb;
+        padding: 18px;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .info-label {
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .info-value {
+        font-size: 16px;
+        font-weight: 700;
+        margin-top: 5px;
+        color: #111827;
+    }
+
+    .action-row {
+        margin-top: 25px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 700;
+        text-decoration: none !important;
+        display: inline-block;
+        transition: 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-primary {
+        background: #2563eb;
+        color: white !important;
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+    }
+
+    .btn-secondary {
+        background: #e5e7eb;
+        color: #111827 !important;
+    }
+
+    .btn-secondary:hover {
+        background: #d1d5db;
+    }
+
+    .btn-success {
+        background: #16a34a;
+        color: white !important;
+    }
+
+    .btn-success:hover {
+        background: #15803d;
+    }
+
+    .empty-video {
+        margin: 24px;
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        color: #9a3412;
+        padding: 18px;
+        border-radius: 12px;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .completed-badge {
+        display: inline-block;
+        margin-top: 16px;
+        background: #dcfce7;
+        color: #166534;
+        padding: 10px 16px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+        .lesson-page.full-width {
+            padding: 0 15px;
+        }
+
+        .video-player {
+            height: 250px;
+        }
+
+        .info-grid {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="lesson-page full-width">
+
+    <div class="breadcrumb">
+        <a href="{% url 'student:my_courses' %}">My Courses</a> /
+        <a href="{% url 'student:course_detail' course.id %}">{{ course.title }}</a> /
+        <span>{{ module.title }}</span>
+    </div>
+
+    <div class="lesson-hero">
+        <h1>{{ module.title }} 🎥</h1>
+        <p>Watch the lesson carefully and continue through the course in a guided learning flow.</p>
+    </div>
+
+    <div class="lesson-card">
+
+        <div class="lesson-top">
+            <h2 class="lesson-title">{{ module.title }}</h2>
+
+            <div class="badge-row">
+                <span class="badge">Course: {{ course.title }}</span>
+                <span class="badge">Section: {{ section.title }}</span>
+                <span class="badge">Video Lesson</span>
+            </div>
+
+            {% if is_completed %}
+                <div class="completed-badge">✅ Module Completed</div>
+            {% endif %}
         </div>
 
-        <div style="margin-top: 20px;">
+        {% if mpd_url %}
+            <div class="player-wrap">
+                <video id="videoPlayer" class="video-player" controls></video>
+            </div>
+        {% else %}
+            <div class="empty-video">
+                MPD video file is not available for this module yet.
+            </div>
+        {% endif %}
+
+        <div class="lesson-bottom">
+            <h3>About this lesson</h3>
             <p>
-                This video introduces the basic concepts of cryptography, including encryption,
-                decryption, plaintext, ciphertext, and secure communication.
+                {% if section.description %}
+                    {{ section.description }}
+                {% else %}
+                    This lesson belongs to the selected section. Complete the video before moving to the next learning activity.
+                {% endif %}
             </p>
+
+            <div class="info-grid">
+                <div class="info-box">
+                    <div class="info-label">Course</div>
+                    <div class="info-value">{{ course.title }}</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Section</div>
+                    <div class="info-value">{{ section.title }}</div>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-label">Status</div>
+                    <div class="info-value">
+                        {% if is_completed %}
+                            Completed
+                        {% else %}
+                            Available
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <a href="{% url 'student:course_detail' course.id %}" class="action-btn btn-secondary">← Back to Course</a>
+
+                {% if not is_completed %}
+                    <a href="{% url 'student:mark_module_complete' module.id %}?next={% url 'student:play_video' module.id %}" class="action-btn btn-primary">
+                        Mark as Completed
+                    </a>
+                {% else %}
+                    <span class="action-btn btn-success">Completed</span>
+                {% endif %}
+            </div>
         </div>
 
-        <div style="margin-top: 25px; display: flex; gap: 15px; flex-wrap: wrap;">
-            <a href="#" style="background: #2563eb; color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none;">
-                Mark as Completed
-            </a>
-
-            <a href="#" style="background: #e5e7eb; color: #111827; padding: 10px 18px; border-radius: 8px; text-decoration: none;">
-                Back to Course
-            </a>
-
-            <a href="#" style="background: #16a34a; color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none;">
-                Next Module →
-            </a>
-        </div>
     </div>
 </div>
+
+{% if mpd_url %}
+<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const mpdUrl = "{{ mpd_url|escapejs }}";
+        const video = document.getElementById("videoPlayer");
+
+        if (video && mpdUrl) {
+            const player = dashjs.MediaPlayer().create();
+            player.initialize(video, mpdUrl, true);
+        }
+    });
+</script>
+{% endif %}
 
 {% endblock %}
