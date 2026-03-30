@@ -38,7 +38,9 @@ class Category(models.Model):
 
 class Course(models.Model):
 
-    title = models.CharField(max_length=200)
+    title = models.CharField(
+        max_length=200
+    )
 
     short_name = models.CharField(
         max_length=100,
@@ -54,7 +56,9 @@ class Course(models.Model):
         related_name="courses"
     )
 
-    description = models.TextField(blank=True)
+    description = models.TextField(
+        blank=True
+    )
 
     course_code = models.CharField(
         max_length=50,
@@ -62,7 +66,9 @@ class Course(models.Model):
         null=True
     )
 
-    is_published = models.BooleanField(default=True)
+    is_published = models.BooleanField(
+        default=True
+    )
 
     start_date = models.DateField(
         blank=True,
@@ -74,9 +80,13 @@ class Course(models.Model):
         null=True
     )
 
-    completion_tracking = models.BooleanField(default=True)
+    completion_tracking = models.BooleanField(
+        default=True
+    )
 
-    number_of_sections = models.PositiveIntegerField(default=10)
+    number_of_sections = models.PositiveIntegerField(
+        default=10
+    )
 
     image = models.ImageField(
         upload_to="course_images/",
@@ -89,9 +99,13 @@ class Course(models.Model):
         blank=True
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
 
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
 
     class Meta:
         ordering = ["-created_at"]
@@ -117,9 +131,13 @@ class Section(models.Model):
         related_name="sections"
     )
 
-    title = models.CharField(max_length=200)
+    title = models.CharField(
+        max_length=200
+    )
 
-    description = models.TextField(blank=True)
+    description = models.TextField(
+        blank=True
+    )
 
     order = models.PositiveIntegerField(
         default=1,
@@ -136,7 +154,9 @@ class Section(models.Model):
         blank=True
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
 
     class Meta:
         ordering = ["order"]
@@ -152,16 +172,26 @@ class Section(models.Model):
 
 class Module(models.Model):
 
+    MODULE_TYPE_CHOICES = [
+        ("video", "Video"),
+        ("theory", "Theory"),
+        ("quiz", "Quiz"),
+        ("material", "Material"),
+    ]
+
     section = models.ForeignKey(
         Section,
         on_delete=models.CASCADE,
         related_name="modules"
     )
 
-    title = models.CharField(max_length=255)
+    title = models.CharField(
+        max_length=255
+    )
 
     type = models.CharField(
         max_length=20,
+        choices=MODULE_TYPE_CHOICES,
         default="video"
     )
 
@@ -184,29 +214,65 @@ class Module(models.Model):
         null=True
     )
 
-    # Quiz
-    quiz_question = models.TextField(
+    # Material
+    material_file = models.FileField(
+        upload_to="materials/",
         blank=True,
         null=True
     )
 
-    quiz_options = models.TextField(
-        blank=True,
-        null=True
+    order = models.PositiveIntegerField(
+        default=1
     )
 
-    quiz_answer = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
+    created_at = models.DateTimeField(
+        auto_now_add=True
     )
-
-    order = models.PositiveIntegerField(default=1)
-
-    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["order"]
 
     def __str__(self):
         return f"{self.section.title} → {self.title}"
+
+
+# ==========================================
+# QUIZ QUESTION MODEL
+# ==========================================
+
+class QuizQuestion(models.Model):
+
+    QUIZ_TYPE_CHOICES = [
+        ("mcq", "MCQ"),
+        ("true_false", "True / False"),
+    ]
+
+    module = models.ForeignKey(
+        Module,
+        on_delete=models.CASCADE,
+        related_name="questions"
+    )
+
+    question = models.TextField()
+
+    quiz_type = models.CharField(
+        max_length=20,
+        choices=QUIZ_TYPE_CHOICES
+    )
+
+    options = models.TextField(
+        blank=True,
+        null=True,
+        help_text="For MCQ, store options line by line."
+    )
+
+    answer = models.CharField(
+        max_length=255
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return f"{self.module.title} → Question"

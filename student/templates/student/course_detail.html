@@ -1,0 +1,382 @@
+{% extends 'student/student_base.html' %}
+
+{% block title %}Course Detail{% endblock %}
+
+{% block content %}
+
+<style>
+    .progress-box {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+    }
+
+    .progress-bar-bg {
+        width: 100%;
+        background: #e5e7eb;
+        height: 14px;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 12px;
+    }
+
+    .progress-bar-fill {
+        width: 40%;
+        background: #2563eb;
+        height: 14px;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 14px;
+        padding: 22px;
+        margin-bottom: 22px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .section-title {
+        margin: 0 0 18px 0;
+        font-size: 22px;
+        color: #111827;
+    }
+
+    .module-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .module-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 18px;
+        background: #f9fafb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .module-left {
+        flex: 1;
+        min-width: 280px;
+    }
+
+    .module-left h4 {
+        margin: 0 0 8px 0;
+        font-size: 18px;
+        color: #111827;
+    }
+
+    .module-left p {
+        margin: 5px 0;
+        color: #4b5563;
+        font-size: 14px;
+    }
+
+    .status {
+        display: inline-block;
+        margin-top: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 20px;
+    }
+
+    .status.completed {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status.available {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .status.locked {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+    .module-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .module-btn {
+        text-decoration: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .btn-video {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-theory {
+        background: #7c3aed;
+        color: white;
+    }
+
+    .btn-material {
+        background: #0f766e;
+        color: white;
+    }
+
+    .btn-quiz {
+        background: #ea580c;
+        color: white;
+    }
+
+    .btn-locked {
+        background: #e5e7eb;
+        color: #6b7280;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .lock-icon {
+        font-size: 18px;
+        margin-right: 6px;
+    }
+
+    .section-note {
+        margin-top: 10px;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+        .module-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .module-right {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="welcome">
+    <h2>Cryptography Basics 🔐</h2>
+    <p>Follow the module sequence step by step. Complete video, theory, material, and quiz to unlock the next section.</p>
+</div>
+
+<div class="stats">
+    <div class="card">
+        <h4>Total Modules</h4>
+        <h2>12</h2>
+    </div>
+    <div class="card">
+        <h4>Completed</h4>
+        <h2>5</h2>
+    </div>
+    <div class="card">
+        <h4>Pending</h4>
+        <h2>7</h2>
+    </div>
+    <div class="card">
+        <h4>Progress</h4>
+        <h2>40%</h2>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Course Progress</h3>
+    <div class="progress-box">
+        <p><strong>Current Status:</strong> In Progress</p>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill"></div>
+        </div>
+        <p style="margin-top: 10px;">You have completed 5 out of 12 modules.</p>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-card">
+        <h3 class="section-title">Section 1: Introduction to Cryptography</h3>
+
+        <div class="module-list">
+
+            <div class="module-item">
+                <div class="module-left">
+                    <h4>🎥 Video: Basics of Cryptography</h4>
+                    <p>Learn the basic concepts of encryption and decryption.</p>
+                    <span class="status completed">Completed</span>
+                </div>
+                <div class="module-right">
+                    <a href="/student/play-video/" class="module-btn btn-video">Watch Again</a>
+                </div>
+            </div>
+
+            <div class="module-item">
+                <div class="module-left">
+                    <h4>📘 Theory: Core Concepts</h4>
+                    <p>Read the theory content for cryptography fundamentals.</p>
+                    <span class="status completed">Completed</span>
+                </div>
+                <div class="module-right">
+                    <a href="/student/read-theory/" class="module-btn btn-theory">Read Theory</a>
+                </div>
+            </div>
+
+            <div class="module-item">
+                <div class="module-left">
+                    <h4>📂 Material: Introduction Notes</h4>
+                    <p>Open uploaded notes and reference material for this section.</p>
+                    <span class="status completed">Completed</span>
+                </div>
+                <div class="module-right">
+                    <a href="/student/material/" class="module-btn btn-material">Open Material</a>
+                </div>
+            </div>
+
+            <div class="module-item">
+                <div class="module-left">
+                    <h4>📝 Quiz: Section 1 Quiz</h4>
+                    <p>Test your understanding of the first section.</p>
+                    <span class="status completed">Completed</span>
+                </div>
+                <div class="module-right">
+                    <a href="/student/take-quiz/" class="module-btn btn-quiz">View Quiz</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="section-card">
+        <h3 class="section-title">Section 2: Encryption Techniques</h3>
+
+        <div class="module-list">
+
+            <div class="module-item">
+                <div class="module-left">
+                    <h4>🎥 Video: Symmetric Encryption</h4>
+                    <p>Watch the lesson on symmetric encryption methods.</p>
+                    <span class="status available">Available</span>
+                </div>
+                <div class="module-right">
+                    <a href="/student/play-video/" class="module-btn btn-video">Start Video</a>
+                </div>
+            </div>
+
+            <div class="module-item">
+                <div class="module-left">
+                    <h4>📘 Theory: Symmetric Algorithms</h4>
+                    <p>Read about common symmetric encryption algorithms.</p>
+                    <span class="status locked">Locked</span>
+                    <p class="section-note">Complete the video first to unlock this theory module.</p>
+                </div>
+                <div class="module-right">
+                    <a href="#" class="module-btn btn-locked">
+                        <span class="lock-icon">🔒</span>Locked
+                    </a>
+                </div>
+            </div>
+
+            <div class="module-item">
+                <div class="module-left">
+                    <h4>📂 Material: Symmetric Encryption Notes</h4>
+                    <p>Open uploaded notes and reference material for this section.</p>
+                    <span class="status locked">Locked</span>
+                    <p class="section-note">Complete the theory first to unlock this material.</p>
+                </div>
+                <div class="module-right">
+                    <a href="#" class="module-btn btn-locked">
+                        <span class="lock-icon">🔒</span>Locked
+                    </a>
+                </div>
+            </div>
+
+            <div class="module-item">
+                <div class="module-left">
+                    <h4>📝 Quiz: Section 2 Quiz</h4>
+                    <p>Answer quiz questions to move forward.</p>
+                    <span class="status locked">Locked</span>
+                    <p class="section-note">Complete the material first to unlock this quiz.</p>
+                </div>
+                <div class="module-right">
+                    <a href="#" class="module-btn btn-locked">
+                        <span class="lock-icon">🔒</span>Locked
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="section-card">
+        <h3 class="section-title">Section 3: Advanced Security Concepts</h3>
+
+        <div class="module-list">
+
+            <div class="module-item">
+                <div class="module-left">
+                    <h4>🎥 Video: Advanced Security</h4>
+                    <p>Learn advanced security and secure communication concepts.</p>
+                    <span class="status locked">Locked</span>
+                    <p class="section-note">Complete Section 2 quiz to unlock this video.</p>
+                </div>
+                <div class="module-right">
+                    <a href="#" class="module-btn btn-locked">
+                        <span class="lock-icon">🔒</span>Locked
+                    </a>
+                </div>
+            </div>
+
+            <div class="module-item">
+                <div class="module-left">
+                    <h4>📘 Theory: Secure Protocols</h4>
+                    <p>Study the theory behind secure protocols and applications.</p>
+                    <span class="status locked">Locked</span>
+                    <p class="section-note">This module will unlock after the Section 3 video.</p>
+                </div>
+                <div class="module-right">
+                    <a href="#" class="module-btn btn-locked">
+                        <span class="lock-icon">🔒</span>Locked
+                    </a>
+                </div>
+            </div>
+
+            <div class="module-item">
+                <div class="module-left">
+                    <h4>📂 Material: Advanced Security Notes</h4>
+                    <p>Open uploaded notes and additional resources for advanced concepts.</p>
+                    <span class="status locked">Locked</span>
+                    <p class="section-note">This material will unlock after the Section 3 theory.</p>
+                </div>
+                <div class="module-right">
+                    <a href="#" class="module-btn btn-locked">
+                        <span class="lock-icon">🔒</span>Locked
+                    </a>
+                </div>
+            </div>
+
+            <div class="module-item">
+                <div class="module-left">
+                    <h4>📝 Quiz: Final Quiz</h4>
+                    <p>Complete the final assessment to finish the course.</p>
+                    <span class="status locked">Locked</span>
+                    <p class="section-note">This quiz will unlock after Section 3 material.</p>
+                </div>
+                <div class="module-right">
+                    <a href="#" class="module-btn btn-locked">
+                        <span class="lock-icon">🔒</span>Locked
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

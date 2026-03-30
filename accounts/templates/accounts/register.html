@@ -1,212 +1,565 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Create Account | LMS</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Create Account | Cryptographic Adaptive LMS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
 
-body{
-    margin:0;
-    font-family: Arial, Helvetica, sans-serif;
-    background:#f5f7fa;
-}
+        body{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height:100vh;
+            background: linear-gradient(135deg, #eaf1ff, #dfe9ff);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            padding:30px 15px;
+        }
 
-/* HEADER */
+        .page-wrapper{
+            width:100%;
+            max-width:1400px;
+        }
 
-.header{
-    background:#0f6cbf;
-    color:white;
-    padding:18px 40px;
-    font-size:20px;
-    font-weight:bold;
-}
+        .messages{
+            max-width:1200px;
+            margin:0 auto 18px auto;
+        }
 
-/* CARD */
+        .message{
+            padding:12px 16px;
+            border-radius:8px;
+            margin-bottom:10px;
+            font-size:14px;
+            font-weight:600;
+        }
 
-.container{
-    max-width:700px;
-    margin:60px auto;
-    background:white;
-    padding:40px;
-    border-radius:6px;
-    box-shadow:0 5px 20px rgba(0,0,0,0.08);
-}
+        .message.success{
+            background:#dcfce7;
+            color:#166534;
+            border:1px solid #86efac;
+        }
 
-h2{
-    margin-bottom:30px;
-    font-weight:500;
-}
+        .message.error{
+            background:#fee2e2;
+            color:#991b1b;
+            border:1px solid #fca5a5;
+        }
 
-/* FORM */
+        .main-card{
+            width:100%;
+            max-width:1200px;
+            min-height:700px;
+            margin:auto;
+            background:#fff;
+            border-radius:30px;
+            overflow:hidden;
+            box-shadow:0 20px 50px rgba(0,0,0,0.12);
+            display:grid;
+            grid-template-columns:1fr 1fr;
+        }
 
-label{
-    display:block;
-    margin-top:20px;
-    font-weight:600;
-}
+        .left-panel,
+        .right-panel{
+            padding:55px 45px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+        }
 
-input{
-    width:100%;
-    padding:12px;
-    margin-top:6px;
-    border:1px solid #ccc;
-    border-radius:4px;
-    font-size:14px;
-}
+        .left-panel{
+            background:linear-gradient(135deg, #4f6edb, #1fa2c9);
+            color:white;
+            position:relative;
+        }
 
-input:focus{
-    border-color:#0f6cbf;
-    outline:none;
-}
+        .left-panel::before{
+            content:"";
+            position:absolute;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            background:rgba(255,255,255,0.03);
+            pointer-events:none;
+        }
 
-/* TWO COLUMN ROW */
+        .right-panel{
+            background:#ffffff;
+        }
 
-.row{
-    display:flex;
-    gap:20px;
-}
+        .brand{
+            position:absolute;
+            top:28px;
+            left:35px;
+            font-size:18px;
+            font-weight:700;
+            letter-spacing:0.3px;
+        }
 
-.col{
-    flex:1;
-}
+        .panel-content{
+            position:relative;
+            z-index:2;
+            max-width:420px;
+            margin:auto;
+            width:100%;
+        }
 
-/* PASSWORD INFO */
+        .welcome-title{
+            font-size:52px;
+            font-weight:800;
+            line-height:1.15;
+            margin-bottom:18px;
+        }
 
-.password-rules{
-    background:#f8fafc;
-    border:1px solid #e2e8f0;
-    padding:15px;
-    margin-top:15px;
-    border-radius:5px;
-    font-size:13px;
-}
+        .welcome-text{
+            font-size:18px;
+            line-height:1.7;
+            color:rgba(255,255,255,0.92);
+            margin-bottom:30px;
+        }
 
-.password-rules ul{
-    margin:0;
-    padding-left:18px;
-}
+        .info-box{
+            background:rgba(255,255,255,0.12);
+            border:1px solid rgba(255,255,255,0.18);
+            border-radius:18px;
+            padding:22px;
+            margin-bottom:22px;
+            backdrop-filter: blur(4px);
+        }
 
-/* ERROR */
+        .info-box h3{
+            font-size:22px;
+            margin-bottom:10px;
+            font-weight:700;
+        }
 
-.errorlist{
-    color:#e11d48;
-    font-size:13px;
-    margin-top:5px;
-}
+        .info-box p{
+            font-size:15px;
+            line-height:1.7;
+            color:rgba(255,255,255,0.95);
+        }
 
-/* BUTTON */
+        .switch-link{
+            display:inline-block;
+            margin-top:12px;
+            padding:13px 28px;
+            border:2px solid white;
+            border-radius:30px;
+            text-decoration:none;
+            color:white;
+            font-weight:700;
+            letter-spacing:0.3px;
+            transition:0.3s;
+        }
 
-button{
-    margin-top:30px;
-    background:#0f6cbf;
-    color:white;
-    border:none;
-    padding:12px 30px;
-    font-size:15px;
-    border-radius:4px;
-    cursor:pointer;
-}
+        .switch-link:hover{
+            background:white;
+            color:#2563eb;
+        }
 
-button:hover{
-    background:#0c57a1;
-}
+        .form-title{
+            font-size:48px;
+            font-weight:800;
+            text-align:center;
+            color:#111827;
+            margin-bottom:10px;
+        }
 
-/* LOGIN LINK */
+        .form-subtitle{
+            text-align:center;
+            color:#6b7280;
+            font-size:15px;
+            margin-bottom:30px;
+        }
 
-.login-link{
-    margin-top:20px;
-}
+        .toggle-role{
+            display:flex;
+            background:#eef2ff;
+            border-radius:14px;
+            padding:6px;
+            margin-bottom:24px;
+            gap:6px;
+        }
 
-.login-link a{
-    color:#0f6cbf;
-    text-decoration:none;
-}
+        .toggle-btn{
+            flex:1;
+            border:none;
+            padding:13px 14px;
+            border-radius:10px;
+            font-size:15px;
+            font-weight:700;
+            cursor:pointer;
+            background:transparent;
+            color:#374151;
+            transition:0.3s;
+        }
 
-/* FOOTER */
+        .toggle-btn.active{
+            background:linear-gradient(135deg, #4f6edb, #1fa2c9);
+            color:white;
+            box-shadow:0 6px 18px rgba(79,110,219,0.22);
+        }
 
-.footer{
-    text-align:center;
-    margin-top:40px;
-    padding:20px;
-    font-size:13px;
-    color:#777;
-}
+        .role-form{
+            display:none;
+            animation:fadeIn 0.3s ease;
+        }
 
-</style>
+        .role-form.active{
+            display:block;
+        }
 
+        @keyframes fadeIn{
+            from{
+                opacity:0;
+                transform:translateY(8px);
+            }
+            to{
+                opacity:1;
+                transform:translateY(0);
+            }
+        }
+
+        .input-group{
+            margin-bottom:16px;
+        }
+
+        .row{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:14px;
+        }
+
+        label{
+            display:block;
+            font-size:14px;
+            font-weight:700;
+            color:#111827;
+            margin-bottom:7px;
+        }
+
+        input{
+            width:100%;
+            padding:14px 16px;
+            border:1px solid #d1d5db;
+            border-radius:12px;
+            font-size:14px;
+            background:#f9fafb;
+            transition:0.25s;
+        }
+
+        input:focus{
+            outline:none;
+            border-color:#4f6edb;
+            background:white;
+            box-shadow:0 0 0 4px rgba(79,110,219,0.10);
+        }
+
+        .errorlist{
+            list-style:none;
+            color:#dc2626;
+            font-size:12px;
+            margin-top:6px;
+            font-weight:600;
+        }
+
+        .password-rules{
+            background:#f3f7ff;
+            border:1px solid #dbe7ff;
+            border-radius:14px;
+            padding:15px 18px;
+            margin-bottom:18px;
+        }
+
+        .password-rules strong{
+            display:block;
+            color:#3157c7;
+            margin-bottom:8px;
+            font-size:14px;
+        }
+
+        .password-rules ul{
+            padding-left:18px;
+            color:#4b5563;
+            font-size:13px;
+            line-height:1.7;
+        }
+
+        .submit-btn{
+            width:100%;
+            border:none;
+            background:linear-gradient(135deg, #6a3fc7, #4c2aa9);
+            color:white;
+            font-size:16px;
+            font-weight:700;
+            padding:15px;
+            border-radius:12px;
+            cursor:pointer;
+            margin-top:6px;
+            transition:0.3s;
+            box-shadow:0 10px 24px rgba(106,63,199,0.22);
+        }
+
+        .submit-btn:hover{
+            transform:translateY(-1px);
+            opacity:0.96;
+        }
+
+        .bottom-text{
+            text-align:center;
+            margin-top:18px;
+            font-size:14px;
+            color:#6b7280;
+        }
+
+        .bottom-text a{
+            color:#3157c7;
+            text-decoration:none;
+            font-weight:700;
+        }
+
+        .bottom-text a:hover{
+            text-decoration:underline;
+        }
+
+        @media (max-width: 1100px){
+            .main-card{
+                grid-template-columns:1fr;
+            }
+
+            .left-panel{
+                min-height:320px;
+            }
+
+            .welcome-title{
+                font-size:40px;
+            }
+        }
+
+        @media (max-width: 640px){
+            .left-panel,
+            .right-panel{
+                padding:40px 22px;
+            }
+
+            .row{
+                grid-template-columns:1fr;
+            }
+
+            .form-title{
+                font-size:34px;
+            }
+
+            .welcome-title{
+                font-size:34px;
+            }
+
+            .brand{
+                position:static;
+                margin-bottom:20px;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div class="header">
-    LMS Teacher Portal
+<div class="page-wrapper">
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="main-card">
+
+        <!-- LEFT SIDE -->
+        <div class="left-panel">
+            <div class="brand">Cryptographic Adaptive LMS</div>
+
+            <div class="panel-content">
+                <h1 class="welcome-title">Welcome<br>Back!</h1>
+                <p class="welcome-text">
+                    Create your account to continue with the LMS platform.
+                    Teachers can manage courses and Moodle content, while students can access learning modules, videos, theory, materials, and quizzes.
+                </p>
+
+                <div class="info-box">
+                    <h3>Teacher Access</h3>
+                    <p>
+                        Upload courses, add streaming videos, create theory pages, materials, and quizzes connected with Moodle.
+                    </p>
+                </div>
+
+                <div class="info-box">
+                    <h3>Student Access</h3>
+                    <p>
+                        Access enrolled courses, watch MPD videos, read theory, download materials, and attempt Moodle quizzes.
+                    </p>
+                </div>
+
+                <a href="{% url 'accounts:login' %}" class="switch-link">SIGN IN</a>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="right-panel">
+            <div class="panel-content">
+                <h2 class="form-title">Create Account</h2>
+                <p class="form-subtitle">Choose your role and complete the registration form</p>
+
+                <div class="toggle-role">
+                    <button type="button" class="toggle-btn active" onclick="showRole('teacher')">Teacher</button>
+                    <button type="button" class="toggle-btn" onclick="showRole('student')">Student</button>
+                </div>
+
+                <!-- TEACHER FORM -->
+                <form method="POST" id="teacher-form" class="role-form active">
+                    {% csrf_token %}
+                    <input type="hidden" name="role" value="teacher">
+
+                    <div class="input-group">
+                        <label>Username</label>
+                        {{ form.username }}
+                        {{ form.username.errors }}
+                    </div>
+
+                    <div class="row">
+                        <div class="input-group">
+                            <label>First Name</label>
+                            {{ form.first_name }}
+                            {{ form.first_name.errors }}
+                        </div>
+
+                        <div class="input-group">
+                            <label>Last Name</label>
+                            {{ form.last_name }}
+                            {{ form.last_name.errors }}
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Email</label>
+                        {{ form.email }}
+                        {{ form.email.errors }}
+                    </div>
+
+                    <div class="input-group">
+                        <label>Password</label>
+                        {{ form.password1 }}
+                        {{ form.password1.errors }}
+                    </div>
+
+                    <div class="password-rules">
+                        <strong>Password Requirements</strong>
+                        <ul>
+                            <li>At least 8 characters</li>
+                            <li>Do not use common passwords</li>
+                            <li>Do not use only numbers</li>
+                            <li>Do not use very similar personal details</li>
+                        </ul>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Confirm Password</label>
+                        {{ form.password2 }}
+                        {{ form.password2.errors }}
+                    </div>
+
+                    <button type="submit" class="submit-btn">SIGN UP AS TEACHER</button>
+                </form>
+
+                <!-- STUDENT FORM -->
+                <form method="POST" id="student-form" class="role-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="role" value="student">
+
+                    <div class="input-group">
+                        <label>Username</label>
+                        <input type="text" name="username" placeholder="Enter username" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="input-group">
+                            <label>First Name</label>
+                            <input type="text" name="first_name" placeholder="Enter first name">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Last Name</label>
+                            <input type="text" name="last_name" placeholder="Enter last name">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" name="email" placeholder="Enter email" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" name="password1" placeholder="Enter password" required>
+                    </div>
+
+                    <div class="password-rules">
+                        <strong>Password Requirements</strong>
+                        <ul>
+                            <li>Use at least 8 characters</li>
+                            <li>Use a strong secure password</li>
+                            <li>Avoid common passwords</li>
+                            <li>Use letters and numbers for better security</li>
+                        </ul>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Confirm Password</label>
+                        <input type="password" name="password2" placeholder="Confirm password" required>
+                    </div>
+
+                    <button type="submit" class="submit-btn">SIGN UP AS STUDENT</button>
+                </form>
+
+                <div class="bottom-text">
+                    Already have an account?
+                    <a href="{% url 'accounts:login' %}">Sign in here</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
-<div class="container">
+<script>
+    function showRole(role){
+        const teacherBtn = document.querySelectorAll('.toggle-btn')[0];
+        const studentBtn = document.querySelectorAll('.toggle-btn')[1];
+        const teacherForm = document.getElementById('teacher-form');
+        const studentForm = document.getElementById('student-form');
 
-<h2>Create New Teacher Account</h2>
-
-<form method="POST">
-{% csrf_token %}
-
-<label>Username</label>
-{{ form.username }}
-{{ form.username.errors }}
-
-<div class="row">
-
-<div class="col">
-<label>First Name</label>
-{{ form.first_name }}
-{{ form.first_name.errors }}
-</div>
-
-<div class="col">
-<label>Last Name</label>
-{{ form.last_name }}
-{{ form.last_name.errors }}
-</div>
-
-</div>
-
-<label>Email Address</label>
-{{ form.email }}
-{{ form.email.errors }}
-
-<label>Password</label>
-{{ form.password1 }}
-{{ form.password1.errors }}
-
-<div class="password-rules">
-<strong>Password Requirements:</strong>
-<ul>
-<li>Your password must contain at least 8 characters</li>
-<li>Your password cannot be too similar to your personal information</li>
-<li>Your password cannot be a commonly used password</li>
-<li>Your password cannot be entirely numeric</li>
-</ul>
-</div>
-
-<label>Confirm Password</label>
-{{ form.password2 }}
-{{ form.password2.errors }}
-
-<button type="submit">
-Create Account
-</button>
-
-</form>
-
-<div class="login-link">
-Already have an account?
-<a href="{% url 'accounts:login' %}">Login here</a>
-</div>
-
-</div>
-
-<div class="footer">
-© 2026 LMS System | Secure Academic Platform
-</div>
+        if(role === 'teacher'){
+            teacherBtn.classList.add('active');
+            studentBtn.classList.remove('active');
+            teacherForm.classList.add('active');
+            studentForm.classList.remove('active');
+        }else{
+            studentBtn.classList.add('active');
+            teacherBtn.classList.remove('active');
+            studentForm.classList.add('active');
+            teacherForm.classList.remove('active');
+        }
+    }
+</script>
 
 </body>
 </html>

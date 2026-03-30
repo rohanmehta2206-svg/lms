@@ -1,13 +1,13 @@
 import os
 import subprocess
 import requests
-
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.http import FileResponse, HttpResponse
 from django.contrib import messages
-from .models import Course, Section, Module
+from .models import Course, Section, Module, QuizQuestion
 from .forms import CourseForm
 from django.views.decorators.clickjacking import xframe_options_exempt
 
@@ -17,6 +17,10 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 
 MOODLE_URL = "http://127.0.0.1/moodle/webservice/rest/server.php"
 MOODLE_TOKEN = "53a8b7519e7d735edc9b6423e84f2b54"
+
+# CHANGE THESE TWO VALUES TO YOUR REAL MOODLE IDs
+MOODLE_AUTO_ENROLL_USER_ID = 2
+MOODLE_AUTO_ENROLL_ROLE_ID = 3
 
 
 # ==========================================
@@ -39,6 +43,35 @@ def create_course_in_moodle(course):
     result = response.json()
     print("🎯 Create Course:", result)
     return result
+
+
+def enroll_user_in_moodle_course(course_id, user_id, role_id):
+    data = {
+        "wstoken": MOODLE_TOKEN,
+        "wsfunction": "enrol_manual_enrol_users",
+        "moodlewsrestformat": "json",
+        "enrolments[0][roleid]": role_id,
+        "enrolments[0][userid]": user_id,
+        "enrolments[0][courseid]": course_id,
+    }
+
+    response = requests.post(MOODLE_URL, data=data)
+
+    print("Enroll status code:", response.status_code)
+    print("Enroll raw response:", response.text[:500])
+
+    try:
+        json_data = response.json()
+        print("👤 Enroll:", json_data)
+        return json_data
+    except Exception:
+        if response.text.strip() == "":
+            return {"status": "success"}
+
+        return {
+            "success": False,
+            "error": response.text[:500]
+        }
 
 
 def update_section_in_moodle(course_id, section_id, name):
@@ -131,31 +164,195 @@ def send_module_to_moodle(course_id, section_number, title, player_url):
 
 
 def send_theory_to_moodle(course_id, section_number, title, content):
-    data = {
-        "wstoken": MOODLE_TOKEN,
-        "wsfunction": "mod_page_create_pages",
-        "moodlewsrestformat": "json",
-        "pages[0][courseid]": course_id,
-        "pages[0][name]": title,
-        "pages[0][content]": content,
-        "pages[0][section]": section_number
-    }
-
-    response = requests.post(MOODLE_URL, data=data)
-
-    print("Theory status code:", response.status_code)
-    print("Theory raw response:", response.text[:500])
-
     try:
-        json_data = response.json()
-        print("📄 Theory:", json_data)
-        return json_data
-    except Exception:
-        print("Theory response is not JSON")
+        data = {
+            "wstoken": MOODLE_TOKEN,
+            "wsfunction": "local_djangoapi_create_theory",
+            "moodlewsrestformat": "json",
+            "courseid": course_id,
+            "sectionnumber": section_number,
+            "name": title,
+            "content": content,
+            "contentformat": 1,
+        }
+
+        response = requests.post(MOODLE_URL, data=data)
+
+        print("Theory status code:", response.status_code)
+        print("Theory raw response:", response.text[:500])
+
+        try:
+            json_data = response.json()
+            print("📄 Theory:", json_data)
+            return json_data
+        except Exception:
+            print("Theory response is not JSON")
+            return {
+                "success": False,
+                "error": response.text[:500]
+            }
+
+    except Exception as e:
+        print("❌ Theory Moodle API Error:", str(e))
         return {
             "success": False,
-            "error": response.text[:500]
+            "error": str(e)
         }
+
+
+import json
+
+def send_quiz_to_moodle(course_id, section_number, title, quiz_rows):
+    """
+    Send one quiz title with multiple questions to Moodle as JSON.
+    """
+    try:
+        cleaned_questions = []
+
+        for row in quiz_rows:
+            cleaned_questions.append({
+                "question": str(row.get("question", "")).strip(),
+                "quiz_type": str(row.get("quiz_type", "")).strip(),
+                "options": str(row.get("options", "")).strip(),
+                "answer": str(row.get("answer", "")).strip(),
+            })
+
+        data = {
+            "wstoken": MOODLE_TOKEN,
+            "wsfunction": "local_djangoapi_create_quiz",
+            "moodlewsrestformat": "json",
+            "courseid": course_id,
+            "sectionnumber": section_number,
+            "name": title,
+            "questionsjson": json.dumps(cleaned_questions),
+        }
+
+        response = requests.post(MOODLE_URL, data=data)
+
+        print("Quiz status code:", response.status_code)
+        print("Quiz payload sent:", cleaned_questions)
+        print("Quiz raw response:", response.text[:1000])
+
+        try:
+            json_data = response.json()
+            print("📝 Quiz:", json_data)
+            return json_data
+        except Exception:
+            print("Quiz response is not JSON")
+            return {
+                "success": False,
+                "error": response.text[:1000]
+            }
+
+    except Exception as e:
+        print("❌ Quiz Moodle API Error:", str(e))
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+def send_material_to_moodle(course_id, section_number, title, file_url, filename=""):
+    try:
+        data = {
+            "wstoken": MOODLE_TOKEN,
+            "wsfunction": "local_djangoapi_create_material",
+            "moodlewsrestformat": "json",
+            "courseid": course_id,
+            "sectionnumber": section_number,
+            "name": title,
+            "file_url": file_url,
+            "filename": filename,
+        }
+
+        response = requests.post(MOODLE_URL, data=data)
+
+        print("Material status code:", response.status_code)
+        print("Material raw response:", response.text[:500])
+
+        try:
+            json_data = response.json()
+            print("📎 Material:", json_data)
+            return json_data
+        except Exception:
+            print("Material response is not JSON")
+            return {
+                "success": False,
+                "error": response.text[:500]
+            }
+
+    except Exception as e:
+        print("❌ Material Moodle API Error:", str(e))
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+def moodle_result_ok(result):
+    if not isinstance(result, dict):
+        return False
+
+    if result.get("success") is True:
+        return True
+
+    if result.get("status") == "success":
+        return True
+
+    if result.get("cmid") or result.get("instanceid"):
+        return True
+
+    return False
+
+
+def normalize_quiz_rows(request):
+    questions = request.POST.getlist("quiz_question")
+    quiz_types = request.POST.getlist("quiz_type")
+    options_list = request.POST.getlist("quiz_options")
+    answers = request.POST.getlist("quiz_answer")
+
+    if not questions:
+        single_question = (request.POST.get("quiz_question") or "").strip()
+        single_type = (request.POST.get("quiz_type") or "").strip()
+        single_options = (request.POST.get("quiz_options") or "").strip()
+        single_answer = (request.POST.get("quiz_answer") or "").strip()
+
+        if single_question or single_answer:
+            questions = [single_question]
+            quiz_types = [single_type]
+            options_list = [single_options]
+            answers = [single_answer]
+
+    max_len = max(
+        len(questions),
+        len(quiz_types),
+        len(options_list),
+        len(answers),
+        0
+    )
+
+    rows = []
+
+    for i in range(max_len):
+        question = questions[i].strip() if i < len(questions) and questions[i] else ""
+        quiz_type = quiz_types[i].strip() if i < len(quiz_types) and quiz_types[i] else "mcq"
+        options = options_list[i].strip() if i < len(options_list) and options_list[i] else ""
+        answer = answers[i].strip() if i < len(answers) and answers[i] else ""
+
+        if not question:
+            continue
+
+        if quiz_type == "true_false" and not options:
+            options = "True\nFalse"
+
+        rows.append({
+            "question": question,
+            "quiz_type": quiz_type,
+            "options": options,
+            "answer": answer
+        })
+
+    return rows
 
 
 # ==========================================
@@ -203,7 +400,6 @@ def create_course(request):
                 messages.error(request, "Please choose a Moodle-connected category.")
                 return redirect("teacher:course_list")
 
-            # Create Django sections
             for i in range(1, course.number_of_sections + 1):
                 Section.objects.create(
                     course=course,
@@ -219,6 +415,18 @@ def create_course(request):
 
                 course.moodle_course_id = moodle_id
                 course.save()
+
+                enroll_result = enroll_user_in_moodle_course(
+                    moodle_id,
+                    MOODLE_AUTO_ENROLL_USER_ID,
+                    MOODLE_AUTO_ENROLL_ROLE_ID
+                )
+
+                if enroll_result.get("success") is False and enroll_result.get("status") != "success":
+                    messages.warning(
+                        request,
+                        f"Course created, but auto enrollment failed: {enroll_result.get('error', enroll_result)}"
+                    )
 
                 data = {
                     "wstoken": MOODLE_TOKEN,
@@ -291,11 +499,9 @@ def update_section(request, section_id):
             messages.error(request, "Section title is required.")
             return redirect("teacher:course_detail", course_id=section.course.id)
 
-        # Save Django title first
         section.title = new_title
         section.save()
 
-        # Then try Moodle update
         if section.course.moodle_course_id and section.moodle_section_id:
             result = update_section_in_moodle(
                 section.course.moodle_course_id,
@@ -303,8 +509,6 @@ def update_section(request, section_id):
                 new_title
             )
 
-            # Do NOT rollback Django title here.
-            # Moodle may actually update successfully even if response parsing is imperfect.
             if not result.get("success", False) and result.get("status") != "success":
                 messages.warning(
                     request,
@@ -340,8 +544,6 @@ def course_detail(request, course_id):
 # PLAY MODULE (DASH PLAYER PAGE)
 # ==========================================
 
-
-
 @xframe_options_exempt
 def play_module(request, module_id):
     module = get_object_or_404(Module, id=module_id)
@@ -358,7 +560,11 @@ def module_builder(request, section_id):
 
     if request.method == "POST":
         content_type = request.POST.get("type")
-        title = request.POST.get("title")
+        title = (request.POST.get("title") or "").strip()
+
+        if not title:
+            messages.error(request, "Title is required.")
+            return redirect("teacher:module_builder", section_id=section.id)
 
         module = Module.objects.create(
             section=section,
@@ -439,38 +645,119 @@ def module_builder(request, section_id):
                 module.theory = request.POST.get("theory")
                 module.save()
 
+                moodle_result = {"success": True}
+
                 if section.course.moodle_course_id and section.moodle_section_number is not None:
-                    send_theory_to_moodle(
+                    moodle_result = send_theory_to_moodle(
                         section.course.moodle_course_id,
                         section.moodle_section_number,
                         module.title,
                         module.theory
                     )
 
-                messages.success(request, "Theory added successfully.")
+                if moodle_result_ok(moodle_result):
+                    messages.success(request, "Theory added successfully in Django and Moodle.")
+                else:
+                    messages.warning(
+                        request,
+                        f"Theory saved in Django, but Moodle failed: {moodle_result.get('error', moodle_result)}"
+                    )
 
             # QUIZ
             elif content_type == "quiz":
-                module.quiz_question = request.POST.get("quiz_question")
-                module.quiz_options = request.POST.get("quiz_options")
-                module.quiz_answer = request.POST.get("quiz_answer")
-                module.save()
+                quiz_rows = normalize_quiz_rows(request)
 
-                quiz_content = f"""
-                <h3>{module.quiz_question}</h3>
-                <p>{module.quiz_options}</p>
-                <p><b>Answer:</b> {module.quiz_answer}</p>
-                """
+                if not quiz_rows:
+                    module.delete()
+                    messages.error(request, "Please add at least one quiz question.")
+                    return redirect("teacher:module_builder", section_id=section.id)
+
+                for row in quiz_rows:
+                    QuizQuestion.objects.create(
+                        module=module,
+                        question=row["question"],
+                        quiz_type=row["quiz_type"],
+                        options=row["options"],
+                        answer=row["answer"]
+                    )
+
+                moodle_result = {"success": True}
 
                 if section.course.moodle_course_id and section.moodle_section_number is not None:
-                    send_theory_to_moodle(
+                    moodle_result = send_quiz_to_moodle(
                         section.course.moodle_course_id,
                         section.moodle_section_number,
                         module.title,
-                        quiz_content
+                        quiz_rows
                     )
 
-                messages.success(request, "Quiz added successfully.")
+                if moodle_result_ok(moodle_result):
+                    messages.success(request, "Quiz added successfully in Django and Moodle.")
+                else:
+                    messages.warning(
+                        request,
+                        f"Quiz saved in Django, but Moodle failed: {moodle_result.get('error', moodle_result)}"
+                    )
+
+            # MATERIAL
+            elif content_type == "material":
+                material_file = request.FILES.get("material_file")
+
+                if not material_file:
+                    module.delete()
+                    messages.error(request, "Please choose a material file.")
+                    return redirect("teacher:module_builder", section_id=section.id)
+
+                course_name = section.course.title.replace(" ", "_")
+                section_name = f"section_{section.id}"
+                module_name = f"module_{module.id}"
+
+                base_path = settings.LMS_STORAGE_PATH
+                folder_path = os.path.join(base_path, course_name, section_name, module_name)
+                os.makedirs(folder_path, exist_ok=True)
+
+                original_filename = material_file.name
+                safe_filename = original_filename.replace(" ", "_")
+                material_path = os.path.join(folder_path, safe_filename)
+
+                with open(material_path, "wb+") as f:
+                    for chunk in material_file.chunks():
+                        f.write(chunk)
+
+                relative_material_path = os.path.join(
+                    course_name,
+                    section_name,
+                    module_name,
+                    safe_filename
+                ).replace("\\", "/")
+
+                module.material_file = relative_material_path
+                module.save()
+
+                file_url = request.build_absolute_uri(f"/stream/{relative_material_path}")
+
+                moodle_result = {"success": True}
+
+                if section.course.moodle_course_id and section.moodle_section_number is not None:
+                    moodle_result = send_material_to_moodle(
+                        section.course.moodle_course_id,
+                        section.moodle_section_number,
+                        module.title,
+                        file_url,
+                        safe_filename
+                    )
+
+                if moodle_result_ok(moodle_result):
+                    messages.success(request, "Material added successfully in Django and Moodle.")
+                else:
+                    messages.warning(
+                        request,
+                        f"Material saved in Django, but Moodle failed: {moodle_result.get('error', moodle_result)}"
+                    )
+
+            else:
+                module.delete()
+                messages.error(request, "Invalid content type.")
 
         except Exception as e:
             print("ERROR:", str(e))
@@ -479,7 +766,7 @@ def module_builder(request, section_id):
 
         return redirect("teacher:module_builder", section_id=section.id)
 
-    modules = Module.objects.filter(section=section).order_by("-id")
+    modules = Module.objects.filter(section=section).order_by("-id").prefetch_related("questions")
 
     return render(
         request,
@@ -489,7 +776,7 @@ def module_builder(request, section_id):
 
 
 # ==========================================
-# STREAM DASH FILES
+# STREAM DASH FILES / MATERIAL FILES
 # ==========================================
 
 def serve_dash(request, path):
@@ -499,10 +786,24 @@ def serve_dash(request, path):
     if not os.path.exists(file_path):
         return HttpResponse("File not found", status=404)
 
-    if file_path.endswith(".mpd"):
+    lower_path = file_path.lower()
+
+    if lower_path.endswith(".mpd"):
         content_type = "application/dash+xml"
-    elif file_path.endswith(".m4s"):
+    elif lower_path.endswith(".m4s"):
         content_type = "video/mp4"
+    elif lower_path.endswith(".pdf"):
+        content_type = "application/pdf"
+    elif lower_path.endswith(".doc"):
+        content_type = "application/msword"
+    elif lower_path.endswith(".docx"):
+        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    elif lower_path.endswith(".ppt"):
+        content_type = "application/vnd.ms-powerpoint"
+    elif lower_path.endswith(".pptx"):
+        content_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    elif lower_path.endswith(".txt"):
+        content_type = "text/plain"
     else:
         content_type = "application/octet-stream"
 

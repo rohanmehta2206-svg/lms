@@ -11,6 +11,7 @@ urlpatterns = [
 
     # ✅ FIXED (ADD NAMESPACE)
     path('', include(('teacher.urls', 'teacher'), namespace='teacher')),
+    path('student/', include('student.urls')),
 ]
 
 # Serve media files in development

@@ -1,0 +1,135 @@
+{% extends 'student/student_base.html' %}
+
+{% block title %}Read Theory{% endblock %}
+
+{% block content %}
+
+<style>
+    .content-card {
+        background: white;
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .meta-info {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+
+    .meta-badge {
+        background: #eef2ff;
+        color: #3730a3;
+        padding: 8px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .theory-text h3 {
+        margin-top: 0;
+        color: #111827;
+    }
+
+    .theory-text p {
+        color: #374151;
+        line-height: 1.8;
+        font-size: 15px;
+        margin-bottom: 16px;
+    }
+
+    .action-row {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 28px;
+    }
+
+    .action-btn {
+        text-decoration: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .btn-complete {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-back {
+        background: #e5e7eb;
+        color: #111827;
+    }
+
+    .btn-next {
+        background: #16a34a;
+        color: white;
+    }
+</style>
+
+<div class="welcome">
+    <h2>Theory Module 📘</h2>
+    <p>Read the theory carefully and complete this step to unlock the quiz.</p>
+</div>
+
+<div class="section">
+    <div class="content-card">
+        <div class="meta-info">
+            <span class="meta-badge">Course: Cryptography Basics</span>
+            <span class="meta-badge">Section: Introduction to Cryptography</span>
+            <span class="meta-badge">Status: Available</span>
+        </div>
+
+        <div class="theory-text">
+            <h3>Core Concepts of Cryptography</h3>
+
+            <p>
+                Cryptography is the process of protecting information by converting it into a secure format.
+                It helps keep communication private and safe from unauthorized access.
+            </p>
+
+            <p>
+                In cryptography, the original readable message is called <strong>plaintext</strong>.
+                After applying an encryption method, it becomes <strong>ciphertext</strong>, which cannot
+                be understood easily without the correct key.
+            </p>
+
+            <p>
+                <strong>Encryption</strong> is the process of converting plaintext into ciphertext.
+                <strong>Decryption</strong> is the reverse process, where ciphertext is converted back
+                into readable plaintext using the correct method or key.
+            </p>
+
+            <p>
+                There are two major types of cryptography:
+                <strong>symmetric cryptography</strong> and <strong>asymmetric cryptography</strong>.
+                In symmetric cryptography, the same key is used for both encryption and decryption.
+                In asymmetric cryptography, two different keys are used: a public key and a private key.
+            </p>
+
+            <p>
+                Cryptography is used in many real-world systems such as online banking, secure websites,
+                messaging applications, digital signatures, and authentication systems.
+            </p>
+
+            <p>
+                Understanding these basic concepts is important because they form the foundation
+                for advanced security topics such as secure communication, hashing, authentication,
+                and digital certificates.
+            </p>
+        </div>
+
+        <div class="action-row">
+            <a href="#" class="action-btn btn-complete">Mark as Completed</a>
+            <a href="/student/course-detail/" class="action-btn btn-back">Back to Course</a>
+            <a href="/student/take-quiz/" class="action-btn btn-next">Next: Quiz →</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -3,198 +3,456 @@
 
 {% block content %}
 
-<!-- DASH.JS -->
 <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
 
 <style>
 .section-header{
-background:linear-gradient(90deg,#2563eb,#1d4ed8);
-color:white;
-padding:25px;
-border-radius:12px;
-margin-bottom:30px;
+    background:linear-gradient(90deg,#2563eb,#1d4ed8);
+    color:white;
+    padding:25px;
+    border-radius:12px;
+    margin-bottom:30px;
 }
 
-.activity-card{
-background:white;
-padding:20px;
-border-radius:10px;
-margin-bottom:15px;
-box-shadow:0 2px 6px rgba(0,0,0,0.05);
+.section-header h2{
+    margin:0 0 8px 0;
+    font-size:28px;
 }
 
-.activity-title{
-font-weight:600;
-font-size:16px;
-margin-bottom:5px;
-}
-
-.activity-type{
-font-size:12px;
-color:#64748b;
-margin-bottom:10px;
+.section-header p{
+    margin:0;
+    opacity:0.92;
 }
 
 .add-form{
-background:white;
-padding:25px;
-border-radius:12px;
-margin-bottom:30px;
-box-shadow:0 2px 10px rgba(0,0,0,0.05);
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    margin-bottom:30px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.05);
 }
 
 .form-group{
-margin-bottom:15px;
+    margin-bottom:18px;
 }
 
 .form-group label{
-display:block;
-margin-bottom:6px;
-font-weight:500;
+    display:block;
+    margin-bottom:6px;
+    font-weight:600;
+    color:#1e293b;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea{
-width:100%;
-padding:8px;
-border-radius:6px;
-border:1px solid #e2e8f0;
+    width:100%;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid #e2e8f0;
+    font-size:14px;
+    outline:none;
+    transition:0.2s ease;
+    background:#fff;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus{
+    border-color:#2563eb;
+    box-shadow:0 0 0 3px rgba(37,99,235,0.08);
+}
+
+.form-section{
+    background:#f8fafc;
+    padding:18px;
+    border-radius:10px;
+    border:1px solid #e2e8f0;
+    margin-top:10px;
 }
 
 .submit-btn{
-background:#2563eb;
-color:white;
-border:none;
-padding:10px 16px;
-border-radius:6px;
-cursor:pointer;
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:12px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:14px;
+    transition:0.2s ease;
+}
+
+.submit-btn:hover{
+    background:#1d4ed8;
+}
+
+.secondary-btn{
+    background:#e2e8f0;
+    color:#0f172a;
+    border:none;
+    padding:10px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:14px;
+    transition:0.2s ease;
+    margin-top:10px;
+}
+
+.secondary-btn:hover{
+    background:#cbd5e1;
+}
+
+.activity-card{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:18px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.05);
+    border:1px solid #eef2f7;
+}
+
+.activity-title{
+    font-weight:700;
+    font-size:18px;
+    margin-bottom:6px;
+    color:#0f172a;
+}
+
+.activity-type{
+    font-size:13px;
+    color:#64748b;
+    margin-bottom:14px;
+    text-transform:capitalize;
 }
 
 .video-box{
-margin-top:15px;
+    margin-top:15px;
+    border-radius:10px;
+    overflow:hidden;
+    background:#000;
+}
+
+.video-box video{
+    width:100%;
+    display:block;
 }
 
 .hidden{
-display:none;
+    display:none;
+}
+
+.info-chip{
+    display:inline-block;
+    background:#eff6ff;
+    color:#1d4ed8;
+    padding:5px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:600;
+    margin-bottom:12px;
+}
+
+.text-block{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    padding:14px;
+    border-radius:10px;
+    line-height:1.6;
+    color:#334155;
+    white-space:pre-wrap;
+}
+
+.quiz-box{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    padding:16px;
+    border-radius:10px;
+}
+
+.quiz-question-card{
+    background:white;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:14px;
+}
+
+.quiz-question-card:last-child{
+    margin-bottom:0;
+}
+
+.quiz-box p{
+    margin:8px 0;
+    color:#334155;
+}
+
+.quiz-options-list{
+    margin-top:8px;
+    padding-left:18px;
+    color:#334155;
+}
+
+.quiz-options-list li{
+    margin-bottom:4px;
+}
+
+.material-box{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    padding:16px;
+    border-radius:10px;
+}
+
+.material-link{
+    display:inline-block;
+    text-decoration:none;
+    background:#2563eb;
+    color:white;
+    padding:10px 14px;
+    border-radius:8px;
+    font-weight:600;
+}
+
+.material-link:hover{
+    background:#1d4ed8;
+}
+
+.question-block{
+    background:#ffffff;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:14px;
+}
+
+.question-block:last-child{
+    margin-bottom:0;
+}
+
+.question-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+}
+
+.question-title{
+    font-weight:700;
+    color:#0f172a;
+}
+
+.remove-question-btn{
+    background:#fee2e2;
+    color:#991b1b;
+    border:none;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+}
+
+.remove-question-btn:hover{
+    background:#fecaca;
 }
 </style>
 
 
 <div class="section-header">
-<h2>Add Content</h2>
-<p>Upload videos, theory and quizzes</p>
+    <h2>Add Content</h2>
+    <p>Upload videos, theory, quizzes and material files</p>
 </div>
 
 
-<!-- FORM -->
 <div class="add-form">
-<form method="POST" enctype="multipart/form-data">
-{% csrf_token %}
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
 
-<div class="form-group">
-<label>Content Type</label>
-<select name="type" id="contentType" onchange="toggleFields()" required>
-<option value="video">Video</option>
-<option value="theory">Theory</option>
-<option value="quiz">Quiz</option>
-</select>
+        <div class="form-group">
+            <label>Content Type</label>
+            <select name="type" id="contentType" onchange="toggleFields()" required>
+                <option value="video">Video</option>
+                <option value="theory">Theory</option>
+                <option value="quiz">Quiz</option>
+                <option value="material">Material</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Title</label>
+            <input type="text" name="title" required placeholder="Enter content title">
+        </div>
+
+        <!-- VIDEO -->
+        <div class="form-section" id="videoField">
+            <div class="form-group">
+                <label>Upload Video (MP4)</label>
+                <input type="file" name="video" accept="video/mp4">
+            </div>
+        </div>
+
+        <!-- THEORY -->
+        <div class="form-section hidden" id="theoryField">
+            <div class="form-group">
+                <label>Theory Content</label>
+                <textarea name="theory" rows="6" placeholder="Write theory content here"></textarea>
+            </div>
+        </div>
+
+        <!-- QUIZ -->
+        <div class="form-section hidden" id="quizField">
+            <div id="quizQuestionsWrapper">
+                <div class="question-block quiz-question-item">
+                    <div class="question-header">
+                        <div class="question-title">Question 1</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quiz Type</label>
+                        <select name="quiz_type" class="quiz-type-select" onchange="toggleQuizTypeForBlock(this)">
+                            <option value="mcq">MCQ</option>
+                            <option value="true_false">True / False</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quiz Question</label>
+                        <textarea name="quiz_question" rows="4" placeholder="Enter quiz question"></textarea>
+                    </div>
+
+                    <div class="form-group mcq-options-field">
+                        <label>Options</label>
+                        <textarea name="quiz_options" rows="4" placeholder="Example:
+A. Option 1
+B. Option 2
+C. Option 3
+D. Option 4"></textarea>
+                    </div>
+
+                    <div class="form-group true-false-info hidden">
+                        <label>True / False Options</label>
+                        <input type="text" value="True, False" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Correct Answer</label>
+                        <input type="text" name="quiz_answer" placeholder="Enter correct answer">
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="secondary-btn" onclick="addQuizQuestion()">
+                Add Another Question
+            </button>
+        </div>
+
+        <!-- MATERIAL -->
+        <div class="form-section hidden" id="materialField">
+            <div class="form-group">
+                <label>Upload Material File</label>
+                <input type="file" name="material_file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt">
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">
+            Add Content
+        </button>
+    </form>
 </div>
 
-<div class="form-group">
-<label>Title</label>
-<input type="text" name="title" required>
-</div>
-
-<!-- VIDEO -->
-<div class="form-group" id="videoField">
-<label>Upload Video (MP4)</label>
-<input type="file" name="video">
-</div>
-
-<!-- THEORY -->
-<div class="form-group hidden" id="theoryField">
-<label>Theory Content</label>
-<textarea name="theory" rows="4"></textarea>
-</div>
-
-<!-- QUIZ -->
-<div class="form-group hidden" id="quizField">
-<label>Quiz Question</label>
-<textarea name="quiz_question"></textarea>
-
-<label>Options (comma separated)</label>
-<input type="text" name="quiz_options">
-
-<label>Correct Answer</label>
-<input type="text" name="quiz_answer">
-</div>
-
-<button type="submit" class="submit-btn">
-Add Content
-</button>
-
-</form>
-</div>
-
-
-<!-- CONTENT LIST -->
 
 {% for module in modules %}
-
 <div class="activity-card">
 
-<div class="activity-title">
-{{ module.title }}
+    <div class="activity-title">
+        {{ module.title }}
+    </div>
+
+    <div class="activity-type">
+        {{ module.type|title }}
+    </div>
+
+    {% if module.type == "video" %}
+
+        {% if module.video_mpd %}
+            <span class="info-chip">MPD Ready</span>
+
+            <div class="video-box">
+                <video id="video{{ module.id }}" controls></video>
+            </div>
+
+            <input type="hidden" id="mpd{{ module.id }}" value="http://127.0.0.1:8000/stream/{{ module.video_mpd }}">
+        {% else %}
+            <p style="color:gray;">Processing video...</p>
+        {% endif %}
+
+    {% elif module.type == "theory" %}
+
+        <div class="text-block">
+            {{ module.theory }}
+        </div>
+
+    {% elif module.type == "quiz" %}
+
+        <div class="quiz-box">
+            {% for question in module.questions.all %}
+                <div class="quiz-question-card">
+                    <span class="info-chip">
+                        {% if question.quiz_type == "mcq" %}
+                            MCQ
+                        {% elif question.quiz_type == "true_false" %}
+                            True / False
+                        {% else %}
+                            {{ question.quiz_type }}
+                        {% endif %}
+                    </span>
+
+                    <p><strong>Question {{ forloop.counter }}:</strong> {{ question.question }}</p>
+
+                    {% if question.quiz_type == "mcq" and question.options %}
+                        <p><strong>Options:</strong></p>
+                        <ul class="quiz-options-list">
+                            {% for option in question.options.splitlines %}
+                                {% if option.strip %}
+                                    <li>{{ option }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    {% elif question.quiz_type == "true_false" %}
+                        <p><strong>Options:</strong> True / False</p>
+                    {% elif question.options %}
+                        <p><strong>Options:</strong> {{ question.options }}</p>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p style="color:gray;">No questions added yet.</p>
+            {% endfor %}
+        </div>
+
+    {% elif module.type == "material" %}
+
+        <div class="material-box">
+            {% if module.material_file %}
+                <a class="material-link" href="http://127.0.0.1:8000/stream/{{ module.material_file }}" target="_blank">
+                    Open Material
+                </a>
+            {% else %}
+                <p style="color:gray;">Material file not available.</p>
+            {% endif %}
+        </div>
+
+    {% endif %}
+
 </div>
-
-<div class="activity-type">
-{{ module.type|title }}
-</div>
-
-{% if module.type == "video" %}
-
-{% if module.video_mpd %}
-
-<p style="color:green;">MPD Ready</p>
-
-<div class="video-box">
-<video id="video{{ module.id }}" controls style="width:100%;"></video>
-</div>
-
-<!-- ✅ FIXED MPD URL -->
-<input type="hidden" id="mpd{{ module.id }}" 
-value="http://127.0.0.1:8000/stream/{{ module.video_mpd }}">
-
-{% else %}
-<p style="color:gray;">Processing video...</p>
-{% endif %}
-
-{% elif module.type == "theory" %}
-
-<p>{{ module.theory }}</p>
-
-{% elif module.type == "quiz" %}
-
-<p><strong>Q:</strong> {{ module.quiz_question }}</p>
-<p><strong>Options:</strong> {{ module.quiz_options }}</p>
-
-{% endif %}
-
-</div>
-
 {% endfor %}
 
 
-<!-- DASH PLAYER -->
-
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-
     var videos = document.querySelectorAll("video[id^='video']");
 
     videos.forEach(function(video){
-
         var moduleId = video.id.replace("video", "");
         var urlInput = document.getElementById("mpd" + moduleId);
 
@@ -202,20 +460,17 @@ document.addEventListener("DOMContentLoaded", function(){
 
         var url = urlInput.value;
 
-        console.log("MPD URL:", url);
-
         if(url){
             var player = dashjs.MediaPlayer().create();
             player.initialize(video, url, false);
         }
-
     });
 
+    toggleFields();
+    initializeQuizBlocks();
 });
 </script>
 
-
-<!-- FIELD TOGGLE -->
 
 <script>
 function toggleFields(){
@@ -224,6 +479,7 @@ function toggleFields(){
     document.getElementById("videoField").classList.add("hidden");
     document.getElementById("theoryField").classList.add("hidden");
     document.getElementById("quizField").classList.add("hidden");
+    document.getElementById("materialField").classList.add("hidden");
 
     if(type === "video"){
         document.getElementById("videoField").classList.remove("hidden");
@@ -234,6 +490,85 @@ function toggleFields(){
     else if(type === "quiz"){
         document.getElementById("quizField").classList.remove("hidden");
     }
+    else if(type === "material"){
+        document.getElementById("materialField").classList.remove("hidden");
+    }
+}
+
+function toggleQuizTypeForBlock(selectElement){
+    const questionBlock = selectElement.closest(".quiz-question-item");
+    if (!questionBlock) return;
+
+    const mcqField = questionBlock.querySelector(".mcq-options-field");
+    const tfField = questionBlock.querySelector(".true-false-info");
+    const optionsTextarea = questionBlock.querySelector('textarea[name="quiz_options"]');
+
+    mcqField.classList.add("hidden");
+    tfField.classList.add("hidden");
+
+    if(selectElement.value === "mcq"){
+        mcqField.classList.remove("hidden");
+    } else if(selectElement.value === "true_false"){
+        tfField.classList.remove("hidden");
+        if (optionsTextarea && !optionsTextarea.value.trim()) {
+            optionsTextarea.value = "True\nFalse";
+        }
+    }
+}
+
+function initializeQuizBlocks(){
+    document.querySelectorAll(".quiz-question-item .quiz-type-select").forEach(function(select){
+        toggleQuizTypeForBlock(select);
+    });
+    updateQuestionNumbers();
+}
+
+function updateQuestionNumbers(){
+    const blocks = document.querySelectorAll(".quiz-question-item");
+    blocks.forEach(function(block, index){
+        const title = block.querySelector(".question-title");
+        if (title) {
+            title.textContent = "Question " + (index + 1);
+        }
+    });
+}
+
+function addQuizQuestion(){
+    const wrapper = document.getElementById("quizQuestionsWrapper");
+    const blocks = wrapper.querySelectorAll(".quiz-question-item");
+    const firstBlock = blocks[0];
+
+    const clone = firstBlock.cloneNode(true);
+
+    clone.querySelectorAll("textarea").forEach(function(el){
+        el.value = "";
+    });
+
+    clone.querySelectorAll("input[type='text']").forEach(function(el){
+        if (!el.readOnly) {
+            el.value = "";
+        }
+    });
+
+    clone.querySelectorAll("select").forEach(function(el){
+        el.selectedIndex = 0;
+    });
+
+    let header = clone.querySelector(".question-header");
+    if (!header.querySelector(".remove-question-btn")) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "remove-question-btn";
+        btn.textContent = "Remove";
+        btn.onclick = function(){
+            clone.remove();
+            updateQuestionNumbers();
+        };
+        header.appendChild(btn);
+    }
+
+    wrapper.appendChild(clone);
+    initializeQuizBlocks();
 }
 </script>
 

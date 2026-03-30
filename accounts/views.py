@@ -23,7 +23,6 @@ def home(request):
 # LOGIN VIEW
 # =====================================
 def login_view(request):
-
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
 
@@ -38,7 +37,15 @@ def login_view(request):
             else:
                 print("No Moodle user id found in session")
 
-            return redirect("teacher:teacher_dashboard")
+            # Teacher login
+            if user.is_staff or user.is_superuser:
+                return redirect("teacher:teacher_dashboard")
+
+            # Student login
+            return redirect("/student/dashboard/")
+
+        else:
+            messages.error(request, "Invalid username or password.")
 
     else:
         form = AuthenticationForm()
@@ -50,32 +57,45 @@ def login_view(request):
 # REGISTER VIEW
 # =====================================
 def register_view(request):
-
     if request.method == "POST":
-
         form = RegisterForm(request.POST)
 
         if form.is_valid():
+            role = (
+                request.POST.get("role")
+                or request.POST.get("account_type")
+                or request.POST.get("user_type")
+                or "teacher"
+            ).strip().lower()
 
+            is_student = role == "student"
+
+            # -------------------------------------
             # Create Django user
+            # -------------------------------------
             user = form.save(commit=False)
-            user.is_staff = True
+
+            if is_student:
+                user.is_staff = False
+            else:
+                user.is_staff = True
+
             user.save()
 
             print("Django user created:", user.username)
+            print("Selected role:", role)
 
             password = form.cleaned_data.get("password1")
 
             username = user.username
             email = user.email if user.email else f"{username}@example.com"
             firstname = user.first_name if user.first_name else username
-            lastname = user.last_name if user.last_name else "Teacher"
+            lastname = user.last_name if user.last_name else ("Student" if is_student else "Teacher")
 
             # =====================================
             # CREATE MOODLE USER
             # =====================================
             try:
-
                 moodle_user_id = create_moodle_user(
                     username=username,
                     password=password,
@@ -94,11 +114,10 @@ def register_view(request):
 
                 print("Moodle user created:", moodle_user_id)
 
-                # SAVE IN SESSION
+                # Save in session
                 request.session["moodle_user_id"] = moodle_user_id
 
             except Exception as e:
-
                 print("Moodle user creation error:", e)
 
                 user.delete()
@@ -111,28 +130,39 @@ def register_view(request):
                 return redirect("accounts:register")
 
             # =====================================
-            # CREATE TEACHER CATEGORY
+            # CREATE TEACHER CATEGORY ONLY
             # =====================================
-            try:
+            if not is_student:
+                try:
+                    print("Creating teacher parent category...")
 
-                print("Creating teacher parent category...")
+                    parent_category_id = create_teacher_parent_category(username)
 
-                parent_category_id = create_teacher_parent_category(username)
+                    print("Parent category ID:", parent_category_id)
 
-                print("Parent category ID:", parent_category_id)
+                    if parent_category_id:
+                        create_default_child_categories(parent_category_id)
 
-                if parent_category_id:
-                    create_default_child_categories(parent_category_id)
+                except Exception as e:
+                    print("Category creation error:", e)
 
-            except Exception as e:
-                print("Category creation error:", e)
-
-            # Login user
+            # -------------------------------------
+            # Login user after register
+            # -------------------------------------
             login(request, user)
 
             messages.success(request, "Account created successfully!")
 
-            return redirect("teacher:teacher_dashboard")
+            # -------------------------------------
+            # Redirect by role
+            # -------------------------------------
+            if is_student:
+                return redirect("/student/dashboard/")
+            else:
+                return redirect("teacher:teacher_dashboard")
+
+        else:
+            messages.error(request, "Please correct the form errors.")
 
     else:
         form = RegisterForm()
@@ -144,7 +174,5 @@ def register_view(request):
 # LOGOUT VIEW
 # =====================================
 def logout_view(request):
-
     logout(request)
-
     return redirect("accounts:login")

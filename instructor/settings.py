@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     # Your Apps
     'accounts',
     'teacher',
+    'student',
 ]
 
 

@@ -1,0 +1,121 @@
+{% extends 'student/student_base.html' %}
+
+{% block title %}Study Material{% endblock %}
+
+{% block content %}
+
+<style>
+    .material-card {
+        background: white;
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .material-meta {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 22px;
+    }
+
+    .material-badge {
+        background: #eff6ff;
+        color: #1d4ed8;
+        padding: 8px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .material-box {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 22px;
+        background: #f9fafb;
+        margin-bottom: 18px;
+    }
+
+    .material-box h3 {
+        margin-top: 0;
+        color: #111827;
+    }
+
+    .material-box p {
+        color: #374151;
+        line-height: 1.7;
+        margin-bottom: 14px;
+    }
+
+    .material-actions {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 24px;
+    }
+
+    .material-btn {
+        text-decoration: none;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .btn-open {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-download {
+        background: #7c3aed;
+        color: white;
+    }
+
+    .btn-back {
+        background: #e5e7eb;
+        color: #111827;
+    }
+
+    .btn-next {
+        background: #16a34a;
+        color: white;
+    }
+</style>
+
+<div class="welcome">
+    <h2>Study Material 📂</h2>
+    <p>Open or download the material for this section and continue your learning.</p>
+</div>
+
+<div class="section">
+    <div class="material-card">
+        <div class="material-meta">
+            <span class="material-badge">Course: Cryptography Basics</span>
+            <span class="material-badge">Section: Encryption Techniques</span>
+            <span class="material-badge">Status: Available</span>
+        </div>
+
+        <div class="material-box">
+            <h3>Material: Symmetric Encryption Notes</h3>
+            <p>
+                This material contains important notes, diagrams, and examples related to
+                symmetric encryption algorithms and secure key usage.
+            </p>
+            <p>
+                Students should read this material before attempting the section quiz.
+                You can use this page to open PDFs, documents, or downloadable files uploaded by the teacher.
+            </p>
+
+            <div class="material-actions">
+                <a href="#" class="material-btn btn-open">Open Material</a>
+                <a href="#" class="material-btn btn-download">Download File</a>
+                <a href="/student/course-detail/" class="material-btn btn-back">Back to Course</a>
+                <a href="/student/take-quiz/" class="material-btn btn-next">Next: Quiz →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

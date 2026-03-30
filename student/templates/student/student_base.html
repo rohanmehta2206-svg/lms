@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}LMS{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: #f3f4f6;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: white;
+            padding: 15px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .nav-links a {
+            margin-left: 20px;
+            text-decoration: none;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .logout {
+            background: #2563eb;
+            color: white !important;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+
+        /* MAIN */
+        .container {
+            padding: 40px 80px;
+        }
+
+        /* WELCOME */
+        .welcome {
+            background: linear-gradient(to right, #2563eb, #1e40af);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        /* STATS */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        /* SECTIONS */
+        .section {
+            margin-top: 30px;
+        }
+
+        .section h3 {
+            margin-bottom: 15px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .box a {
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div><strong>Cryptographic Adaptive LMS</strong></div>
+    <div class="nav-links">
+        <a href="/student/dashboard/">Dashboard</a>
+        <a href="/student/courses/">My Courses</a>
+        <a href="/student/progress/">Progress</a>
+        <a href="/student/certificates/">Certificates</a>
+        <a href="#" class="logout">Logout</a>
+    </div>
+</div>
+
+<!-- CONTENT -->
+<div class="container">
+    {% block content %}
+    {% endblock %}
+</div>
+
+</body>
+</html>
+

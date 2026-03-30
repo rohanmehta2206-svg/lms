@@ -1,0 +1,34 @@
+{% extends 'student/student_base.html' %}
+
+{% block title %}Progress{% endblock %}
+
+{% block content %}
+
+<div class="welcome">
+    <h2>Progress Tracker 📈</h2>
+    <p>Track your completed and pending learning progress.</p>
+</div>
+
+<div class="section">
+    <div class="grid">
+        <div class="box">
+            <h4>Cryptography Basics</h4>
+            <p>Completed Modules: 6 / 10</p>
+            <p><strong>Progress:</strong> 60%</p>
+        </div>
+
+        <div class="box">
+            <h4>Network Security</h4>
+            <p>Completed Modules: 3 / 8</p>
+            <p><strong>Progress:</strong> 35%</p>
+        </div>
+
+        <div class="box">
+            <h4>Ethical Hacking</h4>
+            <p>Completed Modules: 12 / 12</p>
+            <p><strong>Progress:</strong> 100%</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

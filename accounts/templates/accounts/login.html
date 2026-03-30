@@ -1,126 +1,389 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login | LMS</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Login | Cryptographic Adaptive LMS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f5f7fa;
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
         }
 
-        .header {
-            background: #0f6cbf;
-            color: white;
-            padding: 15px 40px;
-            font-size: 20px;
-            font-weight: bold;
+        body{
+            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height:100vh;
+            background:linear-gradient(135deg, #eaf1ff, #dfe9ff);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            padding:30px 15px;
         }
 
-        .container {
-            max-width: 500px;
-            margin: 80px auto;
-            background: white;
-            padding: 40px;
-            border-radius: 4px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        .page-wrapper{
+            width:100%;
+            max-width:1200px;
         }
 
-        h2 {
-            margin-bottom: 30px;
-            font-weight: 500;
+        .messages{
+            max-width:1100px;
+            margin:0 auto 18px auto;
         }
 
-        label {
-            display: block;
-            margin-top: 20px;
-            font-weight: 600;
+        .message{
+            padding:12px 16px;
+            border-radius:8px;
+            margin-bottom:10px;
+            font-size:14px;
+            font-weight:600;
         }
 
-        input {
-            width: 100%;
-            padding: 10px;
-            margin-top: 6px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            font-size: 14px;
+        .message.success{
+            background:#dcfce7;
+            color:#166534;
+            border:1px solid #86efac;
         }
 
-        input:focus {
-            border-color: #0f6cbf;
-            outline: none;
+        .message.error{
+            background:#fee2e2;
+            color:#991b1b;
+            border:1px solid #fca5a5;
         }
 
-        button {
-            margin-top: 30px;
-            background: #0f6cbf;
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            font-size: 15px;
-            border-radius: 3px;
-            cursor: pointer;
-            width: 100%;
+        .main-card{
+            width:100%;
+            min-height:680px;
+            background:#fff;
+            border-radius:32px;
+            overflow:hidden;
+            box-shadow:0 20px 50px rgba(0,0,0,0.12);
+            display:grid;
+            grid-template-columns:1fr 1fr;
         }
 
-        button:hover {
-            background: #0c57a1;
+        .left-panel,
+        .right-panel{
+            padding:55px 45px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
         }
 
-        .register-link {
-            margin-top: 20px;
-            text-align: center;
+        .left-panel{
+            background:linear-gradient(135deg, #4f6edb, #1fa2c9);
+            color:white;
         }
 
-        .register-link a {
-            color: #0f6cbf;
-            text-decoration: none;
+        .panel-content{
+            max-width:430px;
+            margin:auto;
+            width:100%;
         }
 
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding: 20px;
-            font-size: 13px;
-            color: #777;
+        .left-panel h1{
+            font-size:56px;
+            font-weight:800;
+            line-height:1.15;
+            margin-bottom:18px;
+        }
+
+        .left-panel p{
+            font-size:17px;
+            line-height:1.8;
+            color:rgba(255,255,255,0.94);
+            margin-bottom:28px;
+        }
+
+        .left-info-box{
+            background:rgba(255,255,255,0.12);
+            border:1px solid rgba(255,255,255,0.20);
+            border-radius:18px;
+            padding:18px;
+            margin-bottom:18px;
+        }
+
+        .left-info-box h3{
+            font-size:21px;
+            margin-bottom:8px;
+            font-weight:700;
+        }
+
+        .left-info-box p{
+            font-size:14px;
+            line-height:1.7;
+            margin-bottom:0;
+        }
+
+        .switch-link{
+            display:inline-block;
+            margin-top:14px;
+            padding:13px 28px;
+            border:2px solid white;
+            border-radius:32px;
+            text-decoration:none;
+            color:white;
+            font-weight:700;
+            transition:0.3s;
+        }
+
+        .switch-link:hover{
+            background:white;
+            color:#2563eb;
+        }
+
+        .right-panel{
+            background:#ffffff;
+        }
+
+        .form-title{
+            font-size:50px;
+            font-weight:800;
+            color:#111827;
+            margin-bottom:10px;
+        }
+
+        .form-subtitle{
+            color:#6b7280;
+            font-size:15px;
+            margin-bottom:28px;
+        }
+
+        .toggle-role{
+            display:flex;
+            background:#eef2ff;
+            border-radius:14px;
+            padding:6px;
+            gap:6px;
+            margin-bottom:24px;
+        }
+
+        .toggle-btn{
+            flex:1;
+            border:none;
+            padding:13px 14px;
+            border-radius:10px;
+            font-size:15px;
+            font-weight:700;
+            cursor:pointer;
+            background:transparent;
+            color:#374151;
+            transition:0.3s;
+        }
+
+        .toggle-btn.active{
+            background:linear-gradient(135deg, #4f6edb, #1fa2c9);
+            color:white;
+            box-shadow:0 6px 18px rgba(79,110,219,0.20);
+        }
+
+        .role-note{
+            font-size:13px;
+            color:#6b7280;
+            margin-bottom:20px;
+        }
+
+        .input-group{
+            margin-bottom:18px;
+        }
+
+        label{
+            display:block;
+            margin-bottom:8px;
+            font-size:14px;
+            font-weight:700;
+            color:#111827;
+        }
+
+        input{
+            width:100%;
+            padding:14px 16px;
+            border:1px solid #d1d5db;
+            border-radius:14px;
+            font-size:14px;
+            background:#f9fafb;
+            transition:0.25s;
+        }
+
+        input:focus{
+            outline:none;
+            border-color:#4f6edb;
+            background:white;
+            box-shadow:0 0 0 4px rgba(79,110,219,0.10);
+        }
+
+        .submit-btn{
+            width:100%;
+            border:none;
+            background:linear-gradient(135deg, #6a3fc7, #4c2aa9);
+            color:white;
+            font-size:16px;
+            font-weight:700;
+            padding:15px;
+            border-radius:14px;
+            cursor:pointer;
+            margin-top:8px;
+            transition:0.3s;
+            box-shadow:0 10px 24px rgba(106,63,199,0.22);
+        }
+
+        .submit-btn:hover{
+            transform:translateY(-1px);
+            opacity:0.97;
+        }
+
+        .bottom-text{
+            text-align:center;
+            margin-top:18px;
+            font-size:14px;
+            color:#6b7280;
+        }
+
+        .bottom-text a{
+            color:#3157c7;
+            text-decoration:none;
+            font-weight:700;
+        }
+
+        .bottom-text a:hover{
+            text-decoration:underline;
+        }
+
+        @media (max-width: 1000px){
+            .main-card{
+                grid-template-columns:1fr;
+            }
+
+            .left-panel h1{
+                font-size:42px;
+            }
+        }
+
+        @media (max-width: 640px){
+            .left-panel,
+            .right-panel{
+                padding:40px 22px;
+            }
+
+            .form-title{
+                font-size:36px;
+            }
+
+            .left-panel h1{
+                font-size:36px;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="header">
-    LMS Teacher Portal
-</div>
+<div class="page-wrapper">
 
-<div class="container">
-
-    <h2>Login</h2>
-
-    <form method="POST">
-        {% csrf_token %}
-
-        {{ form.username.label_tag }}
-        {{ form.username }}
-
-        {{ form.password.label_tag }}
-        {{ form.password }}
-
-        <button type="submit">Login</button>
-    </form>
-
-    <div class="register-link">
-        Don’t have an account?
-        <!-- FIXED HERE -->
-        <a href="{% url 'accounts:register' %}">Create one</a>
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
     </div>
+    {% endif %}
 
+    <div class="main-card">
+
+        <!-- LEFT SIDE -->
+        <div class="left-panel">
+            <div class="panel-content">
+                <h1>Welcome Back 👋</h1>
+                <p>
+                    Login to continue your LMS journey. Teachers can manage courses and Moodle content,
+                    while students can access courses, streaming videos, theory, materials, and quizzes.
+                </p>
+
+                <div class="left-info-box">
+                    <h3>Teacher Login</h3>
+                    <p>
+                        Access the teacher dashboard to manage courses, upload content, and control Moodle-connected learning modules.
+                    </p>
+                </div>
+
+                <div class="left-info-box">
+                    <h3>Student Login</h3>
+                    <p>
+                        Access the student dashboard to continue learning, watch videos, read theory, download materials, and attempt quizzes.
+                    </p>
+                </div>
+
+                <a href="{% url 'accounts:register' %}" class="switch-link">CREATE ACCOUNT</a>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="right-panel">
+            <div class="panel-content">
+                <h2 class="form-title">Sign In</h2>
+                <p class="form-subtitle">Choose your role and enter your credentials</p>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="toggle-role">
+                        <button type="button" class="toggle-btn active" onclick="setRole('teacher')">Teacher</button>
+                        <button type="button" class="toggle-btn" onclick="setRole('student')">Student</button>
+                    </div>
+
+                    <input type="hidden" name="role" id="role-input" value="teacher">
+
+                    <div class="role-note" id="role-note">
+                        You are signing in as a teacher.
+                    </div>
+
+                    <div class="input-group">
+                        <label>Username</label>
+                        {{ form.username }}
+                    </div>
+
+                    <div class="input-group">
+                        <label>Password</label>
+                        {{ form.password }}
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submit-text">SIGN IN AS TEACHER</button>
+                </form>
+
+                <div class="bottom-text">
+                    Don’t have an account?
+                    <a href="{% url 'accounts:register' %}">Create one</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
-<div class="footer">
-    © 2026 LMS System | Secure Academic Platform
-</div>
+<script>
+    function setRole(role){
+        const buttons = document.querySelectorAll('.toggle-btn');
+        const roleInput = document.getElementById('role-input');
+        const roleNote = document.getElementById('role-note');
+        const submitText = document.getElementById('submit-text');
+
+        buttons.forEach(btn => btn.classList.remove('active'));
+
+        if(role === 'teacher'){
+            buttons[0].classList.add('active');
+            roleInput.value = 'teacher';
+            roleNote.textContent = 'You are signing in as a teacher.';
+            submitText.textContent = 'SIGN IN AS TEACHER';
+        }else{
+            buttons[1].classList.add('active');
+            roleInput.value = 'student';
+            roleNote.textContent = 'You are signing in as a student.';
+            submitText.textContent = 'SIGN IN AS STUDENT';
+        }
+    }
+</script>
 
 </body>
 </html>
