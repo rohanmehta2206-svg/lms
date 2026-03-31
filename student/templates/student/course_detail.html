@@ -18,8 +18,17 @@
         box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
     }
 
+    .course-hero-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+
     .course-hero h2 {
-        margin: 0 0 10px 0;
+        margin: 0;
         font-size: 38px;
         font-weight: 700;
         color: white;
@@ -32,6 +41,16 @@
         color: rgba(255,255,255,0.94);
         line-height: 1.8;
         max-width: 900px;
+    }
+
+    .hero-badge {
+        background: rgba(255,255,255,0.18);
+        color: white;
+        padding: 9px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
     }
 
     .stats-grid {
@@ -178,6 +197,28 @@
         border-color: #dbeafe;
     }
 
+    .module-item.locked-item {
+        background: #f8fafc;
+        border-color: #e5e7eb;
+        opacity: 0.95;
+    }
+
+    .module-item.locked-item:hover {
+        background: #f8fafc;
+        border-color: #d1d5db;
+    }
+
+    .module-item.current-item {
+        border-color: #93c5fd;
+        background: #eff6ff;
+        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.08);
+    }
+
+    .module-item.completed-item {
+        border-color: #86efac;
+        background: #f0fdf4;
+    }
+
     .module-left {
         flex: 1;
         min-width: 260px;
@@ -204,11 +245,38 @@
         font-weight: 700;
         padding: 7px 12px;
         border-radius: 999px;
+        margin-right: 8px;
+        margin-bottom: 6px;
     }
 
     .status.available {
         background: #dbeafe;
         color: #1d4ed8;
+    }
+
+    .status.completed {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status.pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status.locked {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+
+    .status.score {
+        background: #ede9fe;
+        color: #6d28d9;
+    }
+
+    .status.current {
+        background: #bfdbfe;
+        color: #1e3a8a;
     }
 
     .module-right {
@@ -224,7 +292,10 @@
         border-radius: 10px;
         font-size: 14px;
         font-weight: 700;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
         transition: 0.3s ease;
         color: white !important;
         min-width: 145px;
@@ -261,6 +332,21 @@
 
     .btn-quiz:hover {
         background: #c2410c;
+    }
+
+    .btn-locked {
+        background: #9ca3af !important;
+        color: #ffffff !important;
+    }
+
+    .btn-locked:hover {
+        background: #6b7280 !important;
+        color: #ffffff !important;
+    }
+
+    .lock-icon {
+        font-size: 15px;
+        line-height: 1;
     }
 
     .empty-box {
@@ -327,7 +413,17 @@
 <div class="course-page">
 
     <div class="course-hero">
-        <h2>{{ course.title }} 📘</h2>
+        <div class="course-hero-top">
+            <h2>{{ course.title }} 📘</h2>
+            <span class="hero-badge">
+                {% if enrollment %}
+                    Enrolled
+                {% else %}
+                    Course
+                {% endif %}
+            </span>
+        </div>
+
         <p>
             {% if course.description %}
                 {{ course.description }}
@@ -362,7 +458,16 @@
     <h3 class="section-heading">Course Progress</h3>
     <div class="progress-card">
         <div class="progress-header">
-            <div class="progress-label"><strong>Current Status:</strong> In Progress</div>
+            <div class="progress-label">
+                <strong>Current Status:</strong>
+                {% if progress_percent == 100 %}
+                    Completed
+                {% elif completed_modules > 0 %}
+                    In Progress
+                {% else %}
+                    Not Started
+                {% endif %}
+            </div>
             <div class="progress-pill">{{ progress_percent }}% Completed</div>
         </div>
 
@@ -390,10 +495,10 @@
                     {% endif %}
                 </div>
 
-                {% if section.modules.all %}
+                {% if section.modules_list %}
                     <div class="module-list">
-                        {% for module in section.modules.all %}
-                            <div class="module-item">
+                        {% for module in section.modules_list %}
+                            <div class="module-item {% if module.is_locked %}locked-item{% endif %} {% if module.is_current %}current-item{% endif %} {% if module.is_completed %}completed-item{% endif %}">
                                 <div class="module-left">
                                     <h4>
                                         {% if module.type == "video" %}
@@ -423,18 +528,68 @@
                                         {% endif %}
                                     </p>
 
-                                    <span class="status available">Available</span>
+                                    {% if module.is_completed %}
+                                        <span class="status completed">Completed</span>
+                                    {% else %}
+                                        <span class="status pending">Pending</span>
+                                    {% endif %}
+
+                                    {% if module.is_locked %}
+                                        <span class="status locked">🔒 Locked</span>
+                                    {% else %}
+                                        <span class="status available">Available</span>
+                                    {% endif %}
+
+                                    {% if module.is_current and not module.is_completed %}
+                                        <span class="status current">Current Module</span>
+                                    {% endif %}
+
+                                    {% if module.type == "quiz" and module.latest_quiz_score != None %}
+                                        <span class="status score">Score: {{ module.latest_quiz_score }}%</span>
+                                    {% endif %}
                                 </div>
 
                                 <div class="module-right">
                                     {% if module.type == "video" %}
-                                        <a href="{% url 'student:play_video' module.id %}" class="module-btn btn-video">Watch Video</a>
+                                        {% if module.is_locked %}
+                                            <a href="{% url 'student:play_video' module.id %}" class="module-btn btn-locked">
+                                                <span class="lock-icon">🔒</span> Locked
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'student:play_video' module.id %}" class="module-btn btn-video">
+                                                {% if module.is_completed %}Watch Again{% elif module.is_current %}Start Now{% else %}Watch Video{% endif %}
+                                            </a>
+                                        {% endif %}
                                     {% elif module.type == "theory" %}
-                                        <a href="{% url 'student:read_theory' module.id %}" class="module-btn btn-theory">Read Theory</a>
+                                        {% if module.is_locked %}
+                                            <a href="{% url 'student:read_theory' module.id %}" class="module-btn btn-locked">
+                                                <span class="lock-icon">🔒</span> Locked
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'student:read_theory' module.id %}" class="module-btn btn-theory">
+                                                {% if module.is_completed %}Read Again{% elif module.is_current %}Start Now{% else %}Read Theory{% endif %}
+                                            </a>
+                                        {% endif %}
                                     {% elif module.type == "material" %}
-                                        <a href="{% url 'student:material_page' module.id %}" class="module-btn btn-material">Open Material</a>
+                                        {% if module.is_locked %}
+                                            <a href="{% url 'student:material_page' module.id %}" class="module-btn btn-locked">
+                                                <span class="lock-icon">🔒</span> Locked
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'student:material_page' module.id %}" class="module-btn btn-material">
+                                                {% if module.is_completed %}Open Again{% elif module.is_current %}Start Now{% else %}Open Material{% endif %}
+                                            </a>
+                                        {% endif %}
                                     {% elif module.type == "quiz" %}
-                                        <a href="{% url 'student:take_quiz' module.id %}" class="module-btn btn-quiz">Take Quiz</a>
+                                        {% if module.is_locked %}
+                                            <a href="{% url 'student:take_quiz' module.id %}" class="module-btn btn-locked">
+                                                <span class="lock-icon">🔒</span> Locked
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'student:take_quiz' module.id %}" class="module-btn btn-quiz">
+                                                {% if module.is_completed %}Review Quiz{% elif module.is_current %}Start Now{% else %}Take Quiz{% endif %}
+                                            </a>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             </div>

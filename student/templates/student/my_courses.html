@@ -27,6 +27,10 @@
         color: rgba(255,255,255,0.95);
     }
 
+    .section-block {
+        margin-bottom: 40px;
+    }
+
     .section-title {
         font-size: 26px;
         font-weight: 700;
@@ -145,6 +149,7 @@
         transition: 0.3s ease;
         text-align: center;
         border: none;
+        cursor: pointer;
     }
 
     .view-btn {
@@ -165,6 +170,38 @@
     .enroll-btn:hover {
         background: #15803d !important;
         color: #ffffff !important;
+    }
+
+    .continue-btn {
+        background: #7c3aed !important;
+        color: #ffffff !important;
+    }
+
+    .continue-btn:hover {
+        background: #6d28d9 !important;
+        color: #ffffff !important;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        width: fit-content;
+    }
+
+    .badge-enrolled {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-available {
+        background: #dbeafe;
+        color: #1d4ed8;
     }
 
     .empty-box {
@@ -205,59 +242,119 @@
 
 <div class="welcome">
     <h2>My Courses 📚</h2>
-    <p>View available courses created by teachers and continue your learning journey.</p>
+    <p>View your enrolled courses, discover available courses, and continue your learning journey.</p>
 </div>
 
-<h3 class="section-title">Available Courses</h3>
+<div class="section-block">
+    <h3 class="section-title">Enrolled Courses</h3>
 
-{% if courses %}
-    <div class="course-grid">
-        {% for course in courses %}
-            <div class="course-card">
-                <div class="course-image-wrap">
-                    {% if course.image %}
-                        <img src="{{ course.image.url }}" alt="{{ course.title }}" class="course-image">
-                    {% else %}
-                        <div class="course-image-placeholder">
-                            {{ course.title }}
-                        </div>
-                    {% endif %}
-                </div>
-
-                <div class="course-body">
-                    <h4 class="course-title">{{ course.title }}</h4>
-
-                    <p class="course-description">
-                        {% if course.description %}
-                            {{ course.description|truncatechars:75 }}
+    {% if courses %}
+        <div class="course-grid">
+            {% for course in courses %}
+                <div class="course-card">
+                    <div class="course-image-wrap">
+                        {% if course.image %}
+                            <img src="{{ course.image.url }}" alt="{{ course.title }}" class="course-image">
                         {% else %}
-                            No course description available yet.
-                        {% endif %}
-                    </p>
-
-                    <div class="course-meta">
-                        {% if course.course_code %}
-                            <p><strong>Course Code:</strong> {{ course.course_code }}</p>
-                        {% endif %}
-
-                        {% if course.created_at %}
-                            <p><strong>Created:</strong> {{ course.created_at|date:"d M Y" }}</p>
+                            <div class="course-image-placeholder">
+                                {{ course.title }}
+                            </div>
                         {% endif %}
                     </div>
 
-                    <div class="course-actions">
-                        <a href="{% url 'student:course_detail' course.id %}" class="course-btn view-btn">View Course</a>
-                        <a href="#" class="course-btn enroll-btn">Enroll Now</a>
+                    <div class="course-body">
+                        <span class="badge badge-enrolled">Enrolled</span>
+
+                        <h4 class="course-title">{{ course.title }}</h4>
+
+                        <p class="course-description">
+                            {% if course.description %}
+                                {{ course.description|truncatechars:75 }}
+                            {% else %}
+                                No course description available yet.
+                            {% endif %}
+                        </p>
+
+                        <div class="course-meta">
+                            {% if course.course_code %}
+                                <p><strong>Course Code:</strong> {{ course.course_code }}</p>
+                            {% endif %}
+
+                            {% if course.created_at %}
+                                <p><strong>Created:</strong> {{ course.created_at|date:"d M Y" }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="course-actions">
+                            <a href="{% url 'student:course_detail' course.id %}" class="course-btn view-btn">View Course</a>
+                            <a href="{% url 'student:course_detail' course.id %}" class="course-btn continue-btn">Continue Learning</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <div class="empty-box">
-        <h4>No Courses Available</h4>
-        <p>When a teacher creates a published course, it will appear here.</p>
-    </div>
-{% endif %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-box">
+            <h4>No Enrolled Courses Yet</h4>
+            <p>You have not enrolled in any course yet. Choose a course from the available section below.</p>
+        </div>
+    {% endif %}
+</div>
+
+<div class="section-block">
+    <h3 class="section-title">Available Courses</h3>
+
+    {% if available_courses %}
+        <div class="course-grid">
+            {% for course in available_courses %}
+                <div class="course-card">
+                    <div class="course-image-wrap">
+                        {% if course.image %}
+                            <img src="{{ course.image.url }}" alt="{{ course.title }}" class="course-image">
+                        {% else %}
+                            <div class="course-image-placeholder">
+                                {{ course.title }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="course-body">
+                        <span class="badge badge-available">Available</span>
+
+                        <h4 class="course-title">{{ course.title }}</h4>
+
+                        <p class="course-description">
+                            {% if course.description %}
+                                {{ course.description|truncatechars:75 }}
+                            {% else %}
+                                No course description available yet.
+                            {% endif %}
+                        </p>
+
+                        <div class="course-meta">
+                            {% if course.course_code %}
+                                <p><strong>Course Code:</strong> {{ course.course_code }}</p>
+                            {% endif %}
+
+                            {% if course.created_at %}
+                                <p><strong>Created:</strong> {{ course.created_at|date:"d M Y" }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="course-actions">
+                            <a href="{% url 'student:enroll_course' course.id %}" class="course-btn enroll-btn">Enroll Now</a>
+                            <a href="{% url 'student:enroll_course' course.id %}" class="course-btn view-btn">Enroll &amp; View</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-box">
+            <h4>No More Courses Available</h4>
+            <p>All published courses are already enrolled or no new published courses are available right now.</p>
+        </div>
+    {% endif %}
+</div>
 
 {% endblock %}

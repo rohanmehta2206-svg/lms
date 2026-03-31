@@ -61,12 +61,78 @@
         color: #166534;
     }
 
+    .status-pending {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .result-box {
+        margin-bottom: 22px;
+        padding: 18px;
+        border-radius: 14px;
+        border: 1px solid #dbeafe;
+        background: #eff6ff;
+    }
+
+    .result-box h3 {
+        margin: 0 0 8px 0;
+        font-size: 22px;
+        color: #111827;
+    }
+
+    .result-box p {
+        margin: 0;
+        font-size: 15px;
+        color: #374151;
+        line-height: 1.7;
+    }
+
+    .score-good {
+        background: #ecfdf5;
+        border-color: #86efac;
+    }
+
+    .score-good h3,
+    .score-good p {
+        color: #166534;
+    }
+
+    .score-average {
+        background: #fffbeb;
+        border-color: #fcd34d;
+    }
+
+    .score-average h3,
+    .score-average p {
+        color: #92400e;
+    }
+
+    .score-low {
+        background: #fef2f2;
+        border-color: #fca5a5;
+    }
+
+    .score-low h3,
+    .score-low p {
+        color: #991b1b;
+    }
+
     .question-box {
         border: 1px solid #e5e7eb;
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 18px;
         background: #f9fafb;
+    }
+
+    .question-box.correct-box {
+        border-color: #86efac;
+        background: #f0fdf4;
+    }
+
+    .question-box.wrong-box {
+        border-color: #fca5a5;
+        background: #fef2f2;
     }
 
     .question-box h4 {
@@ -94,11 +160,43 @@
         margin-top: 4px;
     }
 
+    .option.correct-answer {
+        background: #dcfce7;
+        border: 1px solid #86efac;
+        padding: 10px 12px;
+        border-radius: 10px;
+    }
+
+    .option.selected-wrong {
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        padding: 10px 12px;
+        border-radius: 10px;
+    }
+
     .tf-answer {
         margin-top: 10px;
         display: flex;
         gap: 20px;
         flex-wrap: wrap;
+    }
+
+    .answer-feedback {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .feedback-correct {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .feedback-wrong {
+        background: #fee2e2;
+        color: #991b1b;
     }
 
     .quiz-actions {
@@ -203,30 +301,70 @@
                 {% if is_completed %}
                     <span class="quiz-badge status-completed">Completed</span>
                 {% else %}
-                    <span class="quiz-badge">Available</span>
+                    <span class="quiz-badge status-pending">Available</span>
                 {% endif %}
             </div>
 
+            {% if quiz_result %}
+                <div class="result-box
+                    {% if quiz_result.score_percent >= 80 %}
+                        score-good
+                    {% elif quiz_result.score_percent >= 50 %}
+                        score-average
+                    {% else %}
+                        score-low
+                    {% endif %}
+                ">
+                    <h3>Quiz Result</h3>
+                    <p>
+                        You scored <strong>{{ quiz_result.correct_answers }}</strong> out of
+                        <strong>{{ quiz_result.total_questions }}</strong>
+                        ({{ quiz_result.score_percent }}%).
+                    </p>
+                </div>
+            {% endif %}
+
             {% if questions %}
-                {% if is_completed %}
+                {% if is_completed and not quiz_result %}
                     <div class="completed-box">
                         ✅ This quiz module has already been completed.
                     </div>
                 {% endif %}
 
-                <form id="quizForm" method="post" action="{% url 'student:mark_module_complete' module.id %}?next={% url 'student:take_quiz' module.id %}">
+                <form id="quizForm" method="post" action="{% url 'student:take_quiz' module.id %}">
                     {% csrf_token %}
 
                     {% for question in questions %}
-                        <div class="question-box">
+                        <div class="question-box
+                            {% if quiz_result %}
+                                {% if question.is_correct %}
+                                    correct-box
+                                {% else %}
+                                    wrong-box
+                                {% endif %}
+                            {% endif %}
+                        ">
                             <h4>{{ forloop.counter }}. {{ question.question }}</h4>
 
                             {% if question.quiz_type == "mcq" %}
                                 {% if question.options %}
                                     {% for option in question.options.splitlines %}
-                                        <div class="option">
+                                        <div class="option
+                                            {% if quiz_result and option == question.correct_answer %}
+                                                correct-answer
+                                            {% endif %}
+                                            {% if quiz_result and option == question.selected_answer and option != question.correct_answer %}
+                                                selected-wrong
+                                            {% endif %}
+                                        ">
                                             <label>
-                                                <input type="radio" name="question_{{ question.id }}" value="{{ option }}" {% if is_completed %}disabled{% endif %}>
+                                                <input
+                                                    type="radio"
+                                                    name="question_{{ question.id }}"
+                                                    value="{{ option }}"
+                                                    {% if question.selected_answer == option %}checked{% endif %}
+                                                    {% if is_completed %}disabled{% endif %}
+                                                >
                                                 <span>{{ option }}</span>
                                             </label>
                                         </div>
@@ -237,16 +375,49 @@
                             {% elif question.quiz_type == "true_false" %}
                                 <div class="tf-answer">
                                     <label>
-                                        <input type="radio" name="question_{{ question.id }}" value="True" {% if is_completed %}disabled{% endif %}>
+                                        <input
+                                            type="radio"
+                                            name="question_{{ question.id }}"
+                                            value="True"
+                                            {% if question.selected_answer == "True" %}checked{% endif %}
+                                            {% if is_completed %}disabled{% endif %}
+                                        >
                                         True
                                     </label>
                                     <label>
-                                        <input type="radio" name="question_{{ question.id }}" value="False" {% if is_completed %}disabled{% endif %}>
+                                        <input
+                                            type="radio"
+                                            name="question_{{ question.id }}"
+                                            value="False"
+                                            {% if question.selected_answer == "False" %}checked{% endif %}
+                                            {% if is_completed %}disabled{% endif %}
+                                        >
                                         False
                                     </label>
                                 </div>
                             {% else %}
                                 <div class="option">Question type not supported.</div>
+                            {% endif %}
+
+                            {% if quiz_result %}
+                                {% if question.is_correct %}
+                                    <div class="answer-feedback feedback-correct">
+                                        ✅ Correct answer.
+                                    </div>
+                                {% else %}
+                                    <div class="answer-feedback feedback-wrong">
+                                        ❌ Your answer:
+                                        <strong>
+                                            {% if question.selected_answer %}
+                                                {{ question.selected_answer }}
+                                            {% else %}
+                                                No answer selected
+                                            {% endif %}
+                                        </strong>
+                                        <br>
+                                        ✅ Correct answer: <strong>{{ question.correct_answer }}</strong>
+                                    </div>
+                                {% endif %}
                             {% endif %}
                         </div>
                     {% endfor %}
@@ -266,7 +437,7 @@
 
                 {% if not is_completed %}
                     <div class="info-note">
-                        After selecting answers and clicking <strong>Submit Quiz</strong>, this quiz module will be marked as completed.
+                        After selecting answers and clicking <strong>Submit Quiz</strong>, your answers will be checked and your score will be calculated.
                     </div>
                 {% else %}
                     <div class="info-note">

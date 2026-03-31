@@ -9,6 +9,9 @@ urlpatterns = [
     path('progress/', views.progress_tracker, name='progress_tracker'),
     path('certificates/', views.certificates, name='certificates'),
 
+    # Enrollment
+    path('enroll/<int:course_id>/', views.enroll_course, name='enroll_course'),
+
     # Course detail
     path('course-detail/<int:course_id>/', views.course_detail, name='course_detail'),
 
