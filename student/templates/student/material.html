@@ -5,10 +5,14 @@
 {% block content %}
 
 <style>
+    .material-page {
+        width: 100%;
+    }
+
     .material-header {
         background: linear-gradient(135deg, #2563eb, #1e40af);
         color: white;
-        padding: 28px 32px;
+        padding: 30px 34px;
         border-radius: 18px;
         margin-bottom: 28px;
         box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
@@ -16,7 +20,7 @@
 
     .material-header h2 {
         margin: 0 0 8px 0;
-        font-size: 32px;
+        font-size: 34px;
         font-weight: 700;
         color: white;
     }
@@ -25,7 +29,7 @@
         margin: 0;
         font-size: 15px;
         color: rgba(255,255,255,0.95);
-        line-height: 1.6;
+        line-height: 1.7;
     }
 
     .material-card {
@@ -50,6 +54,11 @@
         border-radius: 20px;
         font-size: 13px;
         font-weight: 600;
+    }
+
+    .status-completed {
+        background: #dcfce7;
+        color: #166534;
     }
 
     .material-box {
@@ -93,6 +102,29 @@
         color: #9a3412;
     }
 
+    .read-note {
+        margin-top: 18px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        color: #475569;
+        padding: 16px 18px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .completed-box {
+        margin-top: 18px;
+        background: #ecfdf5;
+        border: 1px solid #86efac;
+        color: #166534;
+        padding: 16px 18px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.6;
+    }
+
     .material-actions {
         display: flex;
         gap: 14px;
@@ -128,6 +160,15 @@
         background: #6d28d9;
     }
 
+    .btn-complete {
+        background: #16a34a;
+        color: white !important;
+    }
+
+    .btn-complete:hover {
+        background: #15803d;
+    }
+
     .btn-back {
         background: #e5e7eb;
         color: #111827 !important;
@@ -135,6 +176,15 @@
 
     .btn-back:hover {
         background: #d1d5db;
+    }
+
+    .btn-success {
+        background: #16a34a;
+        color: white !important;
+    }
+
+    .btn-success:hover {
+        background: #15803d;
     }
 
     @media (max-width: 768px) {
@@ -148,55 +198,82 @@
     }
 </style>
 
-<div class="material-header">
-    <h2>{{ module.title }} 📂</h2>
-    <p>Open or download the study material for this module and continue your learning.</p>
-</div>
+<div class="material-page">
 
-<div class="section">
-    <div class="material-card">
-        <div class="material-meta">
-            <span class="material-badge">Course: {{ course.title }}</span>
-            <span class="material-badge">Section: {{ section.title }}</span>
-            <span class="material-badge">Status: Available</span>
-        </div>
+    <div class="material-header">
+        <h2>{{ module.title }} 📂</h2>
+        <p>Open or download the study material for this module and continue your learning.</p>
+    </div>
 
-        <div class="material-box">
-            <h3>{{ module.title }}</h3>
+    <div class="section">
+        <div class="material-card">
+            <div class="material-meta">
+                <span class="material-badge">Course: {{ course.title }}</span>
+                <span class="material-badge">Section: {{ section.title }}</span>
 
-            <p>
-                {% if section.description %}
-                    {{ section.description }}
+                {% if is_completed %}
+                    <span class="material-badge status-completed">Completed</span>
                 {% else %}
-                    This material belongs to the selected course section.
+                    <span class="material-badge">Available</span>
                 {% endif %}
-            </p>
+            </div>
 
-            <p>
-                Open the uploaded file to read the teacher-provided notes, documents, or reference material.
-            </p>
+            <div class="material-box">
+                <h3>{{ module.title }}</h3>
 
-            {% if material_file %}
-                <div class="file-status file-available">
-                    Material file is available and ready to open or download.
-                </div>
+                <p>
+                    {% if section.description %}
+                        {{ section.description }}
+                    {% else %}
+                        This material belongs to the selected course section.
+                    {% endif %}
+                </p>
 
-                <div class="material-actions">
-                    <a href="{{ material_file }}" target="_blank" class="material-btn btn-open">Open Material</a>
-                    <a href="{{ material_file }}" download class="material-btn btn-download">Download File</a>
-                    <a href="{% url 'student:course_detail' course.id %}" class="material-btn btn-back">← Back to Course</a>
-                </div>
-            {% else %}
-                <div class="file-status file-missing">
-                    No material file has been uploaded for this module yet.
-                </div>
+                <p>
+                    Open the uploaded file to read the teacher-provided notes, documents, or reference material.
+                </p>
 
-                <div class="material-actions">
-                    <a href="{% url 'student:course_detail' course.id %}" class="material-btn btn-back">← Back to Course</a>
-                </div>
-            {% endif %}
+                {% if material_file %}
+                    <div class="file-status file-available">
+                        Material file is available and ready to open or download.
+                    </div>
+
+                    {% if is_completed %}
+                        <div class="completed-box">
+                            ✅ This material module has already been marked as completed.
+                        </div>
+                    {% else %}
+                        <div class="read-note">
+                            First open or download the file, then click <strong>Mark as Read</strong> to complete this material module.
+                        </div>
+                    {% endif %}
+
+                    <div class="material-actions">
+                        <a href="{{ material_file }}" target="_blank" class="material-btn btn-open">Open Material</a>
+                        <a href="{{ material_file }}" download class="material-btn btn-download">Download File</a>
+                        <a href="{% url 'student:course_detail' course.id %}" class="material-btn btn-back">← Back to Course</a>
+
+                        {% if not is_completed %}
+                            <a href="{% url 'student:mark_module_complete' module.id %}?next={% url 'student:material_page' module.id %}" class="material-btn btn-complete">
+                                Mark as Read
+                            </a>
+                        {% else %}
+                            <span class="material-btn btn-success">Completed</span>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="file-status file-missing">
+                        No material file has been uploaded for this module yet.
+                    </div>
+
+                    <div class="material-actions">
+                        <a href="{% url 'student:course_detail' course.id %}" class="material-btn btn-back">← Back to Course</a>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
+
 </div>
 
 {% endblock %}

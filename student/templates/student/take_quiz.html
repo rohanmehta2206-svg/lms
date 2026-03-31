@@ -5,10 +5,14 @@
 {% block content %}
 
 <style>
+    .quiz-page {
+        width: 100%;
+    }
+
     .quiz-header {
         background: linear-gradient(135deg, #2563eb, #1e40af);
         color: white;
-        padding: 28px 32px;
+        padding: 30px 34px;
         border-radius: 18px;
         margin-bottom: 28px;
         box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
@@ -16,7 +20,7 @@
 
     .quiz-header h2 {
         margin: 0 0 8px 0;
-        font-size: 32px;
+        font-size: 34px;
         font-weight: 700;
         color: white;
     }
@@ -25,7 +29,7 @@
         margin: 0;
         font-size: 15px;
         color: rgba(255,255,255,0.95);
-        line-height: 1.6;
+        line-height: 1.7;
     }
 
     .quiz-card {
@@ -52,6 +56,11 @@
         font-weight: 600;
     }
 
+    .status-completed {
+        background: #dcfce7;
+        color: #166534;
+    }
+
     .question-box {
         border: 1px solid #e5e7eb;
         border-radius: 12px;
@@ -64,7 +73,7 @@
         margin: 0 0 14px 0;
         color: #111827;
         font-size: 18px;
-        line-height: 1.5;
+        line-height: 1.6;
     }
 
     .option {
@@ -107,11 +116,13 @@
         font-weight: 700;
         display: inline-block;
         transition: 0.3s ease;
+        border: none;
     }
 
     .btn-submit {
         background: #ea580c;
         color: white !important;
+        cursor: pointer;
     }
 
     .btn-submit:hover {
@@ -125,6 +136,15 @@
 
     .btn-back:hover {
         background: #d1d5db;
+    }
+
+    .btn-success {
+        background: #16a34a;
+        color: white !important;
+    }
+
+    .btn-success:hover {
+        background: #15803d;
     }
 
     .empty-quiz {
@@ -145,6 +165,18 @@
         padding: 16px;
         border-radius: 12px;
         font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .completed-box {
+        margin-top: 22px;
+        background: #ecfdf5;
+        border: 1px solid #86efac;
+        color: #166534;
+        padding: 16px 18px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
         line-height: 1.6;
     }
 
@@ -155,78 +187,104 @@
     }
 </style>
 
-<div class="quiz-header">
-    <h2>{{ module.title }} 📝</h2>
-    <p>Answer the quiz questions and complete this learning step.</p>
-</div>
+<div class="quiz-page">
 
-<div class="section">
-    <div class="quiz-card">
-        <div class="quiz-meta">
-            <span class="quiz-badge">Course: {{ course.title }}</span>
-            <span class="quiz-badge">Section: {{ section.title }}</span>
-            <span class="quiz-badge">Status: Available</span>
-        </div>
+    <div class="quiz-header">
+        <h2>{{ module.title }} 📝</h2>
+        <p>Answer the quiz questions and complete this learning step.</p>
+    </div>
 
-        {% if questions %}
-            <form method="post">
-                {% csrf_token %}
+    <div class="section">
+        <div class="quiz-card">
+            <div class="quiz-meta">
+                <span class="quiz-badge">Course: {{ course.title }}</span>
+                <span class="quiz-badge">Section: {{ section.title }}</span>
 
-                {% for question in questions %}
-                    <div class="question-box">
-                        <h4>{{ forloop.counter }}. {{ question.question }}</h4>
+                {% if is_completed %}
+                    <span class="quiz-badge status-completed">Completed</span>
+                {% else %}
+                    <span class="quiz-badge">Available</span>
+                {% endif %}
+            </div>
 
-                        {% if question.quiz_type == "mcq" %}
-                            {% if question.options %}
-                                {% for option in question.options.splitlines %}
-                                    <div class="option">
-                                        <label>
-                                            <input type="radio" name="question_{{ question.id }}" value="{{ option }}">
-                                            <span>{{ option }}</span>
-                                        </label>
-                                    </div>
-                                {% endfor %}
+            {% if questions %}
+                {% if is_completed %}
+                    <div class="completed-box">
+                        ✅ This quiz module has already been completed.
+                    </div>
+                {% endif %}
+
+                <form id="quizForm" method="post" action="{% url 'student:mark_module_complete' module.id %}?next={% url 'student:take_quiz' module.id %}">
+                    {% csrf_token %}
+
+                    {% for question in questions %}
+                        <div class="question-box">
+                            <h4>{{ forloop.counter }}. {{ question.question }}</h4>
+
+                            {% if question.quiz_type == "mcq" %}
+                                {% if question.options %}
+                                    {% for option in question.options.splitlines %}
+                                        <div class="option">
+                                            <label>
+                                                <input type="radio" name="question_{{ question.id }}" value="{{ option }}" {% if is_completed %}disabled{% endif %}>
+                                                <span>{{ option }}</span>
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="option">No options available for this MCQ.</div>
+                                {% endif %}
+                            {% elif question.quiz_type == "true_false" %}
+                                <div class="tf-answer">
+                                    <label>
+                                        <input type="radio" name="question_{{ question.id }}" value="True" {% if is_completed %}disabled{% endif %}>
+                                        True
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="question_{{ question.id }}" value="False" {% if is_completed %}disabled{% endif %}>
+                                        False
+                                    </label>
+                                </div>
                             {% else %}
-                                <div class="option">No options available for this MCQ.</div>
+                                <div class="option">Question type not supported.</div>
                             {% endif %}
-                        {% elif question.quiz_type == "true_false" %}
-                            <div class="tf-answer">
-                                <label>
-                                    <input type="radio" name="question_{{ question.id }}" value="True">
-                                    True
-                                </label>
-                                <label>
-                                    <input type="radio" name="question_{{ question.id }}" value="False">
-                                    False
-                                </label>
-                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <div class="quiz-actions">
+                        <a href="{% url 'student:course_detail' course.id %}" class="quiz-btn btn-back">← Back to Course</a>
+
+                        {% if not is_completed %}
+                            <button type="submit" class="quiz-btn btn-submit">
+                                Submit Quiz
+                            </button>
                         {% else %}
-                            <div class="option">Question type not supported.</div>
+                            <span class="quiz-btn btn-success">Completed</span>
                         {% endif %}
                     </div>
-                {% endfor %}
+                </form>
+
+                {% if not is_completed %}
+                    <div class="info-note">
+                        After selecting answers and clicking <strong>Submit Quiz</strong>, this quiz module will be marked as completed.
+                    </div>
+                {% else %}
+                    <div class="info-note">
+                        Quiz submission is finished for this module.
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-quiz">
+                    No quiz questions are available for this module yet.
+                </div>
 
                 <div class="quiz-actions">
-                    <button type="submit" class="quiz-btn btn-submit" style="border:none; cursor:pointer;">
-                        Submit Quiz
-                    </button>
                     <a href="{% url 'student:course_detail' course.id %}" class="quiz-btn btn-back">← Back to Course</a>
                 </div>
-            </form>
-
-            <div class="info-note">
-                This page is now showing the real quiz questions from your database. The next step after this is to process answers and calculate score.
-            </div>
-        {% else %}
-            <div class="empty-quiz">
-                No quiz questions are available for this module yet.
-            </div>
-
-            <div class="quiz-actions">
-                <a href="{% url 'student:course_detail' course.id %}" class="quiz-btn btn-back">← Back to Course</a>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
+
 </div>
 
 {% endblock %}

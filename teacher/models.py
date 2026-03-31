@@ -18,7 +18,8 @@ class Category(models.Model):
 
     moodle_category_id = models.IntegerField(
         null=True,
-        blank=True
+        blank=True,
+        db_index=True
     )
 
     created_at = models.DateTimeField(
@@ -96,7 +97,8 @@ class Course(models.Model):
 
     moodle_course_id = models.IntegerField(
         null=True,
-        blank=True
+        blank=True,
+        db_index=True
     )
 
     created_at = models.DateTimeField(
@@ -111,8 +113,14 @@ class Course(models.Model):
         ordering = ["-created_at"]
 
     def save(self, *args, **kwargs):
-        if not self.short_name:
+        if self.title:
+            self.title = self.title.strip()
+
+        if self.short_name:
+            self.short_name = self.short_name.strip()
+        elif self.title:
             self.short_name = self.title.replace(" ", "_")
+
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -146,7 +154,8 @@ class Section(models.Model):
 
     moodle_section_id = models.IntegerField(
         null=True,
-        blank=True
+        blank=True,
+        db_index=True
     )
 
     moodle_section_number = models.PositiveIntegerField(

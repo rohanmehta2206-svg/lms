@@ -11,6 +11,11 @@ from .models import Course, Section, Module, QuizQuestion
 from .forms import CourseForm
 from django.views.decorators.clickjacking import xframe_options_exempt
 
+from .moodle_api import (
+    create_moodle_course,
+    sync_django_category_with_moodle,
+)
+
 # ==========================================
 # MOODLE API CONFIG
 # ==========================================
@@ -28,21 +33,39 @@ MOODLE_AUTO_ENROLL_ROLE_ID = 3
 # ==========================================
 
 def create_course_in_moodle(course):
-    data = {
-        "wstoken": MOODLE_TOKEN,
-        "wsfunction": "core_course_create_courses",
-        "moodlewsrestformat": "json",
-        "courses[0][fullname]": course.title,
-        "courses[0][shortname]": course.short_name,
-        "courses[0][categoryid]": course.category.moodle_category_id,
-        "courses[0][format]": "topics",
-        "courses[0][numsections]": course.number_of_sections,
-    }
+    """
+    Safe wrapper:
+    - validates or repairs Moodle category mapping
+    - creates course in Moodle using the safe helper from moodle_api.py
+    """
+    resolved_category_id, category_error = sync_django_category_with_moodle(course.category)
 
-    response = requests.post(MOODLE_URL, data=data)
-    result = response.json()
-    print("🎯 Create Course:", result)
-    return result
+    if category_error:
+        return {
+            "success": False,
+            "error": f"Category sync failed: {category_error}"
+        }
+
+    result_course_id, error = create_moodle_course(
+        course_name=course.title,
+        short_name=course.short_name,
+        category_id=resolved_category_id,
+        summary=getattr(course, "description", "") or "",
+        visible=1 if getattr(course, "is_published", True) else 0,
+        sections=getattr(course, "number_of_sections", 10) or 10,
+        category_name=course.category.name,
+        category_parent_id=None,
+    )
+
+    if error:
+        return {
+            "success": False,
+            "error": error
+        }
+
+    return [{
+        "id": result_course_id
+    }]
 
 
 def enroll_user_in_moodle_course(course_id, user_id, role_id):
@@ -199,8 +222,6 @@ def send_theory_to_moodle(course_id, section_number, title, content):
             "error": str(e)
         }
 
-
-import json
 
 def send_quiz_to_moodle(course_id, section_number, title, quiz_rows):
     """
@@ -393,12 +414,19 @@ def create_course(request):
 
         if course_form.is_valid():
             course = course_form.save(commit=False)
-            course.save()
+            selected_category = course.category
 
-            if not course.category or not course.category.moodle_category_id:
-                course.delete()
-                messages.error(request, "Please choose a Moodle-connected category.")
-                return redirect("teacher:course_list")
+            if not selected_category:
+                messages.error(request, "Please choose a category.")
+                return render(request, "teacher/create_course.html", {"course_form": course_form})
+
+            resolved_category_id, category_error = sync_django_category_with_moodle(selected_category)
+
+            if category_error:
+                messages.error(request, f"Category sync failed: {category_error}")
+                return render(request, "teacher/create_course.html", {"course_form": course_form})
+
+            course.save()
 
             for i in range(1, course.number_of_sections + 1):
                 Section.objects.create(
@@ -414,6 +442,11 @@ def create_course(request):
                 moodle_id = moodle_course[0]["id"]
 
                 course.moodle_course_id = moodle_id
+
+                if course.category.moodle_category_id != resolved_category_id:
+                    course.category.moodle_category_id = resolved_category_id
+                    course.category.save(update_fields=["moodle_category_id"])
+
                 course.save()
 
                 enroll_result = enroll_user_in_moodle_course(
@@ -475,7 +508,15 @@ def create_course(request):
                 return redirect("teacher:course_detail", course_id=course.id)
 
             course.delete()
-            messages.error(request, "Moodle course creation failed.")
+
+            if isinstance(moodle_course, dict):
+                messages.error(
+                    request,
+                    moodle_course.get("error", "Moodle course creation failed.")
+                )
+            else:
+                messages.error(request, "Moodle course creation failed.")
+
             return render(request, "teacher/create_course.html", {"course_form": course_form})
 
     else:

@@ -65,6 +65,27 @@ def get_course_progress_data(user, course, sections):
 
 
 # =====================================
+# HELPER: MARK SINGLE MODULE COMPLETED
+# =====================================
+def complete_module_for_user(user, module):
+    progress_obj, created = StudentModuleProgress.objects.get_or_create(
+        student=user,
+        module=module,
+        defaults={
+            "is_completed": True,
+            "completed_at": timezone.now()
+        }
+    )
+
+    if not created and not progress_obj.is_completed:
+        progress_obj.is_completed = True
+        progress_obj.completed_at = timezone.now()
+        progress_obj.save()
+
+    return progress_obj
+
+
+# =====================================
 # DASHBOARD
 # =====================================
 @login_required
@@ -183,6 +204,12 @@ def read_theory(request, module_id):
 def take_quiz(request, module_id):
     module = get_object_or_404(Module, id=module_id, type='quiz')
 
+    if request.method == "POST":
+        # For now, submitting the quiz marks this quiz module as completed.
+        # Real score calculation can be added later.
+        complete_module_for_user(request.user, module)
+        return redirect('student:take_quiz', module_id=module.id)
+
     is_completed = StudentModuleProgress.objects.filter(
         student=request.user,
         module=module,
@@ -231,19 +258,11 @@ def material_page(request, module_id):
 def mark_module_complete(request, module_id):
     module = get_object_or_404(Module, id=module_id)
 
-    progress_obj, created = StudentModuleProgress.objects.get_or_create(
-        student=request.user,
-        module=module,
-        defaults={
-            "is_completed": True,
-            "completed_at": timezone.now()
-        }
-    )
+    # Quiz should be completed only through quiz submit, not direct button
+    if module.type == 'quiz':
+        return redirect('student:take_quiz', module_id=module.id)
 
-    if not created and not progress_obj.is_completed:
-        progress_obj.is_completed = True
-        progress_obj.completed_at = timezone.now()
-        progress_obj.save()
+    complete_module_for_user(request.user, module)
 
     next_url = request.GET.get("next")
 

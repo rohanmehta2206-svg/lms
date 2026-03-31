@@ -134,6 +134,70 @@
         color: #111827;
     }
 
+    .watch-progress-box {
+        margin-top: 24px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 18px;
+    }
+
+    .watch-progress-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+
+    .watch-progress-label {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .watch-progress-value {
+        font-size: 14px;
+        font-weight: 700;
+        color: #2563eb;
+    }
+
+    .watch-progress-bar-bg {
+        width: 100%;
+        height: 12px;
+        background: #e5e7eb;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .watch-progress-bar-fill {
+        width: 0%;
+        height: 12px;
+        background: linear-gradient(90deg, #2563eb, #1d4ed8);
+        border-radius: 999px;
+        transition: width 0.2s ease;
+    }
+
+    .watch-note {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #6b7280;
+        line-height: 1.6;
+    }
+
+    .unlock-note {
+        margin-top: 12px;
+        display: none;
+        background: #ecfdf5;
+        border: 1px solid #86efac;
+        color: #166534;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
     .action-row {
         margin-top: 25px;
         display: flex;
@@ -149,6 +213,7 @@
         display: inline-block;
         transition: 0.3s ease;
         font-size: 14px;
+        border: none;
     }
 
     .btn-primary {
@@ -176,6 +241,13 @@
 
     .btn-success:hover {
         background: #15803d;
+    }
+
+    .btn-disabled {
+        background: #cbd5e1 !important;
+        color: #64748b !important;
+        cursor: not-allowed;
+        pointer-events: none;
     }
 
     .empty-video {
@@ -225,7 +297,7 @@
 
     <div class="lesson-hero">
         <h1>{{ module.title }} 🎥</h1>
-        <p>Watch the lesson carefully and continue through the course in a guided learning flow.</p>
+        <p>Watch the lesson carefully. After you complete 90% of the video, the completion button will be enabled.</p>
     </div>
 
     <div class="lesson-card">
@@ -281,17 +353,41 @@
                         {% if is_completed %}
                             Completed
                         {% else %}
-                            Available
+                            In Progress
                         {% endif %}
                     </div>
                 </div>
             </div>
 
+            {% if not is_completed and mpd_url %}
+            <div class="watch-progress-box">
+                <div class="watch-progress-top">
+                    <div class="watch-progress-label">Video Watch Progress</div>
+                    <div class="watch-progress-value" id="watchPercentText">0%</div>
+                </div>
+
+                <div class="watch-progress-bar-bg">
+                    <div class="watch-progress-bar-fill" id="watchProgressBar"></div>
+                </div>
+
+                <div class="watch-note">
+                    Watch at least <strong>90%</strong> of the video to enable the completion button.
+                </div>
+
+                <div class="unlock-note" id="unlockNote">
+                    ✅ You have watched 90% of the video. You can now mark this module as completed.
+                </div>
+            </div>
+            {% endif %}
+
             <div class="action-row">
                 <a href="{% url 'student:course_detail' course.id %}" class="action-btn btn-secondary">← Back to Course</a>
 
                 {% if not is_completed %}
-                    <a href="{% url 'student:mark_module_complete' module.id %}?next={% url 'student:play_video' module.id %}" class="action-btn btn-primary">
+                    <a
+                        href="{% url 'student:mark_module_complete' module.id %}?next={% url 'student:play_video' module.id %}"
+                        id="completeBtn"
+                        class="action-btn btn-primary {% if mpd_url %}btn-disabled{% endif %}">
                         Mark as Completed
                     </a>
                 {% else %}
@@ -309,10 +405,54 @@
     document.addEventListener("DOMContentLoaded", function () {
         const mpdUrl = "{{ mpd_url|escapejs }}";
         const video = document.getElementById("videoPlayer");
+        const completeBtn = document.getElementById("completeBtn");
+        const watchPercentText = document.getElementById("watchPercentText");
+        const watchProgressBar = document.getElementById("watchProgressBar");
+        const unlockNote = document.getElementById("unlockNote");
 
         if (video && mpdUrl) {
             const player = dashjs.MediaPlayer().create();
             player.initialize(video, mpdUrl, true);
+
+            let highestPercent = 0;
+            let unlocked = false;
+
+            function updateWatchProgress() {
+                if (!video.duration || isNaN(video.duration) || video.duration <= 0) {
+                    return;
+                }
+
+                const currentPercent = Math.min((video.currentTime / video.duration) * 100, 100);
+
+                if (currentPercent > highestPercent) {
+                    highestPercent = currentPercent;
+                }
+
+                const roundedPercent = Math.floor(highestPercent);
+
+                if (watchPercentText) {
+                    watchPercentText.textContent = roundedPercent + "%";
+                }
+
+                if (watchProgressBar) {
+                    watchProgressBar.style.width = roundedPercent + "%";
+                }
+
+                if (highestPercent >= 90 && !unlocked) {
+                    unlocked = true;
+
+                    if (completeBtn) {
+                        completeBtn.classList.remove("btn-disabled");
+                    }
+
+                    if (unlockNote) {
+                        unlockNote.style.display = "block";
+                    }
+                }
+            }
+
+            video.addEventListener("timeupdate", updateWatchProgress);
+            video.addEventListener("ended", updateWatchProgress);
         }
     });
 </script>

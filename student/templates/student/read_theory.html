@@ -5,18 +5,22 @@
 {% block content %}
 
 <style>
+    .theory-page {
+        width: 100%;
+    }
+
     .theory-header {
         background: linear-gradient(135deg, #2563eb, #1e40af);
         color: white;
-        padding: 28px 32px;
+        padding: 30px 34px;
         border-radius: 18px;
-        margin-bottom: 28px;
+        margin-bottom: 26px;
         box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
     }
 
     .theory-header h2 {
         margin: 0 0 8px 0;
-        font-size: 32px;
+        font-size: 34px;
         font-weight: 700;
         color: white;
     }
@@ -25,7 +29,7 @@
         margin: 0;
         font-size: 15px;
         color: rgba(255,255,255,0.95);
-        line-height: 1.6;
+        line-height: 1.7;
     }
 
     .content-card {
@@ -50,6 +54,11 @@
         border-radius: 20px;
         font-size: 13px;
         font-weight: 600;
+    }
+
+    .status-completed {
+        background: #dcfce7;
+        color: #166534;
     }
 
     .theory-text h3 {
@@ -77,6 +86,29 @@
         padding: 18px;
         border-radius: 12px;
         font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .read-note {
+        margin-top: 22px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        color: #475569;
+        padding: 16px 18px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .completed-box {
+        margin-top: 22px;
+        background: #ecfdf5;
+        border: 1px solid #86efac;
+        color: #166534;
+        padding: 16px 18px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
         line-height: 1.6;
     }
 
@@ -115,6 +147,15 @@
         background: #d1d5db;
     }
 
+    .btn-success {
+        background: #16a34a;
+        color: white !important;
+    }
+
+    .btn-success:hover {
+        background: #15803d;
+    }
+
     @media (max-width: 768px) {
         .theory-header h2 {
             font-size: 28px;
@@ -126,38 +167,64 @@
     }
 </style>
 
-<div class="theory-header">
-    <h2>{{ module.title }} 📘</h2>
-    <p>Read the theory carefully and continue your learning step by step.</p>
-</div>
+<div class="theory-page">
 
-<div class="section">
-    <div class="content-card">
-        <div class="meta-info">
-            <span class="meta-badge">Course: {{ course.title }}</span>
-            <span class="meta-badge">Section: {{ section.title }}</span>
-            <span class="meta-badge">Status: Available</span>
-        </div>
+    <div class="theory-header">
+        <h2>{{ module.title }} 📘</h2>
+        <p>Read the theory content carefully and mark it as read when you finish.</p>
+    </div>
 
-        <div class="theory-text">
-            <h3>{{ module.title }}</h3>
+    <div class="section">
+        <div class="content-card">
+            <div class="meta-info">
+                <span class="meta-badge">Course: {{ course.title }}</span>
+                <span class="meta-badge">Section: {{ section.title }}</span>
 
-            {% if module.theory %}
-                <div class="theory-content">
-                    {{ module.theory|linebreaks }}
+                {% if is_completed %}
+                    <span class="meta-badge status-completed">Completed</span>
+                {% else %}
+                    <span class="meta-badge">Available</span>
+                {% endif %}
+            </div>
+
+            <div class="theory-text">
+                <h3>{{ module.title }}</h3>
+
+                {% if module.theory %}
+                    <div class="theory-content">
+                        {{ module.theory|linebreaks }}
+                    </div>
+                {% else %}
+                    <div class="empty-theory">
+                        Theory content is not available for this module yet.
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if is_completed %}
+                <div class="completed-box">
+                    ✅ This theory module has already been marked as read.
                 </div>
             {% else %}
-                <div class="empty-theory">
-                    Theory content is not available for this module yet.
+                <div class="read-note">
+                    After reading the content, click <strong>Mark as Read</strong> to complete this theory module.
                 </div>
             {% endif %}
-        </div>
 
-        <div class="action-row">
-            <a href="#" class="action-btn btn-complete">Mark as Completed</a>
-            <a href="{% url 'student:course_detail' course.id %}" class="action-btn btn-back">← Back to Course</a>
+            <div class="action-row">
+                <a href="{% url 'student:course_detail' course.id %}" class="action-btn btn-back">← Back to Course</a>
+
+                {% if not is_completed %}
+                    <a href="{% url 'student:mark_module_complete' module.id %}?next={% url 'student:read_theory' module.id %}" class="action-btn btn-complete">
+                        Mark as Read
+                    </a>
+                {% else %}
+                    <span class="action-btn btn-success">Completed</span>
+                {% endif %}
+            </div>
         </div>
     </div>
+
 </div>
 
 {% endblock %}

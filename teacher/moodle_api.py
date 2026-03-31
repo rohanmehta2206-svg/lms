@@ -84,6 +84,122 @@ def call_moodle_api(function_name, params=None, timeout=DEFAULT_TIMEOUT):
 
 
 # ========================================
+# MOODLE CATEGORY HELPERS
+# ========================================
+
+def get_moodle_categories():
+    result = call_moodle_api("core_course_get_categories", {})
+    if result["success"] and isinstance(result["data"], list):
+        return result["data"], None
+    return [], result.get("error", "Could not fetch Moodle categories")
+
+
+def get_moodle_category_by_id(category_id):
+    if not category_id:
+        return None, "No Moodle category id provided"
+
+    categories, error = get_moodle_categories()
+    if error:
+        return None, error
+
+    for category in categories:
+        try:
+            if int(category.get("id")) == int(category_id):
+                return category, None
+        except (TypeError, ValueError):
+            continue
+
+    return None, f"Moodle category id {category_id} not found"
+
+
+def find_moodle_category_by_name(category_name, parent_id=None):
+    if not category_name:
+        return None, "No category name provided"
+
+    categories, error = get_moodle_categories()
+    if error:
+        return None, error
+
+    normalized_name = category_name.strip().lower()
+
+    exact_matches = []
+    for category in categories:
+        moodle_name = str(category.get("name", "")).strip().lower()
+        if moodle_name == normalized_name:
+            exact_matches.append(category)
+
+    if not exact_matches:
+        return None, f"Moodle category '{category_name}' not found by name"
+
+    if parent_id is not None:
+        for category in exact_matches:
+            try:
+                if int(category.get("parent", 0)) == int(parent_id):
+                    return category, None
+            except (TypeError, ValueError):
+                continue
+
+    return exact_matches[0], None
+
+
+def ensure_moodle_category(category_id=None, category_name=None, parent_id=None):
+    """
+    Safe category resolver:
+    1. Try existing category_id
+    2. If invalid, try finding by name
+    3. If still not found and category_name exists, create it
+    """
+    if category_id:
+        category, error = get_moodle_category_by_id(category_id)
+        if category:
+            return category.get("id"), None
+        print("Invalid Moodle category id:", category_id, "|", error)
+
+    if category_name:
+        category, error = find_moodle_category_by_name(category_name, parent_id=parent_id)
+        if category:
+            return category.get("id"), None
+        print("Category not found by name:", category_name, "|", error)
+
+        params = {
+            "categories[0][name]": category_name,
+            "categories[0][parent]": parent_id or 0
+        }
+        result = call_moodle_api("core_course_create_categories", params)
+
+        if result["success"] and isinstance(result["data"], list) and result["data"]:
+            new_id = result["data"][0].get("id")
+            return new_id, None
+
+        return None, result.get("error", f"Could not create Moodle category '{category_name}'")
+
+    return None, "Could not resolve Moodle category"
+
+
+def sync_django_category_with_moodle(django_category):
+    """
+    Repairs Django category mapping safely.
+    """
+    if django_category is None:
+        return None, "Django category object is required"
+
+    resolved_id, error = ensure_moodle_category(
+        category_id=getattr(django_category, "moodle_category_id", None),
+        category_name=getattr(django_category, "name", None),
+        parent_id=None
+    )
+
+    if error:
+        return None, error
+
+    if getattr(django_category, "moodle_category_id", None) != resolved_id:
+        django_category.moodle_category_id = resolved_id
+        django_category.save(update_fields=["moodle_category_id"])
+
+    return resolved_id, None
+
+
+# ========================================
 # CREATE MOODLE COURSE
 # ========================================
 
@@ -94,11 +210,22 @@ def create_moodle_course(
     summary="",
     visible=1,
     sections=10,
+    category_name=None,
+    category_parent_id=None,
 ):
+    resolved_category_id, category_error = ensure_moodle_category(
+        category_id=category_id,
+        category_name=category_name,
+        parent_id=category_parent_id
+    )
+
+    if category_error:
+        return None, f"Category validation failed: {category_error}"
+
     params = {
         "courses[0][fullname]": course_name,
         "courses[0][shortname]": short_name,
-        "courses[0][categoryid]": category_id,
+        "courses[0][categoryid]": resolved_category_id,
         "courses[0][summary]": summary,
         "courses[0][visible]": visible,
         "courses[0][numsections]": sections,
@@ -106,10 +233,11 @@ def create_moodle_course(
 
     result = call_moodle_api("core_course_create_courses", params)
 
-    if result["success"] and isinstance(result["data"], list):
+    if result["success"] and isinstance(result["data"], list) and result["data"]:
         return result["data"][0].get("id"), None
 
-    return None, result.get("error", "Course creation failed")
+    moodle_error = result.get("error", "Course creation failed")
+    return None, f"Course creation failed in Moodle: {moodle_error}"
 
 
 # ========================================
@@ -389,6 +517,10 @@ def upload_thumbnail_via_plugin(course_id, image_url):
 # ========================================
 
 def create_teacher_parent_category(teacher_name):
+    existing_category, _ = find_moodle_category_by_name(teacher_name, parent_id=0)
+    if existing_category:
+        return existing_category.get("id"), None
+
     params = {
         "categories[0][name]": teacher_name,
         "categories[0][parent]": 0
@@ -396,7 +528,7 @@ def create_teacher_parent_category(teacher_name):
 
     result = call_moodle_api("core_course_create_categories", params)
 
-    if result["success"] and isinstance(result["data"], list):
+    if result["success"] and isinstance(result["data"], list) and result["data"]:
         return result["data"][0].get("id"), None
 
     return None, result.get("error", "Parent category creation failed")
@@ -428,24 +560,24 @@ def create_default_child_categories(parent_id):
     created_items = []
 
     for position, category_name in enumerate(default_categories, start=1):
-        params = {
-            "categories[0][name]": category_name,
-            "categories[0][parent]": parent_id
-        }
+        moodle_id, error = ensure_moodle_category(
+            category_id=None,
+            category_name=category_name,
+            parent_id=parent_id
+        )
 
-        result = call_moodle_api("core_course_create_categories", params)
+        if error:
+            print(f"Could not create/sync category '{category_name}': {error}")
+            continue
 
-        if result["success"] and isinstance(result["data"], list):
-            moodle_id = result["data"][0].get("id")
-
-            category, _ = Category.objects.update_or_create(
-                name=category_name,
-                defaults={
-                    "position": position,
-                    "moodle_category_id": moodle_id
-                }
-            )
-            created_items.append(category)
+        category, _ = Category.objects.update_or_create(
+            name=category_name,
+            defaults={
+                "position": position,
+                "moodle_category_id": moodle_id
+            }
+        )
+        created_items.append(category)
 
     return created_items
 
