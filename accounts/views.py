@@ -11,6 +11,8 @@ from teacher.moodle_api import (
     create_default_child_categories
 )
 
+from student.models import Student
+
 
 # =====================================
 # HOME PAGE
@@ -96,7 +98,7 @@ def register_view(request):
             # CREATE MOODLE USER
             # =====================================
             try:
-                moodle_user_id = create_moodle_user(
+                moodle_user_id, moodle_error = create_moodle_user(
                     username=username,
                     password=password,
                     firstname=firstname,
@@ -105,9 +107,10 @@ def register_view(request):
                 )
 
                 if not moodle_user_id:
+                    print("Moodle user creation failed:", moodle_error)
                     messages.error(
                         request,
-                        "Moodle user creation failed. Please try again."
+                        f"Moodle user creation failed: {moodle_error or 'Please try again.'}"
                     )
                     user.delete()
                     return redirect("accounts:register")
@@ -130,18 +133,41 @@ def register_view(request):
                 return redirect("accounts:register")
 
             # =====================================
+            # CREATE STUDENT PROFILE ONLY
+            # =====================================
+            if is_student:
+                try:
+                    Student.objects.update_or_create(
+                        user=user,
+                        defaults={
+                            "username": username,
+                            "email": email,
+                            "password": password,
+                            "moodle_user_id": moodle_user_id,
+                        }
+                    )
+                    print("Student profile created successfully.")
+                except Exception as e:
+                    print("Student profile creation error:", e)
+                    user.delete()
+                    messages.error(request, "Student profile creation failed.")
+                    return redirect("accounts:register")
+
+            # =====================================
             # CREATE TEACHER CATEGORY ONLY
             # =====================================
             if not is_student:
                 try:
                     print("Creating teacher parent category...")
 
-                    parent_category_id = create_teacher_parent_category(username)
+                    parent_category_id, category_error = create_teacher_parent_category(username)
 
                     print("Parent category ID:", parent_category_id)
 
                     if parent_category_id:
                         create_default_child_categories(parent_category_id)
+                    else:
+                        print("Teacher category creation failed:", category_error)
 
                 except Exception as e:
                     print("Category creation error:", e)

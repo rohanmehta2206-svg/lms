@@ -15,6 +15,7 @@ MOODLE_UPLOAD_URL = f"{MOODLE_BASE_URL}/webservice/upload.php"
 
 MOODLE_ADMIN_ID = getattr(settings, "MOODLE_ADMIN_ID", 2)
 MOODLE_TEACHER_ROLE = getattr(settings, "MOODLE_TEACHER_ROLE", 3)
+MOODLE_STUDENT_ROLE = getattr(settings, "MOODLE_STUDENT_ROLE", 5)
 
 DEFAULT_TIMEOUT = 30
 
@@ -272,7 +273,49 @@ def update_moodle_course(course_id, fullname=None, shortname=None, category_id=N
 # ENROLL USER INTO COURSE
 # ========================================
 
+def is_user_enrolled_in_moodle_course(user_id, course_id):
+    """
+    Checks whether a Moodle user is already enrolled in a Moodle course.
+    Useful when enrol_manual_enrol_users returns a message error
+    but the actual enrollment may still be completed.
+    """
+    if not user_id or not course_id:
+        return False
+
+    params = {
+        "userid": user_id
+    }
+
+    result = call_moodle_api("core_enrol_get_users_courses", params)
+
+    if not result["success"]:
+        return False
+
+    data = result.get("data", [])
+    if not isinstance(data, list):
+        return False
+
+    for course in data:
+        try:
+            if int(course.get("id")) == int(course_id):
+                return True
+        except (TypeError, ValueError):
+            continue
+
+    return False
+
+
 def enroll_user_to_course(user_id, course_id, role_id=MOODLE_TEACHER_ROLE):
+    if not user_id:
+        return False, "Moodle user id is required"
+
+    if not course_id:
+        return False, "Moodle course id is required"
+
+    # If already enrolled, treat as success
+    if is_user_enrolled_in_moodle_course(user_id, course_id):
+        return True, None
+
     params = {
         "enrolments[0][roleid]": role_id,
         "enrolments[0][userid]": user_id,
@@ -284,7 +327,20 @@ def enroll_user_to_course(user_id, course_id, role_id=MOODLE_TEACHER_ROLE):
     if result["success"]:
         return True, None
 
-    return False, result.get("error", "Enrollment failed")
+    error_message = result.get("error", "Enrollment failed")
+
+    # Special Moodle case:
+    # enrollment may actually happen, but message sending fails
+    if "Message was not sent" in str(error_message):
+        if is_user_enrolled_in_moodle_course(user_id, course_id):
+            print("Enrollment completed in Moodle, but message sending failed. Treating as success.")
+            return True, None
+
+    # If Moodle says user is already enrolled in any form, also treat as success
+    if is_user_enrolled_in_moodle_course(user_id, course_id):
+        return True, None
+
+    return False, error_message
 
 
 def enroll_admin_to_course(course_id):
@@ -292,6 +348,24 @@ def enroll_admin_to_course(course_id):
         MOODLE_ADMIN_ID,
         course_id,
         MOODLE_TEACHER_ROLE
+    )
+
+
+def enroll_student_to_course(moodle_user_id, moodle_course_id, role_id=MOODLE_STUDENT_ROLE):
+    """
+    Enroll a real student into a real Moodle course.
+    This should be called when a student clicks Enroll in Django.
+    """
+    if not moodle_user_id:
+        return False, "Student Moodle user id is missing"
+
+    if not moodle_course_id:
+        return False, "Course Moodle course id is missing"
+
+    return enroll_user_to_course(
+        user_id=moodle_user_id,
+        course_id=moodle_course_id,
+        role_id=role_id
     )
 
 

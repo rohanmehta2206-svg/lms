@@ -12,7 +12,8 @@ urlpatterns = [
     # Enrollment
     path('enroll/<int:course_id>/', views.enroll_course, name='enroll_course'),
 
-    # Course detail
+    # Course preview + enrolled course detail
+    path('view-course/<int:course_id>/', views.view_course, name='view_course'),
     path('course-detail/<int:course_id>/', views.course_detail, name='course_detail'),
 
     # Dynamic module pages

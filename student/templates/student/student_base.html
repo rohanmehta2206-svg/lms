@@ -73,6 +73,47 @@
             padding: 40px 80px;
         }
 
+        /* DJANGO MESSAGES */
+        .messages-wrap {
+            margin-bottom: 24px;
+        }
+
+        .message-box {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            border: 1px solid transparent;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+        }
+
+        .message-success {
+            background: #ecfdf5;
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .message-error {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+
+        .message-warning {
+            background: #fffbeb;
+            color: #92400e;
+            border-color: #fcd34d;
+        }
+
+        .message-info {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: #93c5fd;
+        }
+
         /* DEFAULT COMPONENTS */
         .welcome {
             background: linear-gradient(to right, #2563eb, #1e40af);
@@ -173,6 +214,27 @@
 
     <!-- CONTENT -->
     <div class="container">
+
+        {% if messages %}
+            <div class="messages-wrap">
+                {% for message in messages %}
+                    <div class="message-box
+                        {% if message.tags == 'success' %}
+                            message-success
+                        {% elif message.tags == 'error' %}
+                            message-error
+                        {% elif message.tags == 'warning' %}
+                            message-warning
+                        {% else %}
+                            message-info
+                        {% endif %}
+                    ">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         {% block content %}
         {% endblock %}
     </div>

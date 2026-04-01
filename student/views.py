@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.contrib import messages
 
 from teacher.models import Course, Section, Module
+from teacher.moodle_api import enroll_student_to_course
 from .models import Enrollment, StudentModuleProgress, QuizAttempt
 
 
@@ -286,6 +287,41 @@ def student_dashboard(request):
 def enroll_course(request, course_id):
     course = get_object_or_404(Course, id=course_id, is_published=True)
 
+    existing_enrollment = Enrollment.objects.filter(
+        student=request.user,
+        course=course,
+        is_active=True
+    ).first()
+
+    if existing_enrollment:
+        messages.info(request, "You are already enrolled in this course.")
+        return redirect("student:course_detail", course_id=course.id)
+
+    student_profile = getattr(request.user, "student_profile", None)
+    moodle_user_id = getattr(student_profile, "moodle_user_id", None)
+    moodle_course_id = getattr(course, "moodle_course_id", None)
+
+    if not student_profile:
+        messages.error(request, "Student profile not found.")
+        return redirect("student:my_courses")
+
+    if not moodle_user_id:
+        messages.error(request, "Your Moodle account is not linked yet. Please login again or contact admin.")
+        return redirect("student:my_courses")
+
+    if not moodle_course_id:
+        messages.error(request, "This course is not synced with Moodle yet.")
+        return redirect("student:my_courses")
+
+    moodle_ok, moodle_error = enroll_student_to_course(
+        moodle_user_id=moodle_user_id,
+        moodle_course_id=moodle_course_id
+    )
+
+    if not moodle_ok:
+        messages.error(request, f"Moodle enrollment failed: {moodle_error}")
+        return redirect("student:my_courses")
+
     enrollment, created = Enrollment.objects.get_or_create(
         student=request.user,
         course=course,
@@ -296,12 +332,29 @@ def enroll_course(request, course_id):
         enrollment.is_active = True
         enrollment.save(update_fields=["is_active"])
 
-    if created:
-        messages.success(request, "You have enrolled in this course successfully.")
-    else:
-        messages.info(request, "You are already enrolled in this course.")
-
+    messages.success(request, "You have enrolled in this course successfully.")
     return redirect("student:course_detail", course_id=course.id)
+
+
+# =====================================
+# VIEW COURSE PREVIEW
+# =====================================
+@login_required
+def view_course(request, course_id):
+    course = get_object_or_404(Course, id=course_id, is_published=True)
+    sections = list(Section.objects.filter(course=course).order_by('order'))
+
+    for section in sections:
+        section.modules_list = list(section.modules.all().order_by("order", "id"))
+
+    already_enrolled = is_student_enrolled(request.user, course)
+
+    context = {
+        'course': course,
+        'sections': sections,
+        'already_enrolled': already_enrolled,
+    }
+    return render(request, 'student/view_course.html', context)
 
 
 # =====================================

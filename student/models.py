@@ -4,13 +4,33 @@ from teacher.models import Course, Module
 
 
 class Student(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='student_profile',
+        null=True,
+        blank=True
+    )
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
     moodle_user_id = models.IntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if self.user:
+            if not self.username:
+                self.username = self.user.username
+            if not self.email:
+                self.email = self.user.email
+        super().save(*args, **kwargs)
+
     def __str__(self):
+        if self.user:
+            return f"{self.user.username} - Student"
         return self.username
 
 
@@ -54,6 +74,7 @@ class StudentModuleProgress(models.Model):
 
     class Meta:
         unique_together = ('student', 'module')
+        ordering = ['-created_at']
 
     def __str__(self):
         status = "Completed" if self.is_completed else "Pending"
