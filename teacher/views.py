@@ -150,6 +150,28 @@ def send_thumbnail_to_moodle(course_id, image_url):
         }
 
 
+def get_default_completion_payload():
+    """
+    Default completion settings for non-video modules.
+    These modules can still use view-based completion if needed.
+    """
+    return {
+        "completion": 2,
+        "completionview": 1,
+    }
+
+
+def get_video_completion_payload():
+    """
+    Video completion must be controlled by Django after 90% watch.
+    So Moodle should NOT auto-complete on activity view.
+    """
+    return {
+        "completion": 1,
+        "completionview": 0,
+    }
+
+
 def send_module_to_moodle(course_id, section_number, title, player_url):
     try:
         data = {
@@ -159,12 +181,15 @@ def send_module_to_moodle(course_id, section_number, title, player_url):
             "courseid": course_id,
             "sectionnumber": section_number,
             "name": title,
-            "video_url": player_url
+            "video_url": player_url,
         }
+
+        data.update(get_video_completion_payload())
 
         response = requests.post(MOODLE_URL, data=data)
 
         print("Module status code:", response.status_code)
+        print("Module payload:", data)
         print("Module raw response:", response.text[:500])
 
         try:
@@ -199,9 +224,12 @@ def send_theory_to_moodle(course_id, section_number, title, content):
             "contentformat": 1,
         }
 
+        data.update(get_default_completion_payload())
+
         response = requests.post(MOODLE_URL, data=data)
 
         print("Theory status code:", response.status_code)
+        print("Theory payload:", data)
         print("Theory raw response:", response.text[:500])
 
         try:
@@ -248,10 +276,12 @@ def send_quiz_to_moodle(course_id, section_number, title, quiz_rows):
             "questionsjson": json.dumps(cleaned_questions),
         }
 
+        data.update(get_default_completion_payload())
+
         response = requests.post(MOODLE_URL, data=data)
 
         print("Quiz status code:", response.status_code)
-        print("Quiz payload sent:", cleaned_questions)
+        print("Quiz payload sent:", data)
         print("Quiz raw response:", response.text[:1000])
 
         try:
@@ -286,9 +316,12 @@ def send_material_to_moodle(course_id, section_number, title, file_url, filename
             "filename": filename,
         }
 
+        data.update(get_default_completion_payload())
+
         response = requests.post(MOODLE_URL, data=data)
 
         print("Material status code:", response.status_code)
+        print("Material payload:", data)
         print("Material raw response:", response.text[:500])
 
         try:
@@ -324,6 +357,54 @@ def moodle_result_ok(result):
         return True
 
     return False
+
+
+def save_moodle_module_mapping(module, moodle_result):
+    """
+    Save Moodle ids returned from plugin/webservice into Django Module.
+    Safe and flexible for different response formats.
+    """
+    if not isinstance(moodle_result, dict):
+        return
+
+    changed_fields = []
+
+    moodle_cmid = (
+        moodle_result.get("cmid")
+        or moodle_result.get("coursemodule")
+        or moodle_result.get("coursemoduleid")
+    )
+
+    moodle_instance_id = (
+        moodle_result.get("instanceid")
+        or moodle_result.get("id")
+    )
+
+    moodle_module_id = (
+        moodle_result.get("moduleid")
+        or moodle_result.get("modid")
+    )
+
+    if moodle_cmid and module.moodle_cmid != moodle_cmid:
+        module.moodle_cmid = moodle_cmid
+        changed_fields.append("moodle_cmid")
+
+    if moodle_instance_id and module.moodle_instance_id != moodle_instance_id:
+        module.moodle_instance_id = moodle_instance_id
+        changed_fields.append("moodle_instance_id")
+
+    if moodle_module_id and module.moodle_module_id != moodle_module_id:
+        module.moodle_module_id = moodle_module_id
+        changed_fields.append("moodle_module_id")
+
+    if changed_fields:
+        module.save(update_fields=changed_fields)
+        print(
+            f"✅ Moodle mapping saved for module {module.id}: "
+            f"cmid={module.moodle_cmid}, "
+            f"instanceid={module.moodle_instance_id}, "
+            f"moduleid={module.moodle_module_id}"
+        )
 
 
 def normalize_quiz_rows(request):
@@ -671,15 +752,24 @@ def module_builder(request, section_id):
 
                 player_url = request.build_absolute_uri(f"/play-module/{module.id}/")
 
+                moodle_result = {"success": True}
+
                 if section.course.moodle_course_id and section.moodle_section_number is not None:
-                    send_module_to_moodle(
+                    moodle_result = send_module_to_moodle(
                         section.course.moodle_course_id,
                         section.moodle_section_number,
                         module.title,
                         player_url
                     )
+                    save_moodle_module_mapping(module, moodle_result)
 
-                messages.success(request, "Video uploaded successfully.")
+                if moodle_result_ok(moodle_result):
+                    messages.success(request, "Video uploaded successfully in Django and Moodle.")
+                else:
+                    messages.warning(
+                        request,
+                        f"Video saved in Django, but Moodle failed: {moodle_result.get('error', moodle_result)}"
+                    )
 
             # THEORY
             elif content_type == "theory":
@@ -695,6 +785,7 @@ def module_builder(request, section_id):
                         module.title,
                         module.theory
                     )
+                    save_moodle_module_mapping(module, moodle_result)
 
                 if moodle_result_ok(moodle_result):
                     messages.success(request, "Theory added successfully in Django and Moodle.")
@@ -731,6 +822,7 @@ def module_builder(request, section_id):
                         module.title,
                         quiz_rows
                     )
+                    save_moodle_module_mapping(module, moodle_result)
 
                 if moodle_result_ok(moodle_result):
                     messages.success(request, "Quiz added successfully in Django and Moodle.")
@@ -787,6 +879,7 @@ def module_builder(request, section_id):
                         file_url,
                         safe_filename
                     )
+                    save_moodle_module_mapping(module, moodle_result)
 
                 if moodle_result_ok(moodle_result):
                     messages.success(request, "Material added successfully in Django and Moodle.")

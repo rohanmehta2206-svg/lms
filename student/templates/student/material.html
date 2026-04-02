@@ -125,6 +125,17 @@
         line-height: 1.6;
     }
 
+    .flow-box {
+        margin-top: 18px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e3a8a;
+        padding: 16px 18px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
     .material-actions {
         display: flex;
         gap: 14px;
@@ -160,12 +171,12 @@
         background: #6d28d9;
     }
 
-    .btn-complete {
+    .btn-continue {
         background: #16a34a;
         color: white !important;
     }
 
-    .btn-complete:hover {
+    .btn-continue:hover {
         background: #15803d;
     }
 
@@ -202,7 +213,7 @@
 
     <div class="material-header">
         <h2>{{ module.title }} 📂</h2>
-        <p>Open or download the study material for this module and continue your learning.</p>
+        <p>Open or download the study material for this module and continue your learning flow.</p>
     </div>
 
     <div class="section">
@@ -210,6 +221,7 @@
             <div class="material-meta">
                 <span class="material-badge">Course: {{ course.title }}</span>
                 <span class="material-badge">Section: {{ section.title }}</span>
+                <span class="material-badge">Type: Material</span>
 
                 {% if is_completed %}
                     <span class="material-badge status-completed">Completed</span>
@@ -240,11 +252,15 @@
 
                     {% if is_completed %}
                         <div class="completed-box">
-                            ✅ This material module has already been marked as completed.
+                            ✅ This material module has already been completed successfully.
                         </div>
                     {% else %}
                         <div class="read-note">
-                            First open or download the file, then click <strong>Mark as Read</strong> to complete this material module.
+                            First open or download the file, then click <strong>Continue</strong> to complete this material module and move forward in the course flow.
+                        </div>
+
+                        <div class="flow-box">
+                            This action will mark the material module as completed in Django, and the system can also sync the completion status to Moodle when the student account is properly linked.
                         </div>
                     {% endif %}
 
@@ -254,8 +270,8 @@
                         <a href="{% url 'student:course_detail' course.id %}" class="material-btn btn-back">← Back to Course</a>
 
                         {% if not is_completed %}
-                            <a href="{% url 'student:mark_module_complete' module.id %}?next={% url 'student:material_page' module.id %}" class="material-btn btn-complete">
-                                Mark as Read
+                            <a href="{% url 'student:mark_module_complete' module.id %}?next={% url 'student:course_detail' course.id %}" class="material-btn btn-continue">
+                                Continue
                             </a>
                         {% else %}
                             <span class="material-btn btn-success">Completed</span>

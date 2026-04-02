@@ -312,7 +312,6 @@ def enroll_user_to_course(user_id, course_id, role_id=MOODLE_TEACHER_ROLE):
     if not course_id:
         return False, "Moodle course id is required"
 
-    # If already enrolled, treat as success
     if is_user_enrolled_in_moodle_course(user_id, course_id):
         return True, None
 
@@ -329,14 +328,11 @@ def enroll_user_to_course(user_id, course_id, role_id=MOODLE_TEACHER_ROLE):
 
     error_message = result.get("error", "Enrollment failed")
 
-    # Special Moodle case:
-    # enrollment may actually happen, but message sending fails
     if "Message was not sent" in str(error_message):
         if is_user_enrolled_in_moodle_course(user_id, course_id):
             print("Enrollment completed in Moodle, but message sending failed. Treating as success.")
             return True, None
 
-    # If Moodle says user is already enrolled in any form, also treat as success
     if is_user_enrolled_in_moodle_course(user_id, course_id):
         return True, None
 
@@ -367,6 +363,178 @@ def enroll_student_to_course(moodle_user_id, moodle_course_id, role_id=MOODLE_ST
         course_id=moodle_course_id,
         role_id=role_id
     )
+
+
+# ========================================
+# MOODLE COMPLETION HELPERS
+# ========================================
+
+def get_course_completion_status(moodle_course_id, moodle_user_id):
+    """
+    Returns Moodle course completion data for one user in one course.
+    """
+    if not moodle_course_id:
+        return False, "Moodle course id is required", None
+
+    if not moodle_user_id:
+        return False, "Moodle user id is required", None
+
+    params = {
+        "courseid": moodle_course_id,
+        "userid": moodle_user_id,
+    }
+
+    result = call_moodle_api("core_completion_get_course_completion_status", params)
+
+    if result["success"]:
+        return True, None, result.get("data")
+
+    return False, result.get("error", "Could not fetch Moodle course completion status"), None
+
+
+def get_activities_completion_status(moodle_course_id, moodle_user_id):
+    """
+    Returns all activity completion rows for one user in one course.
+    """
+    if not moodle_course_id:
+        return False, "Moodle course id is required", None
+
+    if not moodle_user_id:
+        return False, "Moodle user id is required", None
+
+    params = {
+        "courseid": moodle_course_id,
+        "userid": moodle_user_id,
+    }
+
+    result = call_moodle_api("core_completion_get_activities_completion_status", params)
+
+    if result["success"]:
+        return True, None, result.get("data")
+
+    return False, result.get("error", "Could not fetch Moodle activities completion status"), None
+
+
+def _is_missing_custom_completion_function(error_text):
+    text = str(error_text or "").lower()
+    markers = [
+        "function does not exist",
+        "access control exception",
+        "can not find data record in database table external_functions",
+        "servicenotavailable",
+        "invalidparameter",
+    ]
+    return any(marker in text for marker in markers)
+
+
+def mark_moodle_activity_complete(moodle_user_id, cmid):
+    """
+    Mark one Moodle activity complete for a specific student.
+
+    Preferred path:
+    - use custom Moodle function local_djangoapi_mark_activity_complete
+
+    Fallback path:
+    - old core API, only if custom function is not available yet
+    """
+    if not moodle_user_id:
+        return False, "Moodle user id is required"
+
+    if not cmid:
+        return False, "Moodle cmid is required"
+
+    custom_params = {
+        "userid": moodle_user_id,
+        "cmid": cmid,
+        "completed": 1,
+    }
+
+    custom_result = call_moodle_api("local_djangoapi_mark_activity_complete", custom_params)
+
+    if custom_result["success"]:
+        return True, "Moodle activity marked as completed successfully"
+
+    custom_error = custom_result.get("error", "Could not update Moodle activity completion")
+
+    if not _is_missing_custom_completion_function(custom_error):
+        return False, custom_error
+
+    fallback_params = {
+        "cmid": cmid,
+        "completed": 1,
+    }
+
+    fallback_result = call_moodle_api("core_completion_update_activity_completion_status_manually", fallback_params)
+
+    if fallback_result["success"]:
+        return True, "Moodle activity marked as completed successfully"
+
+    return False, fallback_result.get("error", "Could not update Moodle activity completion")
+
+
+def mark_moodle_activity_incomplete(moodle_user_id, cmid):
+    """
+    Mark one Moodle activity incomplete for a specific student.
+    """
+    if not moodle_user_id:
+        return False, "Moodle user id is required"
+
+    if not cmid:
+        return False, "Moodle cmid is required"
+
+    custom_params = {
+        "userid": moodle_user_id,
+        "cmid": cmid,
+        "completed": 0,
+    }
+
+    custom_result = call_moodle_api("local_djangoapi_mark_activity_complete", custom_params)
+
+    if custom_result["success"]:
+        return True, "Moodle activity marked as incomplete successfully"
+
+    custom_error = custom_result.get("error", "Could not update Moodle activity completion")
+
+    if not _is_missing_custom_completion_function(custom_error):
+        return False, custom_error
+
+    fallback_params = {
+        "cmid": cmid,
+        "completed": 0,
+    }
+
+    fallback_result = call_moodle_api("core_completion_update_activity_completion_status_manually", fallback_params)
+
+    if fallback_result["success"]:
+        return True, "Moodle activity marked as incomplete successfully"
+
+    return False, fallback_result.get("error", "Could not update Moodle activity completion")
+
+
+def get_single_activity_completion_state(moodle_course_id, moodle_user_id, cmid):
+    """
+    Checks whether one Moodle activity is complete by reading the course activity completion list.
+    """
+    ok, error, data = get_activities_completion_status(moodle_course_id, moodle_user_id)
+
+    if not ok:
+        return False, error, None
+
+    statuses = []
+
+    if isinstance(data, dict):
+        statuses = data.get("statuses", [])
+    elif isinstance(data, list):
+        statuses = data
+
+    for row in statuses:
+        try:
+            if int(row.get("cmid")) == int(cmid):
+                return True, None, row
+        except (TypeError, ValueError):
+            continue
+
+    return False, f"Completion row not found for cmid {cmid}", None
 
 
 # ========================================

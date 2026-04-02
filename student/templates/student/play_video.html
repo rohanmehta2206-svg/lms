@@ -272,6 +272,30 @@
         font-weight: 700;
     }
 
+    .auto-complete-box {
+        margin-top: 18px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.7;
+    }
+
+    .auto-complete-box.success {
+        background: #ecfdf5;
+        border-color: #86efac;
+        color: #166534;
+    }
+
+    .auto-complete-box.error {
+        background: #fee2e2;
+        border-color: #fca5a5;
+        color: #991b1b;
+    }
+
     @media (max-width: 768px) {
         .lesson-page.full-width {
             padding: 0 15px;
@@ -297,7 +321,7 @@
 
     <div class="lesson-hero">
         <h1>{{ module.title }} 🎥</h1>
-        <p>Watch the lesson carefully. After you complete 90% of the video, the completion button will be enabled.</p>
+        <p>Watch the lesson carefully. After you complete 90% of the video, this module will be completed automatically.</p>
     </div>
 
     <div class="lesson-card">
@@ -308,17 +332,21 @@
             <div class="badge-row">
                 <span class="badge">Course: {{ course.title }}</span>
                 <span class="badge">Section: {{ section.title }}</span>
-                <span class="badge">Video Lesson</span>
+                <span class="badge">Type: Video</span>
             </div>
 
             {% if is_completed %}
-                <div class="completed-badge">✅ Module Completed</div>
+                <div class="completed-badge" id="completedBadge">✅ Module Completed</div>
+            {% else %}
+                <div class="auto-complete-box" id="autoCompleteMessage">
+                    Watch 90% of the video to complete this module automatically in Django. The system can also sync the completion status to Moodle when the student account is properly linked.
+                </div>
             {% endif %}
         </div>
 
         {% if mpd_url %}
             <div class="player-wrap">
-                <video id="videoPlayer" class="video-player" controls></video>
+                <video id="videoPlayer" class="video-player" controls controlsList="nodownload"></video>
             </div>
         {% else %}
             <div class="empty-video">
@@ -349,7 +377,7 @@
 
                 <div class="info-box">
                     <div class="info-label">Status</div>
-                    <div class="info-value">
+                    <div class="info-value" id="videoStatusText">
                         {% if is_completed %}
                             Completed
                         {% else %}
@@ -371,27 +399,24 @@
                 </div>
 
                 <div class="watch-note">
-                    Watch at least <strong>90%</strong> of the video to enable the completion button.
+                    Watch at least <strong>90%</strong> of the video. After that, this module will be completed automatically.
                 </div>
 
                 <div class="unlock-note" id="unlockNote">
-                    ✅ You have watched 90% of the video. You can now mark this module as completed.
+                    ✅ 90% reached. Saving completion automatically...
                 </div>
             </div>
             {% endif %}
 
             <div class="action-row">
-                <a href="{% url 'student:course_detail' course.id %}" class="action-btn btn-secondary">← Back to Course</a>
+                <a href="{% url 'student:course_detail' course.id %}" class="action-btn btn-secondary" id="backToCourseBtn">← Back to Course</a>
 
-                {% if not is_completed %}
-                    <a
-                        href="{% url 'student:mark_module_complete' module.id %}?next={% url 'student:play_video' module.id %}"
-                        id="completeBtn"
-                        class="action-btn btn-primary {% if mpd_url %}btn-disabled{% endif %}">
-                        Mark as Completed
-                    </a>
+                {% if is_completed %}
+                    <span class="action-btn btn-success" id="completedActionBtn">Completed</span>
                 {% else %}
-                    <span class="action-btn btn-success">Completed</span>
+                    <a href="{% url 'student:course_detail' course.id %}" class="action-btn btn-primary btn-disabled" id="continueBtn">
+                        Continue After Completion
+                    </a>
                 {% endif %}
             </div>
         </div>
@@ -404,52 +429,137 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const mpdUrl = "{{ mpd_url|escapejs }}";
+        const completeUrl = "{% url 'student:mark_module_complete' module.id %}";
+        const courseDetailUrl = "{% url 'student:course_detail' course.id %}";
         const video = document.getElementById("videoPlayer");
-        const completeBtn = document.getElementById("completeBtn");
         const watchPercentText = document.getElementById("watchPercentText");
         const watchProgressBar = document.getElementById("watchProgressBar");
         const unlockNote = document.getElementById("unlockNote");
+        const autoCompleteMessage = document.getElementById("autoCompleteMessage");
+        const videoStatusText = document.getElementById("videoStatusText");
+        const continueBtn = document.getElementById("continueBtn");
+
+        let highestPercent = 0;
+        let completionTriggered = false;
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== "") {
+                const cookies = document.cookie.split(";");
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function setCompletedUI() {
+            if (autoCompleteMessage) {
+                autoCompleteMessage.textContent = "✅ Module completed successfully. You can go back to the course and continue.";
+                autoCompleteMessage.classList.add("success");
+            }
+
+            if (videoStatusText) {
+                videoStatusText.textContent = "Completed";
+            }
+
+            if (unlockNote) {
+                unlockNote.style.display = "block";
+                unlockNote.textContent = "✅ Video completed automatically. The next module is now unlocked.";
+            }
+
+            if (continueBtn) {
+                continueBtn.classList.remove("btn-disabled");
+                continueBtn.setAttribute("href", courseDetailUrl);
+                continueBtn.textContent = "Go to Course";
+            }
+        }
+
+        function setErrorUI(message) {
+            if (autoCompleteMessage) {
+                autoCompleteMessage.textContent = message;
+                autoCompleteMessage.classList.add("error");
+            }
+
+            if (unlockNote) {
+                unlockNote.style.display = "block";
+                unlockNote.textContent = message;
+            }
+        }
+
+        function saveCompletionAutomatically() {
+            if (completionTriggered) {
+                return;
+            }
+
+            completionTriggered = true;
+
+            if (unlockNote) {
+                unlockNote.style.display = "block";
+                unlockNote.textContent = "✅ 90% reached. Saving completion automatically...";
+            }
+
+            fetch(completeUrl, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": getCookie("csrftoken")
+                }
+            })
+            .then(async function(response) {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "Could not save video completion.");
+                }
+                return data;
+            })
+            .then(function(data) {
+                if (data.success) {
+                    setCompletedUI();
+                } else {
+                    completionTriggered = false;
+                    setErrorUI(data.error || "Could not save video completion.");
+                }
+            })
+            .catch(function(error) {
+                completionTriggered = false;
+                setErrorUI(error.message || "Could not save video completion.");
+            });
+        }
+
+        function updateWatchProgress() {
+            if (!video || !video.duration || isNaN(video.duration) || video.duration <= 0) {
+                return;
+            }
+
+            const currentPercent = Math.min((video.currentTime / video.duration) * 100, 100);
+
+            if (currentPercent > highestPercent) {
+                highestPercent = currentPercent;
+            }
+
+            const roundedPercent = Math.floor(highestPercent);
+
+            if (watchPercentText) {
+                watchPercentText.textContent = roundedPercent + "%";
+            }
+
+            if (watchProgressBar) {
+                watchProgressBar.style.width = roundedPercent + "%";
+            }
+
+            if (highestPercent >= 90) {
+                saveCompletionAutomatically();
+            }
+        }
 
         if (video && mpdUrl) {
             const player = dashjs.MediaPlayer().create();
             player.initialize(video, mpdUrl, true);
-
-            let highestPercent = 0;
-            let unlocked = false;
-
-            function updateWatchProgress() {
-                if (!video.duration || isNaN(video.duration) || video.duration <= 0) {
-                    return;
-                }
-
-                const currentPercent = Math.min((video.currentTime / video.duration) * 100, 100);
-
-                if (currentPercent > highestPercent) {
-                    highestPercent = currentPercent;
-                }
-
-                const roundedPercent = Math.floor(highestPercent);
-
-                if (watchPercentText) {
-                    watchPercentText.textContent = roundedPercent + "%";
-                }
-
-                if (watchProgressBar) {
-                    watchProgressBar.style.width = roundedPercent + "%";
-                }
-
-                if (highestPercent >= 90 && !unlocked) {
-                    unlocked = true;
-
-                    if (completeBtn) {
-                        completeBtn.classList.remove("btn-disabled");
-                    }
-
-                    if (unlockNote) {
-                        unlockNote.style.display = "block";
-                    }
-                }
-            }
 
             video.addEventListener("timeupdate", updateWatchProgress);
             video.addEventListener("ended", updateWatchProgress);

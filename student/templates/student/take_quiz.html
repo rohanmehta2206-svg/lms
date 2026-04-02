@@ -289,7 +289,7 @@
 
     <div class="quiz-header">
         <h2>{{ module.title }} 📝</h2>
-        <p>Answer the quiz questions and complete this learning step.</p>
+        <p>Answer the quiz questions and submit to complete this learning step.</p>
     </div>
 
     <div class="section">
@@ -297,6 +297,7 @@
             <div class="quiz-meta">
                 <span class="quiz-badge">Course: {{ course.title }}</span>
                 <span class="quiz-badge">Section: {{ section.title }}</span>
+                <span class="quiz-badge">Type: Quiz</span>
 
                 {% if is_completed %}
                     <span class="quiz-badge status-completed">Completed</span>
@@ -327,7 +328,7 @@
             {% if questions %}
                 {% if is_completed and not quiz_result %}
                     <div class="completed-box">
-                        ✅ This quiz module has already been completed.
+                        ✅ This quiz module has already been completed successfully.
                     </div>
                 {% endif %}
 
@@ -430,18 +431,20 @@
                                 Submit Quiz
                             </button>
                         {% else %}
-                            <span class="quiz-btn btn-success">Completed</span>
+                            <a href="{% url 'student:course_detail' course.id %}" class="quiz-btn btn-success">
+                                Back to Course
+                            </a>
                         {% endif %}
                     </div>
                 </form>
 
                 {% if not is_completed %}
                     <div class="info-note">
-                        After selecting answers and clicking <strong>Submit Quiz</strong>, your answers will be checked and your score will be calculated.
+                        After selecting answers and clicking <strong>Submit Quiz</strong>, your answers will be checked, your score will be calculated, this quiz module will be completed in Django, and the system can also sync the completion status to Moodle when the student account is properly linked.
                     </div>
                 {% else %}
                     <div class="info-note">
-                        Quiz submission is finished for this module.
+                        Quiz submission is finished for this module. You can now return to the course and continue with the next unlocked module.
                     </div>
                 {% endif %}
             {% else %}

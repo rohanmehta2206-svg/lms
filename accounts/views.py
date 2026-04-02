@@ -3,6 +3,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from .forms import RegisterForm
+from .models import UserProfile
 
 # Moodle API
 from teacher.moodle_api import (
@@ -12,6 +13,49 @@ from teacher.moodle_api import (
 )
 
 from student.models import Student
+
+
+# =====================================
+# HELPER: RESOLVE / SYNC MOODLE USER ID
+# =====================================
+def resolve_user_moodle_id(user):
+    """
+    Safe resolver for Moodle user id.
+
+    Order:
+    1. Try UserProfile.moodle_user_id
+    2. Try Student.moodle_user_id
+    3. If found in Student and missing in UserProfile, write it back
+    4. If UserProfile does not exist, create it
+    """
+    moodle_user_id = None
+
+    profile = getattr(user, "profile", None)
+    if profile:
+        moodle_user_id = getattr(profile, "moodle_user_id", None)
+
+    if moodle_user_id:
+        return moodle_user_id
+
+    student = Student.objects.filter(user=user).first()
+    if student and getattr(student, "moodle_user_id", None):
+        moodle_user_id = student.moodle_user_id
+
+        if profile:
+            if not getattr(profile, "moodle_user_id", None):
+                profile.moodle_user_id = moodle_user_id
+                profile.save(update_fields=["moodle_user_id"])
+        else:
+            UserProfile.objects.update_or_create(
+                user=user,
+                defaults={
+                    "moodle_user_id": moodle_user_id
+                }
+            )
+
+        return moodle_user_id
+
+    return None
 
 
 # =====================================
@@ -32,12 +76,15 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
 
-            moodle_user_id = request.session.get("moodle_user_id")
+            # Always rebuild moodle_user_id from DB on login
+            resolved_moodle_user_id = resolve_user_moodle_id(user)
 
-            if moodle_user_id:
-                print("Moodle user id found in session:", moodle_user_id)
+            if resolved_moodle_user_id:
+                request.session["moodle_user_id"] = resolved_moodle_user_id
+                print("Moodle user id linked on login:", resolved_moodle_user_id)
             else:
-                print("No Moodle user id found in session")
+                request.session.pop("moodle_user_id", None)
+                print("No Moodle user id found for this user")
 
             # Teacher login
             if user.is_staff or user.is_superuser:
@@ -133,6 +180,23 @@ def register_view(request):
                 return redirect("accounts:register")
 
             # =====================================
+            # CREATE USER PROFILE FOR ALL USERS
+            # =====================================
+            try:
+                UserProfile.objects.update_or_create(
+                    user=user,
+                    defaults={
+                        "moodle_user_id": moodle_user_id,
+                    }
+                )
+                print("UserProfile created successfully.")
+            except Exception as e:
+                print("UserProfile creation error:", e)
+                user.delete()
+                messages.error(request, "User profile creation failed.")
+                return redirect("accounts:register")
+
+            # =====================================
             # CREATE STUDENT PROFILE ONLY
             # =====================================
             if is_student:
@@ -177,6 +241,9 @@ def register_view(request):
             # -------------------------------------
             login(request, user)
 
+            # Reconfirm session value after login
+            request.session["moodle_user_id"] = moodle_user_id
+
             messages.success(request, "Account created successfully!")
 
             # -------------------------------------
@@ -200,5 +267,6 @@ def register_view(request):
 # LOGOUT VIEW
 # =====================================
 def logout_view(request):
+    request.session.pop("moodle_user_id", None)
     logout(request)
     return redirect("accounts:login")

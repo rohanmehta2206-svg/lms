@@ -230,6 +230,24 @@ class Module(models.Model):
         null=True
     )
 
+    # Moodle mapping fields
+    moodle_module_id = models.IntegerField(
+        null=True,
+        blank=True,
+        db_index=True
+    )
+
+    moodle_cmid = models.IntegerField(
+        null=True,
+        blank=True,
+        db_index=True
+    )
+
+    moodle_instance_id = models.IntegerField(
+        null=True,
+        blank=True
+    )
+
     order = models.PositiveIntegerField(
         default=1
     )

@@ -127,14 +127,16 @@
         font-weight: 700;
         display: inline-block;
         transition: 0.3s ease;
+        border: none;
+        cursor: pointer;
     }
 
-    .btn-complete {
+    .btn-continue {
         background: #2563eb;
         color: white !important;
     }
 
-    .btn-complete:hover {
+    .btn-continue:hover {
         background: #1d4ed8;
     }
 
@@ -156,6 +158,17 @@
         background: #15803d;
     }
 
+    .flow-box {
+        margin-top: 20px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e3a8a;
+        padding: 16px 18px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
     @media (max-width: 768px) {
         .theory-header h2 {
             font-size: 28px;
@@ -171,7 +184,7 @@
 
     <div class="theory-header">
         <h2>{{ module.title }} 📘</h2>
-        <p>Read the theory content carefully and mark it as read when you finish.</p>
+        <p>Read the theory content carefully and continue to complete this theory module in your learning flow.</p>
     </div>
 
     <div class="section">
@@ -179,6 +192,7 @@
             <div class="meta-info">
                 <span class="meta-badge">Course: {{ course.title }}</span>
                 <span class="meta-badge">Section: {{ section.title }}</span>
+                <span class="meta-badge">Type: Theory</span>
 
                 {% if is_completed %}
                     <span class="meta-badge status-completed">Completed</span>
@@ -203,11 +217,15 @@
 
             {% if is_completed %}
                 <div class="completed-box">
-                    ✅ This theory module has already been marked as read.
+                    ✅ This theory module has already been completed successfully.
                 </div>
             {% else %}
                 <div class="read-note">
-                    After reading the content, click <strong>Mark as Read</strong> to complete this theory module.
+                    After reading the content, click <strong>Continue</strong> to complete this theory module and unlock the next step in the course flow.
+                </div>
+
+                <div class="flow-box">
+                    This action will mark the theory module as completed in Django, and the system can also sync the completion status to Moodle when the student account is properly linked.
                 </div>
             {% endif %}
 
@@ -215,8 +233,8 @@
                 <a href="{% url 'student:course_detail' course.id %}" class="action-btn btn-back">← Back to Course</a>
 
                 {% if not is_completed %}
-                    <a href="{% url 'student:mark_module_complete' module.id %}?next={% url 'student:read_theory' module.id %}" class="action-btn btn-complete">
-                        Mark as Read
+                    <a href="{% url 'student:mark_module_complete' module.id %}?next={% url 'student:course_detail' course.id %}" class="action-btn btn-continue">
+                        Continue
                     </a>
                 {% else %}
                     <span class="action-btn btn-success">Completed</span>
