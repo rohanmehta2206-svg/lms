@@ -4,25 +4,219 @@
 
 {% block content %}
 
+<style>
+    .welcome {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+        padding: 30px 34px;
+        border-radius: 18px;
+        margin-bottom: 28px;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+    }
+
+    .welcome h2 {
+        margin: 0 0 10px;
+        font-size: 34px;
+        font-weight: 700;
+    }
+
+    .welcome p {
+        margin: 0;
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.95);
+    }
+
+    .section {
+        margin-top: 10px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: 26px;
+    }
+
+    .box {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 28px;
+        border: 1px solid #dbeafe;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+        transition: all 0.25s ease;
+    }
+
+    .box:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12);
+    }
+
+    .box h4 {
+        margin: 0 0 18px;
+        font-size: 26px;
+        font-weight: 700;
+        color: #0f172a;
+        word-break: break-word;
+    }
+
+    .info-line {
+        margin: 12px 0;
+        font-size: 17px;
+        color: #334155;
+        line-height: 1.6;
+    }
+
+    .info-line strong {
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .badge {
+        display: inline-block;
+        margin: 10px 0 20px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .badge.completed {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .download-btn {
+        display: inline-block;
+        padding: 13px 24px;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        border: none;
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.24);
+        transition: all 0.2s ease;
+    }
+
+    .download-btn:hover {
+        background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        color: #ffffff !important;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 22px rgba(29, 78, 216, 0.28);
+    }
+
+    .download-btn:visited,
+    .download-btn:active,
+    .download-btn:focus {
+        color: #ffffff !important;
+        text-decoration: none;
+        outline: none;
+    }
+
+    .empty-box {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 42px 30px;
+        text-align: center;
+        border: 1px solid #dbeafe;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .empty-box h3 {
+        margin: 0 0 10px;
+        font-size: 28px;
+        color: #0f172a;
+    }
+
+    .empty-box p {
+        margin: 0 0 20px;
+        font-size: 17px;
+        color: #64748b;
+        line-height: 1.6;
+    }
+
+    .courses-btn {
+        display: inline-block;
+        padding: 13px 24px;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.24);
+        transition: all 0.2s ease;
+    }
+
+    .courses-btn:hover {
+        background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        color: #ffffff !important;
+        transform: translateY(-2px);
+    }
+
+    .courses-btn:visited,
+    .courses-btn:active,
+    .courses-btn:focus {
+        color: #ffffff !important;
+        text-decoration: none;
+        outline: none;
+    }
+
+    .certificate-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+    }
+
+    .certificate-status {
+        background: #dbeafe;
+        color: #1d4ed8;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+</style>
+
 <div class="welcome">
     <h2>Certificates 🏆</h2>
     <p>View and download your earned certificates.</p>
 </div>
 
 <div class="section">
-    <div class="grid">
-        <div class="box">
-            <h4>Ethical Hacking Certificate</h4>
-            <p>Course completed successfully.</p>
-            <a href="#">Download Certificate →</a>
-        </div>
+    {% if certificate_rows %}
+        <div class="grid">
+            {% for row in certificate_rows %}
+                <div class="box">
+                    <div class="certificate-top">
+                        <h4>{{ row.course.title }}</h4>
+                        <span class="certificate-status">Ready to Download</span>
+                    </div>
 
-        <div class="box">
-            <h4>Cryptography Basics</h4>
-            <p>Complete the course to unlock certificate.</p>
-            <a href="#">Locked</a>
+                    <p class="info-line"><strong>Status:</strong> Course completed successfully</p>
+                    <p class="info-line"><strong>Completed Modules:</strong> {{ row.completed_modules }} / {{ row.total_modules }}</p>
+                    <p class="info-line"><strong>Progress:</strong> {{ row.progress_percent }}%</p>
+                    <p class="info-line"><strong>Certificate ID:</strong> {{ row.certificate_id }}</p>
+
+                    <span class="badge completed">Certificate Available ✅</span>
+                    <br>
+
+                    <a href="{% url 'student:download_certificate' row.course.id %}" class="download-btn">
+                        Download Certificate
+                    </a>
+                </div>
+            {% endfor %}
         </div>
-    </div>
+    {% else %}
+        <div class="empty-box">
+            <h3>No Certificates Available</h3>
+            <p>Complete your enrolled courses fully to unlock certificate download.</p>
+            <a href="{% url 'student:my_courses' %}" class="courses-btn">Go to My Courses</a>
+        </div>
+    {% endif %}
 </div>
 
 {% endblock %}

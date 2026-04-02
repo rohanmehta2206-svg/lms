@@ -9,6 +9,9 @@ urlpatterns = [
     path('progress/', views.progress_tracker, name='progress_tracker'),
     path('certificates/', views.certificates, name='certificates'),
 
+    # Certificate download
+    path('certificate/download/<int:course_id>/', views.download_certificate, name='download_certificate'),
+
     # Enrollment
     path('enroll/<int:course_id>/', views.enroll_course, name='enroll_course'),
 

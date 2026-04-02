@@ -1,15 +1,25 @@
 import os
-from django.http import FileResponse, Http404, JsonResponse
+import time
+from django.conf import settings
+from django.http import FileResponse, Http404, JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib import messages
+
+from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.colors import HexColor, white
+from reportlab.pdfgen import canvas
+from reportlab.graphics.barcode import qr
+from reportlab.graphics.shapes import Drawing
+from reportlab.graphics import renderPDF
 
 from teacher.models import Course, Section, Module
 from teacher.moodle_api import (
     enroll_student_to_course,
     mark_moodle_activity_complete,
     get_single_activity_completion_state,
+    issue_moodle_certificate_record,
 )
 from .models import Enrollment, StudentModuleProgress, QuizAttempt, Student
 from accounts.models import UserProfile
@@ -52,17 +62,40 @@ def get_active_enrollment(user, course):
         student=user,
         course=course,
         is_active=True
-    ).first()
+    ).order_by("-id").first()
+
+
+def get_student_active_course_ids(user):
+    return list(
+        Enrollment.objects.filter(
+            student=user,
+            is_active=True,
+            course__is_published=True
+        )
+        .values_list("course_id", flat=True)
+        .distinct()
+    )
+
+
+def get_student_active_courses(user):
+    course_ids = get_student_active_course_ids(user)
+
+    return Course.objects.filter(
+        id__in=course_ids,
+        is_published=True
+    ).order_by("-created_at")
+
+
+def get_course_sections(course):
+    return list(
+        Section.objects.filter(course=course).order_by("order")
+    )
 
 
 # =====================================
 # HELPER: LOCK / UNLOCK MODULE FLOW
 # =====================================
 def get_ordered_course_modules(course):
-    """
-    Full course order:
-    Section 1 Module 1 -> Section 1 Module 2 -> Section 2 Module 1 -> ...
-    """
     return list(
         Module.objects.filter(section__course=course)
         .select_related("section", "section__course")
@@ -71,26 +104,22 @@ def get_ordered_course_modules(course):
 
 
 def get_completed_module_ids(user, course):
-    course_module_ids = Module.objects.filter(
-        section__course=course
-    ).values_list("id", flat=True)
+    course_module_ids = list(
+        Module.objects.filter(
+            section__course=course
+        ).values_list("id", flat=True).distinct()
+    )
 
     return set(
         StudentModuleProgress.objects.filter(
             student=user,
             module_id__in=course_module_ids,
             is_completed=True
-        ).values_list("module_id", flat=True)
+        ).values_list("module_id", flat=True).distinct()
     )
 
 
 def get_next_unlocked_module_id(user, course):
-    """
-    Exact guided flow:
-    - if nothing is completed -> unlock first module only
-    - after each completion -> unlock next module only
-    - completed modules remain accessible
-    """
     ordered_modules = get_ordered_course_modules(course)
     completed_module_ids = get_completed_module_ids(user, course)
 
@@ -105,11 +134,6 @@ def get_next_unlocked_module_id(user, course):
 
 
 def get_locked_module_ids(user, course):
-    """
-    Only one next pending module is unlocked.
-    All completed modules remain open.
-    All future modules remain locked.
-    """
     ordered_modules = get_ordered_course_modules(course)
     completed_module_ids = get_completed_module_ids(user, course)
     next_unlocked_module_id = get_next_unlocked_module_id(user, course)
@@ -165,8 +189,12 @@ def get_course_progress_data(user, course, sections):
     module_ids = []
 
     for section in sections:
-        module_ids.extend(section.modules.values_list("id", flat=True))
+        section_module_ids = list(
+            section.modules.values_list("id", flat=True).distinct()
+        )
+        module_ids.extend(section_module_ids)
 
+    module_ids = list(dict.fromkeys(module_ids))
     total_modules = len(module_ids)
 
     completed_module_ids = set(
@@ -174,7 +202,7 @@ def get_course_progress_data(user, course, sections):
             student=user,
             module_id__in=module_ids,
             is_completed=True
-        ).values_list("module_id", flat=True)
+        ).values_list("module_id", flat=True).distinct()
     )
 
     completed_modules = len(completed_module_ids)
@@ -191,6 +219,256 @@ def get_course_progress_data(user, course, sections):
         "progress_percent": progress_percent,
         "completed_module_ids": completed_module_ids,
     }
+
+
+# =====================================
+# HELPER: CERTIFICATE LOGIC
+# =====================================
+def is_course_completed_by_student(user, course):
+    sections = get_course_sections(course)
+    progress_data = get_course_progress_data(user, course, sections)
+    return progress_data["total_modules"] > 0 and progress_data["progress_percent"] == 100
+
+
+def get_certificate_id(user, course):
+    return f"CERT-{course.id}-{user.id}"
+
+
+def get_certificate_student_name(user):
+    full_name = user.get_full_name().strip()
+    if full_name:
+        return full_name
+    return getattr(user, "username", "Student")
+
+
+def get_completed_courses_for_certificates(user):
+    completed_rows = []
+    courses = get_student_active_courses(user)
+
+    for course in courses:
+        sections = get_course_sections(course)
+        progress_data = get_course_progress_data(user, course, sections)
+
+        if progress_data["total_modules"] > 0 and progress_data["progress_percent"] == 100:
+            completed_rows.append({
+                "course": course,
+                "total_modules": progress_data["total_modules"],
+                "completed_modules": progress_data["completed_modules"],
+                "progress_percent": progress_data["progress_percent"],
+                "certificate_id": get_certificate_id(user, course),
+            })
+
+    return completed_rows
+
+
+def try_issue_certificate_record_to_moodle(request, user, course):
+    """
+    Best-effort sync:
+    - Django remains certificate generator
+    - Moodle stores certificate issue record
+    """
+    try:
+        moodle_user_id = get_user_moodle_id(user)
+        moodle_course_id = getattr(course, "moodle_course_id", None)
+        certificate_id = get_certificate_id(user, course)
+
+        if not moodle_user_id:
+            return {
+                "success": False,
+                "message": "Moodle user id is missing."
+            }
+
+        if not moodle_course_id:
+            return {
+                "success": False,
+                "message": "Moodle course id is missing."
+            }
+
+        certificate_url = request.build_absolute_uri(
+            f"/student/certificate/download/{course.id}/"
+        )
+
+        issuedate = int(time.time())
+
+        ok, error, data = issue_moodle_certificate_record(
+            moodle_user_id=moodle_user_id,
+            moodle_course_id=moodle_course_id,
+            certificate_id=certificate_id,
+            certificate_url=certificate_url,
+            issuedate=issuedate,
+        )
+
+        if ok:
+            return {
+                "success": True,
+                "message": "Certificate issue record stored in Moodle successfully.",
+                "data": data,
+            }
+
+        return {
+            "success": False,
+            "message": error or "Could not store certificate issue record in Moodle."
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"Moodle certificate sync error: {str(e)}"
+        }
+
+
+def draw_certificate_pdf(response, user, course):
+    page_width, page_height = landscape(A4)
+    pdf = canvas.Canvas(response, pagesize=landscape(A4))
+
+    border_blue = HexColor("#4fb6d6")
+    text_dark = HexColor("#1f2937")
+    text_mid = HexColor("#374151")
+    soft_gray = HexColor("#6b7280")
+    gold = HexColor("#e6c44f")
+    bg = HexColor("#ffffff")
+
+    pdf.setFillColor(bg)
+    pdf.rect(0, 0, page_width, page_height, fill=1, stroke=0)
+
+    # Outer border
+    pdf.setStrokeColor(border_blue)
+    pdf.setLineWidth(3)
+    pdf.rect(32, 32, page_width - 64, page_height - 64, stroke=1, fill=0)
+
+    # Inner border
+    pdf.setLineWidth(1.5)
+    pdf.rect(44, 44, page_width - 88, page_height - 88, stroke=1, fill=0)
+
+    # Small top line
+    pdf.setLineWidth(3)
+    pdf.line(70, page_height - 38, page_width - 70, page_height - 38)
+
+    # Title
+    pdf.setFillColor(text_dark)
+    pdf.setFont("Times-Italic", 30)
+    pdf.drawCentredString(page_width / 2, page_height - 120, "Certificate of Completion")
+
+    # Seal on left
+    seal_x = 78
+    seal_y = page_height - 210
+    seal_path = os.path.join(settings.MEDIA_ROOT, "seal.png")
+
+    if os.path.exists(seal_path):
+        pdf.drawImage(
+            seal_path,
+            seal_x,
+            seal_y,
+            width=95,
+            height=50,
+            preserveAspectRatio=True,
+            mask='auto'
+        )
+    else:
+        pdf.setFillColor(gold)
+        pdf.circle(seal_x + 30, seal_y + 25, 24, fill=1, stroke=0)
+
+        pdf.setFillColor(text_mid)
+        pdf.setFont("Helvetica", 5)
+        pdf.drawCentredString(seal_x + 30, seal_y + 27, "Seal")
+
+    # Name and body text
+    student_name = get_certificate_student_name(user)
+    course_title = str(course.title)
+
+    if len(course_title) > 40:
+        course_title = course_title[:40] + "..."
+
+    pdf.setFillColor(text_dark)
+    pdf.setFont("Times-Bold", 20)
+    pdf.drawCentredString(page_width / 2, page_height - 210, student_name)
+
+    pdf.setFillColor(text_mid)
+    pdf.setFont("Times-Italic", 16)
+    pdf.drawCentredString(page_width / 2, page_height - 238, "has completed")
+
+    pdf.setFillColor(text_dark)
+    pdf.setFont("Times-Bold", 21)
+    pdf.drawCentredString(page_width / 2, page_height - 275, course_title)
+
+    pdf.setFillColor(text_mid)
+    pdf.setFont("Times-Italic", 15)
+    pdf.drawCentredString(page_width / 2, page_height - 305, "offered by")
+
+    pdf.setFillColor(text_dark)
+    pdf.setFont("Times-Bold", 18)
+    pdf.drawCentredString(page_width / 2, page_height - 336, "Cryptographic Adaptive LMS")
+
+    # QR bottom left
+    certificate_id = get_certificate_id(user, course)
+    completion_date = timezone.localdate().strftime("%d %b %Y")
+
+    verification_text = (
+        f"Certificate ID: {certificate_id} | "
+        f"Student: {student_name} | "
+        f"Course: {course.title} | "
+        f"Date: {completion_date}"
+    )
+
+    qr_code = qr.QrCodeWidget(verification_text)
+    bounds = qr_code.getBounds()
+    qr_width = bounds[2] - bounds[0]
+    qr_height = bounds[3] - bounds[1]
+    qr_size = 56
+
+    qr_drawing = Drawing(
+        qr_size,
+        qr_size,
+        transform=[qr_size / qr_width, 0, 0, qr_size / qr_height, 0, 0]
+    )
+    qr_drawing.add(qr_code)
+
+    qr_x = 96
+    qr_y = 96
+    renderPDF.draw(qr_drawing, pdf, qr_x, qr_y)
+
+    pdf.setFillColor(text_mid)
+    pdf.setFont("Helvetica", 9)
+    pdf.drawString(160, 137, f"Issued: {completion_date}")
+    pdf.drawString(160, 121, f"Certificate No: {certificate_id}")
+    pdf.drawString(160, 105, "Verify via LMS QR record")
+
+    # Signature area right
+    sign_line_x1 = page_width - 275
+    sign_line_x2 = page_width - 115
+    sign_y = 118
+
+    pdf.setStrokeColor(text_mid)
+    pdf.setLineWidth(1)
+    pdf.line(sign_line_x1, sign_y, sign_line_x2, sign_y)
+
+    signature_path = os.path.join(settings.MEDIA_ROOT, "signature.png")
+
+    if os.path.exists(signature_path):
+        pdf.drawImage(
+            signature_path,
+            sign_line_x1 + 18,
+            sign_y + 8,
+            width=120,
+            height=40,
+            mask='auto'
+        )
+    else:
+        pdf.setFillColor(text_dark)
+        pdf.setFont("Times-Italic", 22)
+        pdf.drawCentredString((sign_line_x1 + sign_line_x2) / 2, sign_y + 24, "Authorized Signature")
+
+    pdf.setFillColor(text_dark)
+    pdf.setFont("Helvetica", 10)
+    pdf.drawCentredString((sign_line_x1 + sign_line_x2) / 2, sign_y - 14, "Instructor")
+
+    # Footer
+    pdf.setFillColor(soft_gray)
+    pdf.setFont("Helvetica", 9)
+    pdf.drawCentredString(page_width / 2, 52, "Generated from Django LMS integrated with Moodle")
+
+    pdf.showPage()
+    pdf.save()
 
 
 # =====================================
@@ -218,12 +496,6 @@ def complete_module_for_user(user, module):
 # HELPER: MOODLE USER ID RESOLVER
 # =====================================
 def get_user_moodle_id(user):
-    """
-    Safe resolver:
-    1. Try accounts.UserProfile via user.profile
-    2. If missing, try Student model
-    3. If found in Student and profile missing/empty, save it back to profile
-    """
     moodle_user_id = None
     user_profile = getattr(user, "profile", None)
 
@@ -244,9 +516,7 @@ def get_user_moodle_id(user):
         else:
             UserProfile.objects.update_or_create(
                 user=user,
-                defaults={
-                    "moodle_user_id": moodle_user_id
-                }
+                defaults={"moodle_user_id": moodle_user_id}
             )
 
         return moodle_user_id
@@ -280,12 +550,6 @@ def _extract_completion_state(row):
 
 
 def try_sync_module_completion_to_moodle(user, module):
-    """
-    Safe Moodle sync:
-    - Django completion always stays primary
-    - Moodle sync is attempted only when required ids exist
-    - verifies the Moodle state after update when possible
-    """
     try:
         moodle_user_id = get_user_moodle_id(user)
         moodle_cmid = get_module_moodle_cmid(module)
@@ -384,10 +648,6 @@ def try_sync_module_completion_to_moodle(user, module):
 
 
 def complete_module_and_try_moodle_sync(user, module):
-    """
-    1. Always complete in Django first
-    2. Then try Moodle sync
-    """
     progress_obj = complete_module_for_user(user, module)
     moodle_sync = try_sync_module_completion_to_moodle(user, module)
     return progress_obj, moodle_sync
@@ -452,7 +712,7 @@ def get_latest_quiz_attempt(user, module):
 # HELPER: BUILD COURSE STATE FOR AJAX
 # =====================================
 def build_course_state_for_user(user, course):
-    sections = list(Section.objects.filter(course=course).order_by("order"))
+    sections = get_course_sections(course)
     progress_data = get_course_progress_data(user, course, sections)
     completed_module_ids = progress_data["completed_module_ids"]
     locked_module_ids = get_locked_module_ids(user, course)
@@ -493,10 +753,7 @@ def build_course_state_for_user(user, course):
 # =====================================
 @login_required
 def student_dashboard(request):
-    enrolled_courses_count = Enrollment.objects.filter(
-        student=request.user,
-        is_active=True
-    ).count()
+    enrolled_courses_count = len(get_student_active_course_ids(request.user))
 
     context = {
         "enrolled_courses_count": enrolled_courses_count
@@ -566,7 +823,7 @@ def enroll_course(request, course_id):
 @login_required
 def view_course(request, course_id):
     course = get_object_or_404(Course, id=course_id, is_published=True)
-    sections = list(Section.objects.filter(course=course).order_by("order"))
+    sections = get_course_sections(course)
 
     for section in sections:
         section.modules_list = list(section.modules.all().order_by("order", "id"))
@@ -586,24 +843,19 @@ def view_course(request, course_id):
 # =====================================
 @login_required
 def my_courses(request):
+    enrolled_courses = get_student_active_courses(request.user)
+
+    available_courses = Course.objects.filter(
+        is_published=True
+    ).exclude(
+        id__in=get_student_active_course_ids(request.user)
+    ).order_by("-created_at")
+
     enrollments = Enrollment.objects.filter(
         student=request.user,
         is_active=True,
         course__is_published=True
     ).select_related("course").order_by("-enrolled_at")
-
-    enrolled_course_ids = enrollments.values_list("course_id", flat=True)
-
-    enrolled_courses = Course.objects.filter(
-        id__in=enrolled_course_ids,
-        is_published=True
-    ).order_by("-created_at")
-
-    available_courses = Course.objects.filter(
-        is_published=True
-    ).exclude(
-        id__in=enrolled_course_ids
-    ).order_by("-created_at")
 
     context = {
         "courses": enrolled_courses,
@@ -618,17 +870,11 @@ def my_courses(request):
 # =====================================
 @login_required
 def progress_tracker(request):
-    enrollments = Enrollment.objects.filter(
-        student=request.user,
-        is_active=True,
-        course__is_published=True
-    ).select_related("course").order_by("-enrolled_at")
-
+    courses = get_student_active_courses(request.user)
     progress_rows = []
 
-    for enrollment in enrollments:
-        course = enrollment.course
-        sections = Section.objects.filter(course=course).order_by("order")
+    for course in courses:
+        sections = get_course_sections(course)
         progress_data = get_course_progress_data(request.user, course, sections)
 
         progress_rows.append({
@@ -650,7 +896,50 @@ def progress_tracker(request):
 # =====================================
 @login_required
 def certificates(request):
-    return render(request, "student/certificates.html")
+    certificate_rows = get_completed_courses_for_certificates(request.user)
+
+    context = {
+        "certificate_rows": certificate_rows
+    }
+    return render(request, "student/certificates.html", context)
+
+
+@login_required
+def download_certificate(request, course_id):
+    course = get_object_or_404(Course, id=course_id, is_published=True)
+
+    if not is_student_enrolled(request.user, course):
+        messages.error(request, "You are not enrolled in this course.")
+        return redirect("student:my_courses")
+
+    if not is_course_completed_by_student(request.user, course):
+        messages.warning(request, "You can download the certificate only after completing the full course.")
+        return redirect("student:certificates")
+
+    # Best-effort Moodle certificate issue record sync
+    moodle_certificate_sync = try_issue_certificate_record_to_moodle(
+        request=request,
+        user=request.user,
+        course=course,
+    )
+
+    if not moodle_certificate_sync["success"]:
+        print("⚠️ Moodle certificate record sync failed:", moodle_certificate_sync["message"])
+    else:
+        print("✅ Moodle certificate record sync success:", moodle_certificate_sync["message"])
+
+    safe_course_name = "".join(
+        ch if ch.isalnum() or ch in (" ", "_", "-") else "_"
+        for ch in course.title
+    ).strip().replace(" ", "_")
+
+    filename = f"{safe_course_name}_certificate.pdf"
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    draw_certificate_pdf(response, request.user, course)
+    return response
 
 
 # =====================================
@@ -665,7 +954,7 @@ def course_detail(request, course_id):
         messages.warning(request, "Please enroll in this course first.")
         return redirect("student:my_courses")
 
-    sections = list(Section.objects.filter(course=course).order_by("order"))
+    sections = get_course_sections(course)
 
     progress_data = get_course_progress_data(request.user, course, sections)
     completed_module_ids = progress_data["completed_module_ids"]
@@ -702,6 +991,7 @@ def course_detail(request, course_id):
         "pending_modules": progress_data["pending_modules"],
         "progress_percent": progress_data["progress_percent"],
         "next_unlocked_module_id": next_unlocked_module_id,
+        "is_certificate_available": progress_data["total_modules"] > 0 and progress_data["progress_percent"] == 100,
     }
     return render(request, "student/course_detail.html", context)
 
@@ -881,7 +1171,6 @@ def mark_module_complete(request, module_id):
             }, status=403)
         return redirect("student:course_detail", course_id=course.id)
 
-    # Quiz must only be completed from quiz submit
     if module.type == "quiz":
         if is_ajax:
             return JsonResponse({
@@ -891,7 +1180,6 @@ def mark_module_complete(request, module_id):
             }, status=400)
         return redirect("student:take_quiz", module_id=module.id)
 
-    # Video must only be completed automatically through AJAX after 90% watch
     if module.type == "video" and not is_ajax:
         messages.warning(request, "Video module completes automatically after 90% watch.")
         return redirect("student:play_video", module_id=module.id)

@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from django.conf import settings
 
@@ -535,6 +536,49 @@ def get_single_activity_completion_state(moodle_course_id, moodle_user_id, cmid)
             continue
 
     return False, f"Completion row not found for cmid {cmid}", None
+
+
+# ========================================
+# ISSUE CERTIFICATE RECORD IN MOODLE
+# ========================================
+
+def issue_moodle_certificate_record(moodle_user_id, moodle_course_id, certificate_id, certificate_url="", issuedate=None):
+    """
+    Store certificate issue record in Moodle via custom local plugin function.
+    Django remains the certificate generator.
+    Moodle stores the issued certificate record for proof/integration.
+    """
+    if not moodle_user_id:
+        return False, "Moodle user id is required", None
+
+    if not moodle_course_id:
+        return False, "Moodle course id is required", None
+
+    if not certificate_id:
+        return False, "Certificate id is required", None
+
+    if issuedate is None:
+        issuedate = int(time.time())
+    else:
+        try:
+            issuedate = int(issuedate)
+        except (TypeError, ValueError):
+            issuedate = int(time.time())
+
+    params = {
+        "userid": moodle_user_id,
+        "courseid": moodle_course_id,
+        "certificateid": str(certificate_id).strip(),
+        "certificateurl": str(certificate_url or "").strip(),
+        "issuedate": issuedate,
+    }
+
+    result = call_moodle_api("local_djangoapi_issue_certificate", params)
+
+    if result["success"]:
+        return True, None, result.get("data")
+
+    return False, result.get("error", "Could not store certificate issue record in Moodle"), None
 
 
 # ========================================
