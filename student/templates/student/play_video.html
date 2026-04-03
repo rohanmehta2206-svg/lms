@@ -84,11 +84,254 @@
         font-weight: 600;
     }
 
+    .video-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 14px 18px;
+        background: #f8fafc;
+        border-top: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-label {
+        font-size: 14px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .quality-select {
+        padding: 10px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        background: white;
+        color: #111827;
+        font-size: 14px;
+        font-weight: 600;
+        outline: none;
+        min-width: 150px;
+    }
+
+    .quality-select:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .quality-status {
+        font-size: 13px;
+        font-weight: 700;
+        color: #2563eb;
+        background: #eff6ff;
+        padding: 8px 12px;
+        border-radius: 999px;
+    }
+
+    .player-mode-status {
+        font-size: 13px;
+        font-weight: 700;
+        color: #166534;
+        background: #ecfdf5;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid #86efac;
+    }
+
+    .player-shell {
+        width: 100%;
+        background: #000;
+        position: relative;
+    }
+
+    .video-stage {
+        width: 100%;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 650px;
+        overflow: hidden;
+    }
+
     .video-player {
         width: 100%;
-        height: 650px;
-        background: black;
+        max-width: 100%;
+        max-height: 650px;
+        background: #000;
         display: block;
+        outline: none;
+        object-fit: contain;
+    }
+
+    .custom-controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding: 16px 20px;
+        background: #0f172a;
+        border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .control-left,
+    .control-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .control-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+
+    .play-btn {
+        background: #2563eb;
+        color: #fff;
+    }
+
+    .play-btn:hover {
+        background: #1d4ed8;
+    }
+
+    .fullscreen-btn {
+        background: #334155;
+        color: #fff;
+    }
+
+    .fullscreen-btn:hover {
+        background: #475569;
+    }
+
+    .control-chip {
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        padding: 9px 12px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .timeline-wrap {
+        width: 100%;
+        padding: 14px 20px 18px;
+        background: #0f172a;
+        border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .timeline-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+
+    .timeline-label {
+        color: #e2e8f0;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .timeline-note {
+        color: #93c5fd;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .timeline-track-wrap {
+        position: relative;
+        width: 100%;
+    }
+
+    .timeline-bg {
+        width: 100%;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.12);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .timeline-watched {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(59,130,246,0.35);
+        width: 0%;
+        pointer-events: none;
+    }
+
+    .timeline-current {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 10px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
+        width: 0%;
+        pointer-events: none;
+    }
+
+    .timeline-slider {
+        position: absolute;
+        left: 0;
+        top: -4px;
+        width: 100%;
+        height: 18px;
+        background: transparent;
+        appearance: none;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .timeline-slider::-webkit-slider-runnable-track {
+        height: 10px;
+        background: transparent;
+    }
+
+    .timeline-slider::-webkit-slider-thumb {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #60a5fa;
+        border: 2px solid #ffffff;
+        cursor: pointer;
+        margin-top: -4px;
+    }
+
+    .timeline-slider::-moz-range-track {
+        height: 10px;
+        background: transparent;
+    }
+
+    .timeline-slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #60a5fa;
+        border: 2px solid #ffffff;
+        cursor: pointer;
     }
 
     .lesson-bottom {
@@ -198,6 +441,19 @@
         font-weight: 700;
     }
 
+    .skip-warning {
+        margin-top: 12px;
+        display: none;
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        color: #9a3412;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.6;
+    }
+
     .action-row {
         margin-top: 25px;
         display: flex;
@@ -296,17 +552,57 @@
         color: #991b1b;
     }
 
+    .player-shell:fullscreen {
+        background: #000;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .player-shell:fullscreen .video-stage {
+        flex: 1;
+        min-height: 0;
+        height: auto;
+    }
+
+    .player-shell:fullscreen .video-player {
+        width: 100%;
+        height: 100%;
+        max-height: none;
+    }
+
     @media (max-width: 768px) {
         .lesson-page.full-width {
             padding: 0 15px;
         }
 
+        .video-stage {
+            min-height: 250px;
+        }
+
         .video-player {
-            height: 250px;
+            max-height: 250px;
         }
 
         .info-grid {
             flex-direction: column;
+        }
+
+        .video-toolbar,
+        .custom-controls,
+        .timeline-wrap {
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+
+        .quality-select {
+            min-width: 100%;
+        }
+
+        .control-left,
+        .control-right {
+            width: 100%;
         }
     }
 </style>
@@ -339,14 +635,56 @@
                 <div class="completed-badge" id="completedBadge">✅ Module Completed</div>
             {% else %}
                 <div class="auto-complete-box" id="autoCompleteMessage">
-                    Watch 90% of the video to complete this module automatically in Django. The system can also sync the completion status to Moodle when the student account is properly linked.
+                    Watch 90% of the video to complete this module automatically in Django. You can drag backward on the same time bar, but you cannot drag forward beyond the watched point.
                 </div>
             {% endif %}
         </div>
 
         {% if mpd_url %}
-            <div class="player-wrap">
-                <video id="videoPlayer" class="video-player" controls controlsList="nodownload"></video>
+            <div class="video-toolbar">
+                <div class="toolbar-left">
+                    <span class="toolbar-label">Video Quality</span>
+                    <select id="qualitySelector" class="quality-select">
+                        <option value="auto">Auto</option>
+                    </select>
+                    <span class="quality-status" id="qualityStatus">Quality: Auto</span>
+                </div>
+
+                <div class="toolbar-right">
+                    <span class="player-mode-status">Guided watch mode</span>
+                </div>
+            </div>
+
+            <div class="player-shell" id="playerShell">
+                <div class="video-stage">
+                    <video id="videoPlayer" class="video-player" controlslist="nodownload noplaybackrate" preload="metadata"></video>
+                </div>
+
+                <div class="custom-controls">
+                    <div class="control-left">
+                        <button type="button" class="control-btn play-btn" id="playPauseBtn">Play</button>
+                        <button type="button" class="control-btn fullscreen-btn" id="fullscreenBtn">Fullscreen</button>
+                    </div>
+
+                    <div class="control-right">
+                        <span class="control-chip" id="timeDisplay">00:00 / 00:00</span>
+                        <span class="control-chip" id="playStateChip">Paused</span>
+                    </div>
+                </div>
+
+                <div class="timeline-wrap">
+                    <div class="timeline-top">
+                        <div class="timeline-label">Current Watch Position</div>
+                        <div class="timeline-note">Backward drag allowed • forward drag blocked</div>
+                    </div>
+
+                    <div class="timeline-track-wrap">
+                        <div class="timeline-bg"></div>
+                        <div class="timeline-watched" id="timelineWatched"></div>
+                        <div class="timeline-current" id="timelineCurrent"></div>
+                        <input type="range" id="timelineSlider" class="timeline-slider" min="0" max="0" value="0" step="0.1">
+                    </div>
+                </div>
             </div>
         {% else %}
             <div class="empty-video">
@@ -399,11 +737,15 @@
                 </div>
 
                 <div class="watch-note">
-                    Watch at least <strong>90%</strong> of the video. After that, this module will be completed automatically.
+                    Watch at least <strong>90%</strong> of the video. On the same time bar, backward drag is allowed and forward drag is blocked.
                 </div>
 
                 <div class="unlock-note" id="unlockNote">
                     ✅ 90% reached. Saving completion automatically...
+                </div>
+
+                <div class="skip-warning" id="skipWarning">
+                    ⚠️ Forward skipping is not allowed.
                 </div>
             </div>
             {% endif %}
@@ -431,16 +773,34 @@
         const mpdUrl = "{{ mpd_url|escapejs }}";
         const completeUrl = "{% url 'student:mark_module_complete' module.id %}";
         const courseDetailUrl = "{% url 'student:course_detail' course.id %}";
+
+        const playerShell = document.getElementById("playerShell");
         const video = document.getElementById("videoPlayer");
+        const playPauseBtn = document.getElementById("playPauseBtn");
+        const fullscreenBtn = document.getElementById("fullscreenBtn");
+        const timelineSlider = document.getElementById("timelineSlider");
+        const timelineWatched = document.getElementById("timelineWatched");
+        const timelineCurrent = document.getElementById("timelineCurrent");
+        const timeDisplay = document.getElementById("timeDisplay");
+        const playStateChip = document.getElementById("playStateChip");
+
         const watchPercentText = document.getElementById("watchPercentText");
         const watchProgressBar = document.getElementById("watchProgressBar");
+
         const unlockNote = document.getElementById("unlockNote");
+        const skipWarning = document.getElementById("skipWarning");
         const autoCompleteMessage = document.getElementById("autoCompleteMessage");
         const videoStatusText = document.getElementById("videoStatusText");
         const continueBtn = document.getElementById("continueBtn");
+        const qualitySelector = document.getElementById("qualitySelector");
+        const qualityStatus = document.getElementById("qualityStatus");
 
+        let player = null;
         let highestPercent = 0;
         let completionTriggered = false;
+        let maxAllowedTime = 0;
+        let isForcedSeek = false;
+        let isTimelineDragging = false;
 
         function getCookie(name) {
             let cookieValue = null;
@@ -457,6 +817,34 @@
             return cookieValue;
         }
 
+        function formatTime(seconds) {
+            seconds = Math.max(0, Math.floor(seconds || 0));
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+        }
+
+        function updateTimeDisplay() {
+            if (!timeDisplay || !video) {
+                return;
+            }
+            timeDisplay.textContent = formatTime(video.currentTime) + " / " + formatTime(video.duration);
+        }
+
+        function updatePlayState() {
+            if (!playStateChip || !playPauseBtn || !video) {
+                return;
+            }
+
+            if (video.paused) {
+                playStateChip.textContent = "Paused";
+                playPauseBtn.textContent = "Play";
+            } else {
+                playStateChip.textContent = "Playing";
+                playPauseBtn.textContent = "Pause";
+            }
+        }
+
         function setCompletedUI() {
             if (autoCompleteMessage) {
                 autoCompleteMessage.textContent = "✅ Module completed successfully. You can go back to the course and continue.";
@@ -470,6 +858,10 @@
             if (unlockNote) {
                 unlockNote.style.display = "block";
                 unlockNote.textContent = "✅ Video completed automatically. The next module is now unlocked.";
+            }
+
+            if (skipWarning) {
+                skipWarning.style.display = "none";
             }
 
             if (continueBtn) {
@@ -489,6 +881,22 @@
                 unlockNote.style.display = "block";
                 unlockNote.textContent = message;
             }
+        }
+
+        function showSkipWarning() {
+            if (!skipWarning) {
+                return;
+            }
+
+            skipWarning.style.display = "block";
+            skipWarning.textContent = "⚠️ Forward skipping is not allowed. Please continue watching normally.";
+
+            window.clearTimeout(showSkipWarning._timer);
+            showSkipWarning._timer = window.setTimeout(function () {
+                if (skipWarning && !completionTriggered) {
+                    skipWarning.style.display = "none";
+                }
+            }, 2200);
         }
 
         function saveCompletionAutomatically() {
@@ -531,12 +939,57 @@
             });
         }
 
-        function updateWatchProgress() {
-            if (!video || !video.duration || isNaN(video.duration) || video.duration <= 0) {
+        function forceBackToAllowedTime() {
+            if (!video) {
                 return;
             }
 
-            const currentPercent = Math.min((video.currentTime / video.duration) * 100, 100);
+            isForcedSeek = true;
+            video.currentTime = Math.max(0, maxAllowedTime);
+            showSkipWarning();
+
+            window.setTimeout(function() {
+                isForcedSeek = false;
+            }, 180);
+        }
+
+        function updateTimeline() {
+            if (!video || !timelineSlider || !video.duration || isNaN(video.duration) || video.duration <= 0) {
+                return;
+            }
+
+            const duration = video.duration;
+            const currentPercent = Math.min((video.currentTime / duration) * 100, 100);
+            const watchedPercent = Math.min((maxAllowedTime / duration) * 100, 100);
+
+            timelineSlider.max = duration.toFixed(1);
+
+            if (!isTimelineDragging) {
+                timelineSlider.value = video.currentTime.toFixed(1);
+            }
+
+            if (timelineCurrent) {
+                timelineCurrent.style.width = currentPercent + "%";
+            }
+
+            if (timelineWatched) {
+                timelineWatched.style.width = watchedPercent + "%";
+            }
+        }
+
+        function updateWatchProgress() {
+            if (!video || !video.duration || isNaN(video.duration) || video.duration <= 0) {
+                updateTimeDisplay();
+                return;
+            }
+
+            const currentTime = video.currentTime;
+            const duration = video.duration;
+            const currentPercent = Math.min((currentTime / duration) * 100, 100);
+
+            if (currentTime > maxAllowedTime) {
+                maxAllowedTime = currentTime;
+            }
 
             if (currentPercent > highestPercent) {
                 highestPercent = currentPercent;
@@ -552,17 +1005,264 @@
                 watchProgressBar.style.width = roundedPercent + "%";
             }
 
+            updateTimeDisplay();
+            updateTimeline();
+
             if (highestPercent >= 90) {
                 saveCompletionAutomatically();
             }
         }
 
-        if (video && mpdUrl) {
-            const player = dashjs.MediaPlayer().create();
-            player.initialize(video, mpdUrl, true);
+        function updateQualityUI() {
+            if (!player || !qualityStatus) {
+                return;
+            }
 
-            video.addEventListener("timeupdate", updateWatchProgress);
-            video.addEventListener("ended", updateWatchProgress);
+            const autoMode = player.getSettings().streaming.abr.autoSwitchBitrate.video;
+            if (autoMode) {
+                qualityStatus.textContent = "Quality: Auto";
+                if (qualitySelector) {
+                    qualitySelector.value = "auto";
+                }
+                return;
+            }
+
+            const currentIndex = player.getQualityFor("video");
+            const bitrates = player.getBitrateInfoListFor("video") || [];
+            const currentItem = bitrates[currentIndex];
+
+            if (currentItem && currentItem.height) {
+                qualityStatus.textContent = "Quality: " + currentItem.height + "p";
+                if (qualitySelector) {
+                    qualitySelector.value = String(currentIndex);
+                }
+            } else {
+                qualityStatus.textContent = "Quality: Manual";
+            }
+        }
+
+        function buildQualityOptions() {
+            if (!player || !qualitySelector) {
+                return;
+            }
+
+            const bitrates = player.getBitrateInfoListFor("video") || [];
+            qualitySelector.innerHTML = '<option value="auto">Auto</option>';
+
+            bitrates.forEach(function(item, index) {
+                let label = "Quality " + (index + 1);
+                if (item.height) {
+                    label = item.height + "p";
+                } else if (item.bitrate) {
+                    label = Math.round(item.bitrate / 1000) + " kbps";
+                }
+
+                const option = document.createElement("option");
+                option.value = String(index);
+                option.textContent = label;
+                qualitySelector.appendChild(option);
+            });
+
+            updateQualityUI();
+        }
+
+        function toggleFullscreen() {
+            if (!playerShell) {
+                return;
+            }
+
+            if (!document.fullscreenElement) {
+                if (playerShell.requestFullscreen) {
+                    playerShell.requestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        if (video && mpdUrl) {
+            video.removeAttribute("controls");
+            video.controls = false;
+            video.disablePictureInPicture = true;
+            video.setAttribute("playsinline", "true");
+            video.setAttribute("webkit-playsinline", "true");
+            video.oncontextmenu = function () { return false; };
+
+            player = dashjs.MediaPlayer().create();
+            player.initialize(video, mpdUrl, false);
+
+            player.updateSettings({
+                streaming: {
+                    abr: {
+                        autoSwitchBitrate: {
+                            video: true
+                        }
+                    }
+                }
+            });
+
+            player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function () {
+                buildQualityOptions();
+            });
+
+            player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function () {
+                updateQualityUI();
+            });
+
+            if (qualitySelector) {
+                qualitySelector.addEventListener("change", function () {
+                    const selectedValue = qualitySelector.value;
+
+                    if (selectedValue === "auto") {
+                        player.updateSettings({
+                            streaming: {
+                                abr: {
+                                    autoSwitchBitrate: {
+                                        video: true
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        player.updateSettings({
+                            streaming: {
+                                abr: {
+                                    autoSwitchBitrate: {
+                                        video: false
+                                    }
+                                }
+                            }
+                        });
+                        player.setQualityFor("video", parseInt(selectedValue, 10));
+                    }
+
+                    updateQualityUI();
+                });
+            }
+
+            if (playPauseBtn) {
+                playPauseBtn.addEventListener("click", function () {
+                    if (video.paused) {
+                        video.play();
+                    } else {
+                        video.pause();
+                    }
+                });
+            }
+
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener("click", function () {
+                    toggleFullscreen();
+                });
+            }
+
+            if (timelineSlider) {
+                timelineSlider.addEventListener("mousedown", function () {
+                    isTimelineDragging = true;
+                });
+
+                timelineSlider.addEventListener("touchstart", function () {
+                    isTimelineDragging = true;
+                });
+
+                timelineSlider.addEventListener("input", function () {
+                    const target = parseFloat(timelineSlider.value || "0");
+
+                    if (!isNaN(target) && video.duration) {
+                        const allowedTarget = Math.min(target, maxAllowedTime);
+
+                        if (target > maxAllowedTime + 0.05) {
+                            timelineSlider.value = allowedTarget.toFixed(1);
+                            showSkipWarning();
+                        }
+
+                        if (timelineCurrent) {
+                            timelineCurrent.style.width = Math.min((allowedTarget / video.duration) * 100, 100) + "%";
+                        }
+                    }
+                });
+
+                timelineSlider.addEventListener("change", function () {
+                    const target = parseFloat(timelineSlider.value || "0");
+
+                    if (!isNaN(target)) {
+                        if (target <= maxAllowedTime + 0.05) {
+                            video.currentTime = target;
+                        } else {
+                            video.currentTime = maxAllowedTime;
+                            showSkipWarning();
+                        }
+                    }
+
+                    isTimelineDragging = false;
+                    updateTimeline();
+                });
+
+                timelineSlider.addEventListener("mouseup", function () {
+                    isTimelineDragging = false;
+                });
+
+                timelineSlider.addEventListener("touchend", function () {
+                    isTimelineDragging = false;
+                });
+            }
+
+            video.addEventListener("loadedmetadata", function () {
+                maxAllowedTime = 0;
+                updateTimeDisplay();
+                updatePlayState();
+                updateTimeline();
+            });
+
+            video.addEventListener("play", updatePlayState);
+            video.addEventListener("pause", updatePlayState);
+
+            video.addEventListener("timeupdate", function () {
+                updateWatchProgress();
+            });
+
+            video.addEventListener("seeking", function () {
+                if (isForcedSeek || isTimelineDragging) {
+                    return;
+                }
+
+                if (video.currentTime > maxAllowedTime + 0.05) {
+                    forceBackToAllowedTime();
+                }
+            });
+
+            video.addEventListener("seeked", function () {
+                if (isForcedSeek || isTimelineDragging) {
+                    return;
+                }
+
+                if (video.currentTime > maxAllowedTime + 0.05) {
+                    forceBackToAllowedTime();
+                }
+            });
+
+            video.addEventListener("ratechange", function () {
+                if (video.playbackRate !== 1) {
+                    video.playbackRate = 1;
+                    showSkipWarning();
+                }
+            });
+
+            video.addEventListener("ended", function () {
+                updateWatchProgress();
+                updatePlayState();
+            });
+
+            document.addEventListener("keydown", function (event) {
+                const blockedKeys = ["ArrowRight", "l", "L"];
+
+                if (blockedKeys.includes(event.key)) {
+                    event.preventDefault();
+                    showSkipWarning();
+                }
+            });
         }
     });
 </script>
