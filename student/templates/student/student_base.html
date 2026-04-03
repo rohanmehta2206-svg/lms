@@ -55,6 +55,12 @@
             color: #2563eb;
         }
 
+        /* NEW: PROFILE LINK STYLE */
+        .profile-link {
+            font-weight: 600;
+            color: #2563eb !important;
+        }
+
         .logout {
             background: #2563eb;
             color: white !important;
@@ -208,6 +214,10 @@
             <a href="{% url 'student:my_courses' %}">My Courses</a>
             <a href="{% url 'student:progress_tracker' %}">Progress</a>
             <a href="{% url 'student:certificates' %}">Certificates</a>
+
+            <!-- ✅ NEW PROFILE LINK -->
+            <a href="{% url 'student:profile' %}" class="profile-link">Profile</a>
+
             <a href="{% url 'accounts:logout' %}" class="logout">Logout</a>
         </div>
     </div>

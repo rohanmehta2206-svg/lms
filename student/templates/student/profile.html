@@ -1,0 +1,483 @@
+{% extends 'student/student_base.html' %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<style>
+    .profile-page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 10px 0 30px;
+    }
+
+    .profile-header {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+        border-radius: 22px;
+        padding: 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 28px;
+        box-shadow: 0 12px 30px rgba(37, 99, 235, 0.18);
+        flex-wrap: wrap;
+    }
+
+    .profile-header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .profile-avatar {
+        width: 82px;
+        height: 82px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.18);
+        border: 3px solid rgba(255, 255, 255, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .profile-user-info h1 {
+        margin: 0 0 6px;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .profile-user-info p {
+        margin: 0;
+        font-size: 15px;
+        opacity: 0.95;
+    }
+
+    .role-badge {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    .profile-header-right {
+        text-align: right;
+    }
+
+    .profile-header-right p {
+        margin: 0 0 8px;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .profile-header-right h3 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+        margin-bottom: 28px;
+    }
+
+    .summary-card {
+        background: white;
+        border-radius: 20px;
+        padding: 22px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e5e7eb;
+    }
+
+    .summary-card h4 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        color: #6b7280;
+        font-weight: 600;
+    }
+
+    .summary-card .value {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .profile-card {
+        background: white;
+        border-radius: 22px;
+        padding: 28px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e5e7eb;
+    }
+
+    .profile-card h2 {
+        margin: 0 0 8px;
+        font-size: 22px;
+        color: #111827;
+    }
+
+    .profile-card .card-subtitle {
+        margin: 0 0 24px;
+        font-size: 14px;
+        color: #6b7280;
+        line-height: 1.6;
+    }
+
+    .info-list {
+        display: grid;
+        gap: 16px;
+    }
+
+    .info-item {
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+    }
+
+    .info-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #6b7280;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .info-value {
+        font-size: 15px;
+        color: #111827;
+        font-weight: 500;
+        word-break: break-word;
+    }
+
+    .form-section {
+        margin-bottom: 28px;
+    }
+
+    .form-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-section h3 {
+        margin: 0 0 14px;
+        font-size: 18px;
+        color: #111827;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 13px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        font-size: 14px;
+        outline: none;
+        transition: 0.2s ease;
+        background: #fff;
+    }
+
+    .form-group input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+    }
+
+    .btn-primary {
+        border: none;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        padding: 13px 22px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
+    }
+
+    .divider {
+        height: 1px;
+        background: #e5e7eb;
+        margin: 26px 0;
+    }
+
+    .message-wrap {
+        margin-bottom: 22px;
+    }
+
+    .alert {
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        margin-bottom: 10px;
+        border: 1px solid transparent;
+    }
+
+    .alert-success {
+        background: #ecfdf5;
+        color: #065f46;
+        border-color: #a7f3d0;
+    }
+
+    .alert-error {
+        background: #fef2f2;
+        color: #991b1b;
+        border-color: #fecaca;
+    }
+
+    .alert-warning {
+        background: #fffbeb;
+        color: #92400e;
+        border-color: #fde68a;
+    }
+
+    .alert-info {
+        background: #eff6ff;
+        color: #1e40af;
+        border-color: #bfdbfe;
+    }
+
+    @media (max-width: 900px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-header {
+            padding: 24px;
+        }
+
+        .profile-header-right {
+            text-align: left;
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .profile-avatar {
+            width: 68px;
+            height: 68px;
+            font-size: 24px;
+        }
+
+        .profile-user-info h1 {
+            font-size: 22px;
+        }
+
+        .summary-card .value {
+            font-size: 24px;
+        }
+
+        .profile-card {
+            padding: 22px;
+        }
+    }
+</style>
+
+<div class="profile-page">
+
+    {% if messages %}
+    <div class="message-wrap">
+        {% for message in messages %}
+            <div class="alert
+                {% if message.tags == 'success' %}alert-success
+                {% elif message.tags == 'error' %}alert-error
+                {% elif message.tags == 'warning' %}alert-warning
+                {% else %}alert-info
+                {% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="profile-header">
+        <div class="profile-header-left">
+            <div class="profile-avatar">
+                {{ user.username|default:"S"|first|upper }}
+            </div>
+
+            <div class="profile-user-info">
+                <h1>
+                    {% if user.get_full_name %}
+                        {{ user.get_full_name }}
+                    {% else %}
+                        {{ user.username }}
+                    {% endif %}
+                </h1>
+                <p>{{ user.email|default:"No email added" }}</p>
+                <span class="role-badge">Student Account</span>
+            </div>
+        </div>
+
+        <div class="profile-header-right">
+            <p>Member since</p>
+            <h3>{{ user.date_joined|date:"d M Y" }}</h3>
+        </div>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <h4>Enrolled Courses</h4>
+            <p class="value">{{ enrolled_courses_count }}</p>
+        </div>
+
+        <div class="summary-card">
+            <h4>Completed Courses</h4>
+            <p class="value">{{ completed_courses_count }}</p>
+        </div>
+
+        <div class="summary-card">
+            <h4>Pending Modules</h4>
+            <p class="value">{{ pending_modules_count }}</p>
+        </div>
+
+        <div class="summary-card">
+            <h4>Certificates Earned</h4>
+            <p class="value">{{ certificates_count }}</p>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+        <div class="profile-card">
+            <h2>Personal Information</h2>
+            <p class="card-subtitle">
+                View your basic account details and student information connected to your LMS account.
+            </p>
+
+            <div class="info-list">
+                <div class="info-item">
+                    <span class="info-label">Username</span>
+                    <div class="info-value">{{ user.username }}</div>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Full Name</span>
+                    <div class="info-value">
+                        {% if user.get_full_name %}
+                            {{ user.get_full_name }}
+                        {% else %}
+                            Not added
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Email Address</span>
+                    <div class="info-value">
+                        {{ user.email|default:"Not added" }}
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Joined Date</span>
+                    <div class="info-value">{{ user.date_joined|date:"d M Y" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Moodle User ID</span>
+                    <div class="info-value">
+                        {% if user.profile and user.profile.moodle_user_id %}
+                            {{ user.profile.moodle_user_id }}
+                        {% else %}
+                            Not linked
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-card">
+            <h2>Account Settings</h2>
+            <p class="card-subtitle">
+                Update your account information and change your password securely.
+            </p>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="form-section">
+                    <h3>Edit Profile</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" value="{{ user.username }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="full_name">Full Name</label>
+                            <input type="text" id="full_name" name="full_name" value="{{ user.get_full_name }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" value="{{ user.email }}">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">Update Profile</button>
+
+                <div class="divider"></div>
+
+                <div class="form-section">
+                    <h3>Change Password</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="current_password">Current Password</label>
+                            <input type="password" id="current_password" name="current_password">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="new_password">New Password</label>
+                            <input type="password" id="new_password" name="new_password">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirm_password">Confirm New Password</label>
+                            <input type="password" id="confirm_password" name="confirm_password">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">Change Password</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -4,96 +4,212 @@
 
 {% block content %}
 
-<!-- WELCOME -->
-<div class="welcome">
-    <h2>Welcome Student 👋</h2>
-    <p>Continue your learning, complete modules, and track your progress.</p>
-</div>
+<style>
+    .dashboard-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+    }
 
-<!-- STATS -->
-<div class="stats">
-    <div class="card">
-        <h4>Enrolled Courses</h4>
-        <h2>3</h2>
-    </div>
-    <div class="card">
-        <h4>Completed Courses</h4>
-        <h2>1</h2>
-    </div>
-    <div class="card">
-        <h4>Pending Modules</h4>
-        <h2>5</h2>
-    </div>
-    <div class="card">
-        <h4>Certificates</h4>
-        <h2>1</h2>
-    </div>
-</div>
+    .welcome {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+        padding: 34px 38px;
+        border-radius: 18px;
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.18);
+    }
 
-<!-- MY LEARNING -->
-<div class="section">
-    <h3>📘 My Learning</h3>
-    <div class="grid">
-        <div class="box">
-            <h4>Continue Learning</h4>
-            <p>Resume your latest course.</p>
-            <a href="#">Continue →</a>
-        </div>
-        <div class="box">
-            <h4>My Courses</h4>
-            <p>View all enrolled courses.</p>
-            <a href="#">Open Courses →</a>
-        </div>
-        <div class="box">
-            <h4>Progress Tracker</h4>
-            <p>Track your learning progress.</p>
-            <a href="#">View Progress →</a>
-        </div>
-    </div>
-</div>
+    .welcome h2 {
+        margin: 0 0 10px;
+        font-size: 36px;
+        font-weight: 800;
+    }
 
-<!-- MODULES -->
-<div class="section">
-    <h3>🎥 Learning Modules</h3>
-    <div class="grid">
-        <div class="box">
-            <h4>Videos</h4>
-            <p>Watch course videos.</p>
-            <a href="#">Open →</a>
-        </div>
-        <div class="box">
-            <h4>Theory</h4>
-            <p>Read learning material.</p>
-            <a href="#">Open →</a>
-        </div>
-        <div class="box">
-            <h4>Quizzes</h4>
-            <p>Test your knowledge.</p>
-            <a href="#">Open →</a>
-        </div>
-    </div>
-</div>
+    .welcome p {
+        font-size: 16px;
+        opacity: 0.9;
+    }
 
-<!-- ACHIEVEMENTS -->
-<div class="section">
-    <h3>🏆 Achievements</h3>
-    <div class="grid">
-        <div class="box">
-            <h4>Completion Status</h4>
-            <p>Check completed courses.</p>
-            <a href="#">View →</a>
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 18px;
+        padding: 26px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        text-align: center;
+    }
+
+    .card h4 {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 10px;
+    }
+
+    .card h2 {
+        font-size: 30px;
+        font-weight: bold;
+    }
+
+    .section {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section h3 {
+        font-size: 22px;
+        font-weight: bold;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+    }
+
+    .box {
+        background: white;
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .box h4 {
+        margin-bottom: 8px;
+    }
+
+    .box p {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+
+    .box a {
+        color: #2563eb;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .feature-badge {
+        background: #eff6ff;
+        color: #1d4ed8;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        margin-bottom: 10px;
+        display: inline-block;
+    }
+
+    .empty-box {
+        text-align: center;
+    }
+
+    @media (max-width: 900px) {
+        .stats, .grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="dashboard-wrap">
+
+    <!-- WELCOME -->
+    <div class="welcome">
+        <h2>Welcome Student 👋</h2>
+        <p>Track your courses, progress, and learning journey.</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+        <div class="card">
+            <h4>Enrolled Courses</h4>
+            <h2>{{ enrolled_courses_count }}</h2>
         </div>
-        <div class="box">
+        <div class="card">
+            <h4>Completed Courses</h4>
+            <h2>{{ completed_courses_count }}</h2>
+        </div>
+        <div class="card">
+            <h4>Pending Modules</h4>
+            <h2>{{ pending_modules_count }}</h2>
+        </div>
+        <div class="card">
             <h4>Certificates</h4>
-            <p>Download your certificates.</p>
-            <a href="#">View →</a>
-        </div>
-        <div class="box">
-            <h4>Recent Activity</h4>
-            <p>See your recent progress.</p>
-            <a href="#">View →</a>
+            <h2>{{ certificates_count }}</h2>
         </div>
     </div>
+
+    <!-- COURSE OVERVIEW -->
+    <div class="section">
+        <div class="section-header">
+            <h3>📚 Course Overview</h3>
+        </div>
+
+        <div class="grid">
+            {% for item in course_cards %}
+                <div class="box">
+                    <span class="feature-badge">{{ item.progress_percent }}% Progress</span>
+                    <h4>{{ item.course.title }}</h4>
+
+                    <p>
+                        {{ item.completed_modules }}/{{ item.total_modules }} modules completed <br>
+                        Pending: {{ item.pending_modules }}
+                    </p>
+
+                    {% if item.is_completed %}
+                        <a href="{% url 'student:certificates' %}">View Certificate →</a>
+                    {% else %}
+                        <a href="{% url 'student:course_detail' item.course.id %}">Open Course →</a>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div class="box empty-box">
+                    <h4>No Courses</h4>
+                    <p>Start learning by enrolling in a course.</p>
+                    <a href="{% url 'student:my_courses' %}">Browse Courses →</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- MY LEARNING -->
+    <div class="section">
+        <div class="section-header">
+            <h3>📘 My Learning</h3>
+        </div>
+
+        <div class="grid">
+            <div class="box">
+                <h4>My Courses</h4>
+                <p>View all enrolled courses.</p>
+                <a href="{% url 'student:my_courses' %}">Open →</a>
+            </div>
+
+            <div class="box">
+                <h4>Progress Tracker</h4>
+                <p>Check your learning progress.</p>
+                <a href="{% url 'student:progress_tracker' %}">View →</a>
+            </div>
+
+            <div class="box">
+                <h4>Certificates</h4>
+                <p>Download your certificates.</p>
+                <a href="{% url 'student:certificates' %}">View →</a>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 {% endblock %}

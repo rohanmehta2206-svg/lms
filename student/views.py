@@ -20,6 +20,7 @@ from teacher.moodle_api import (
     mark_moodle_activity_complete,
     get_single_activity_completion_state,
     issue_moodle_certificate_record,
+    update_moodle_user_profile_from_django_user,
 )
 from .models import Enrollment, StudentModuleProgress, QuizAttempt, Student
 from accounts.models import UserProfile
@@ -747,18 +748,287 @@ def build_course_state_for_user(user, course):
         "modules": modules_payload,
     }
 
+# =====================================
+# HELPER: DASHBOARD DATA
+# =====================================
+def get_completed_courses_count(user):
+    count = 0
+
+    for course in get_student_active_courses(user):
+        sections = get_course_sections(course)
+        progress_data = get_course_progress_data(user, course, sections)
+
+        if progress_data["total_modules"] > 0 and progress_data["progress_percent"] == 100:
+            count += 1
+
+    return count
+
+
+def get_total_pending_modules_count(user):
+    total_pending = 0
+
+    for course in get_student_active_courses(user):
+        sections = get_course_sections(course)
+        progress_data = get_course_progress_data(user, course, sections)
+        total_pending += progress_data["pending_modules"]
+
+    return total_pending
+
+
+def get_total_certificates_count(user):
+    return len(get_completed_courses_for_certificates(user))
+
+
+def get_dashboard_continue_learning(user):
+    for course in get_student_active_courses(user):
+        sections = get_course_sections(course)
+        progress_data = get_course_progress_data(user, course, sections)
+        next_unlocked_module_id = get_next_unlocked_module_id(user, course)
+
+        if next_unlocked_module_id:
+            next_module = Module.objects.filter(
+                id=next_unlocked_module_id
+            ).select_related("section", "section__course").first()
+
+            if next_module:
+                route_name = None
+
+                if next_module.type == "video":
+                    route_name = "student:play_video"
+                elif next_module.type == "theory":
+                    route_name = "student:read_theory"
+                elif next_module.type == "quiz":
+                    route_name = "student:take_quiz"
+                elif next_module.type == "material":
+                    route_name = "student:material_page"
+
+                return {
+                    "course": course,
+                    "module": next_module,
+                    "progress_percent": progress_data["progress_percent"],
+                    "route_name": route_name,
+                }
+
+    return None
+
+
+def get_dashboard_recent_activity(user):
+    recent_progress = (
+        StudentModuleProgress.objects.filter(
+            student=user,
+            is_completed=True
+        )
+        .select_related("module", "module__section", "module__section__course")
+        .order_by("-completed_at")
+        .first()
+    )
+
+    if recent_progress:
+        return {
+            "type": "module",
+            "title": recent_progress.module.title,
+            "course": recent_progress.module.section.course.title,
+            "time": recent_progress.completed_at,
+        }
+
+    recent_quiz = (
+        QuizAttempt.objects.filter(student=user)
+        .select_related("module", "module__section", "module__section__course")
+        .order_by("-submitted_at")
+        .first()
+    )
+
+    if recent_quiz:
+        return {
+            "type": "quiz",
+            "title": recent_quiz.module.title,
+            "course": recent_quiz.module.section.course.title,
+            "time": recent_quiz.submitted_at,
+            "score_percent": recent_quiz.score_percent,
+        }
+
+    return None
+
+
+def get_dashboard_course_cards(user):
+    cards = []
+
+    for course in get_student_active_courses(user)[:3]:
+        sections = get_course_sections(course)
+        progress_data = get_course_progress_data(user, course, sections)
+        next_unlocked_module_id = get_next_unlocked_module_id(user, course)
+
+        next_module = None
+        if next_unlocked_module_id:
+            next_module = Module.objects.filter(
+                id=next_unlocked_module_id
+            ).select_related("section").first()
+
+        cards.append({
+            "course": course,
+            "progress_percent": progress_data["progress_percent"],
+            "completed_modules": progress_data["completed_modules"],
+            "total_modules": progress_data["total_modules"],
+            "pending_modules": progress_data["pending_modules"],
+            "next_module": next_module,
+            "is_completed": progress_data["total_modules"] > 0 and progress_data["progress_percent"] == 100,
+        })
+
+    return cards
+# =====================================
+# HELPER: DASHBOARD DATA
+# =====================================
+def get_completed_courses_count(user):
+    count = 0
+
+    for course in get_student_active_courses(user):
+        sections = get_course_sections(course)
+        progress_data = get_course_progress_data(user, course, sections)
+
+        if progress_data["total_modules"] > 0 and progress_data["progress_percent"] == 100:
+            count += 1
+
+    return count
+
+
+def get_total_pending_modules_count(user):
+    total_pending = 0
+
+    for course in get_student_active_courses(user):
+        sections = get_course_sections(course)
+        progress_data = get_course_progress_data(user, course, sections)
+        total_pending += progress_data["pending_modules"]
+
+    return total_pending
+
+
+def get_total_certificates_count(user):
+    return len(get_completed_courses_for_certificates(user))
+
+
+def get_dashboard_continue_learning(user):
+    for course in get_student_active_courses(user):
+        sections = get_course_sections(course)
+        progress_data = get_course_progress_data(user, course, sections)
+        next_unlocked_module_id = get_next_unlocked_module_id(user, course)
+
+        if next_unlocked_module_id:
+            next_module = Module.objects.filter(
+                id=next_unlocked_module_id
+            ).select_related("section", "section__course").first()
+
+            if next_module:
+                route_name = None
+
+                if next_module.type == "video":
+                    route_name = "student:play_video"
+                elif next_module.type == "theory":
+                    route_name = "student:read_theory"
+                elif next_module.type == "quiz":
+                    route_name = "student:take_quiz"
+                elif next_module.type == "material":
+                    route_name = "student:material_page"
+
+                return {
+                    "course": course,
+                    "module": next_module,
+                    "progress_percent": progress_data["progress_percent"],
+                    "route_name": route_name,
+                }
+
+    return None
 
 # =====================================
 # DASHBOARD
 # =====================================
 @login_required
 def student_dashboard(request):
-    enrolled_courses_count = len(get_student_active_course_ids(request.user))
+    enrolled_courses = get_student_active_courses(request.user)
+
+    enrolled_courses_count = len(enrolled_courses)
+    completed_courses_count = get_completed_courses_count(request.user)
+    pending_modules_count = get_total_pending_modules_count(request.user)
+    certificates_count = get_total_certificates_count(request.user)
+
+    continue_learning = get_dashboard_continue_learning(request.user)
+    recent_activity = get_dashboard_recent_activity(request.user)
+    course_cards = get_dashboard_course_cards(request.user)
 
     context = {
-        "enrolled_courses_count": enrolled_courses_count
+        "enrolled_courses_count": enrolled_courses_count,
+        "completed_courses_count": completed_courses_count,
+        "pending_modules_count": pending_modules_count,
+        "certificates_count": certificates_count,
+        "continue_learning": continue_learning,
+        "recent_activity": recent_activity,
+        "course_cards": course_cards,
     }
     return render(request, "student/student_dashboard.html", context)
+
+
+def get_dashboard_recent_activity(user):
+    recent_progress = (
+        StudentModuleProgress.objects.filter(
+            student=user,
+            is_completed=True
+        )
+        .select_related("module", "module__section", "module__section__course")
+        .order_by("-completed_at")
+        .first()
+    )
+
+    if recent_progress:
+        return {
+            "type": "module",
+            "title": recent_progress.module.title,
+            "course": recent_progress.module.section.course.title,
+            "time": recent_progress.completed_at,
+        }
+
+    recent_quiz = (
+        QuizAttempt.objects.filter(student=user)
+        .select_related("module", "module__section", "module__section__course")
+        .order_by("-submitted_at")
+        .first()
+    )
+
+    if recent_quiz:
+        return {
+            "type": "quiz",
+            "title": recent_quiz.module.title,
+            "course": recent_quiz.module.section.course.title,
+            "time": recent_quiz.submitted_at,
+            "score_percent": recent_quiz.score_percent,
+        }
+
+    return None
+
+
+def get_dashboard_course_cards(user):
+    cards = []
+
+    for course in get_student_active_courses(user)[:3]:
+        sections = get_course_sections(course)
+        progress_data = get_course_progress_data(user, course, sections)
+        next_unlocked_module_id = get_next_unlocked_module_id(user, course)
+
+        next_module = None
+        if next_unlocked_module_id:
+            next_module = Module.objects.filter(
+                id=next_unlocked_module_id
+            ).select_related("section").first()
+
+        cards.append({
+            "course": course,
+            "progress_percent": progress_data["progress_percent"],
+            "completed_modules": progress_data["completed_modules"],
+            "total_modules": progress_data["total_modules"],
+            "pending_modules": progress_data["pending_modules"],
+            "next_module": next_module,
+            "is_completed": progress_data["total_modules"] > 0 and progress_data["progress_percent"] == 100,
+        })
+
+    return cards
 
 
 # =====================================
@@ -1235,3 +1505,95 @@ def serve_material_file(request, module_id):
         raise Http404("Material file not found.")
 
     return FileResponse(open(real_file_path, "rb"), as_attachment=False)
+
+# =====================================
+# PROFILE PAGE
+# =====================================
+@login_required
+def profile_page(request):
+    user = request.user
+
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        email = (request.POST.get("email") or "").strip()
+        full_name = (request.POST.get("full_name") or "").strip()
+
+        current_password = (request.POST.get("current_password") or "").strip()
+        new_password = (request.POST.get("new_password") or "").strip()
+        confirm_password = (request.POST.get("confirm_password") or "").strip()
+
+        # ===============================
+        # UPDATE BASIC PROFILE
+        # ===============================
+        if username:
+            user.username = username
+
+        if email:
+            user.email = email
+
+        if full_name:
+            parts = full_name.split()
+            user.first_name = parts[0]
+            user.last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
+
+        # ===============================
+        # PASSWORD CHANGE
+        # ===============================
+        if current_password or new_password or confirm_password:
+            if not current_password or not new_password or not confirm_password:
+                messages.error(request, "Fill all password fields.")
+                return redirect("student:profile")
+
+            if not user.check_password(current_password):
+                messages.error(request, "Wrong current password.")
+                return redirect("student:profile")
+
+            if new_password != confirm_password:
+                messages.error(request, "Passwords do not match.")
+                return redirect("student:profile")
+
+            user.set_password(new_password)
+            user.save()
+
+            # 🔥 Moodle sync
+            moodle_ok, moodle_error = update_moodle_user_profile_from_django_user(
+                user,
+                password=new_password
+            )
+
+            if moodle_ok:
+                messages.success(request, "Password updated in Django + Moodle.")
+            else:
+                messages.warning(request, f"Moodle sync failed: {moodle_error}")
+
+            return redirect("accounts:login")
+
+        # ===============================
+        # SAVE PROFILE
+        # ===============================
+        user.save()
+
+        # 🔥 Moodle sync
+        moodle_ok, moodle_error = update_moodle_user_profile_from_django_user(user)
+
+        if moodle_ok:
+            messages.success(request, "Profile updated successfully.")
+        else:
+            messages.warning(request, f"Moodle sync failed: {moodle_error}")
+
+        return redirect("student:profile")
+
+    # ===============================
+    # GET DATA FOR PAGE
+    # ===============================
+    enrolled_courses = get_student_active_courses(user)
+
+    context = {
+        "user": user,
+        "enrolled_courses_count": len(enrolled_courses),
+        "completed_courses_count": get_completed_courses_count(user),
+        "pending_modules_count": get_total_pending_modules_count(user),
+        "certificates_count": get_total_certificates_count(user),
+    }
+
+    return render(request, "student/profile.html", context)

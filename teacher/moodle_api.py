@@ -891,3 +891,113 @@ def create_moodle_user(username, password, firstname, lastname, email):
         return result["data"][0].get("id"), None
 
     return None, result.get("error", "User creation failed")
+
+
+# ========================================
+# UPDATE / SYNC MOODLE USER PROFILE
+# ========================================
+
+def update_moodle_user(
+    moodle_user_id,
+    username=None,
+    firstname=None,
+    lastname=None,
+    email=None,
+    password=None,
+):
+    """
+    Update an existing Moodle user.
+    This uses Moodle core_user_update_users.
+    """
+
+    if not moodle_user_id:
+        return False, "Moodle user id is required"
+
+    params = {
+        "users[0][id]": moodle_user_id,
+    }
+
+    if username is not None and str(username).strip():
+        params["users[0][username]"] = str(username).strip()
+
+    if firstname is not None and str(firstname).strip():
+        params["users[0][firstname]"] = str(firstname).strip()
+
+    if lastname is not None and str(lastname).strip():
+        params["users[0][lastname]"] = str(lastname).strip()
+
+    if email is not None and str(email).strip():
+        params["users[0][email]"] = str(email).strip()
+
+    if password is not None and str(password).strip():
+        params["users[0][password]"] = str(password)
+
+    result = call_moodle_api("core_user_update_users", params)
+
+    if result["success"]:
+        return True, None
+
+    return False, result.get("error", "Moodle user update failed")
+
+
+def get_moodle_user_by_id(moodle_user_id):
+    """
+    Fetch one Moodle user by id.
+    """
+    if not moodle_user_id:
+        return None, "Moodle user id is required"
+
+    params = {
+        "field": "id",
+        "values[0]": moodle_user_id,
+    }
+
+    result = call_moodle_api("core_user_get_users_by_field", params)
+
+    if result["success"] and isinstance(result["data"], list) and result["data"]:
+        return result["data"][0], None
+
+    return None, result.get("error", "Could not fetch Moodle user")
+
+
+def update_moodle_user_profile_from_django_user(user, password=None):
+    """
+    Sync Django user profile to Moodle profile.
+    Expects:
+    - Django user has user.profile.moodle_user_id
+      OR student row sync already handled elsewhere.
+    """
+
+    if not user:
+        return False, "Django user is required"
+
+    moodle_user_id = None
+
+    user_profile = getattr(user, "profile", None)
+    if user_profile:
+        moodle_user_id = getattr(user_profile, "moodle_user_id", None)
+
+    if not moodle_user_id:
+        return False, "Moodle user id not found for this user"
+
+    full_name = (user.get_full_name() or "").strip()
+    first_name = ""
+    last_name = ""
+
+    if full_name:
+        name_parts = full_name.split()
+        first_name = name_parts[0]
+        if len(name_parts) > 1:
+            last_name = " ".join(name_parts[1:])
+    else:
+        first_name = getattr(user, "username", "Student")
+        last_name = "User"
+
+    return update_moodle_user(
+        moodle_user_id=moodle_user_id,
+        username=getattr(user, "username", None),
+        firstname=first_name,
+        lastname=last_name,
+        email=getattr(user, "email", None),
+        password=password,
+    )
