@@ -1,0 +1,227 @@
+{% extends 'adminpanel/base.html' %}
+
+{% block title %}Audit Reports{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header {
+        margin-bottom: 24px;
+    }
+
+    .header h2 {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .stat-box {
+        background: white;
+        padding: 16px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        text-align: center;
+    }
+
+    .stat-title {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 14px 16px;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    th {
+        background: #f9fafb;
+        font-weight: 700;
+        color: #374151;
+    }
+
+    tr {
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    tr:hover {
+        background: #f9fafb;
+    }
+
+    .badge {
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .admin {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .teacher {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .student {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .inactive {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .small-text {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    @media (max-width: 992px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="header">
+    <h2>Audit Reports</h2>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-box">
+        <div class="stat-title">Total Users</div>
+        <div class="stat-value">{{ total_users }}</div>
+    </div>
+
+    <div class="stat-box">
+        <div class="stat-title">Students</div>
+        <div class="stat-value">{{ total_students }}</div>
+    </div>
+
+    <div class="stat-box">
+        <div class="stat-title">Teachers</div>
+        <div class="stat-value">{{ total_teachers }}</div>
+    </div>
+
+    <div class="stat-box">
+        <div class="stat-title">Admins</div>
+        <div class="stat-value">{{ total_admins }}</div>
+    </div>
+
+    <div class="stat-box">
+        <div class="stat-title">Courses</div>
+        <div class="stat-value">{{ total_courses }}</div>
+    </div>
+
+    <div class="stat-box">
+        <div class="stat-title">Active Users</div>
+        <div class="stat-value">{{ active_users }}</div>
+    </div>
+
+    <div class="stat-box">
+        <div class="stat-title">Inactive Users</div>
+        <div class="stat-value">{{ inactive_users }}</div>
+    </div>
+</div>
+
+<!-- Recent Users Table -->
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Joined</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in recent_users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.full_name }}</td>
+                <td>{{ user.email }}</td>
+
+                <td>
+                    {% if user.role == 'Admin' %}
+                        <span class="badge admin">Admin</span>
+                    {% elif user.role == 'Teacher' %}
+                        <span class="badge teacher">Teacher</span>
+                    {% else %}
+                        <span class="badge student">Student</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if user.is_active %}
+                        <span class="badge active">Active</span>
+                    {% else %}
+                        <span class="badge inactive">Inactive</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {{ user.date_joined|date:"d M Y" }}
+                    <div class="small-text">
+                        {{ user.date_joined|date:"H:i" }}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align:center; padding:20px;">
+                    No data available
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

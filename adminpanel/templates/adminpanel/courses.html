@@ -1,0 +1,159 @@
+{% extends 'adminpanel/base.html' %}
+
+{% block title %}Courses{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .header h2 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    .stats {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .stat-box {
+        background: white;
+        padding: 14px 18px;
+        border-radius: 14px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 14px 16px;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    th {
+        background: #f9fafb;
+        font-weight: 700;
+        color: #374151;
+    }
+
+    tr {
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    tr:hover {
+        background: #f9fafb;
+    }
+
+    .badge {
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .published {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .unpublished {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .small-text {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    @media (max-width: 768px) {
+        table {
+            font-size: 13px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="header">
+    <h2>Courses Overview</h2>
+</div>
+
+<!-- Stats -->
+<div class="stats">
+    <div class="stat-box">Total Courses: {{ total_courses }}</div>
+    <div class="stat-box">Published: {{ published_courses }}</div>
+    <div class="stat-box">Unpublished: {{ unpublished_courses }}</div>
+</div>
+
+<!-- Table -->
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Short Name</th>
+                <th>Course Code</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Moodle ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for course in courses %}
+            <tr>
+                <td>{{ course.title }}</td>
+                <td>{{ course.short_name }}</td>
+                <td>{{ course.course_code }}</td>
+                <td>{{ course.category_name }}</td>
+
+                <td>
+                    {% if course.is_published %}
+                        <span class="badge published">Published</span>
+                    {% else %}
+                        <span class="badge unpublished">Unpublished</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if course.moodle_course_id %}
+                        {{ course.moodle_course_id }}
+                    {% else %}
+                        <span class="small-text">Not Synced</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align:center; padding: 20px;">
+                    No courses found
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

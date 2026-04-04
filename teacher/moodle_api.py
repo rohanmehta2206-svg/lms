@@ -1,5 +1,6 @@
 import os
 import time
+import html
 import requests
 from django.conf import settings
 
@@ -89,6 +90,13 @@ def call_moodle_api(function_name, params=None, timeout=DEFAULT_TIMEOUT):
 # MOODLE CATEGORY HELPERS
 # ========================================
 
+def normalize_category_name(value):
+    """
+    Normalize category names so Moodle names like '&amp;' match Django names like '&'.
+    """
+    return html.unescape(str(value or "")).strip().lower()
+
+
 def get_moodle_categories():
     result = call_moodle_api("core_course_get_categories", {})
     if result["success"] and isinstance(result["data"], list):
@@ -122,17 +130,20 @@ def find_moodle_category_by_name(category_name, parent_id=None):
     if error:
         return None, error
 
-    normalized_name = category_name.strip().lower()
+    normalized_name = normalize_category_name(category_name)
 
     exact_matches = []
     for category in categories:
-        moodle_name = str(category.get("name", "")).strip().lower()
+        moodle_name = normalize_category_name(category.get("name", ""))
         if moodle_name == normalized_name:
             exact_matches.append(category)
 
     if not exact_matches:
         return None, f"Moodle category '{category_name}' not found by name"
 
+    # IMPORTANT:
+    # If parent_id is provided, return ONLY a category under that parent.
+    # Do not fall back to a same-name category from another parent.
     if parent_id is not None:
         for category in exact_matches:
             try:
@@ -140,6 +151,8 @@ def find_moodle_category_by_name(category_name, parent_id=None):
                     return category, None
             except (TypeError, ValueError):
                 continue
+
+        return None, f"Moodle category '{category_name}' not found under parent {parent_id}"
 
     return exact_matches[0], None
 
@@ -161,6 +174,7 @@ def ensure_moodle_category(category_id=None, category_name=None, parent_id=None)
         category, error = find_moodle_category_by_name(category_name, parent_id=parent_id)
         if category:
             return category.get("id"), None
+
         print("Category not found by name:", category_name, "|", error)
 
         params = {

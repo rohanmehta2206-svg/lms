@@ -4,14 +4,20 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    # Django default admin (do not remove)
     path('admin/', admin.site.urls),
 
     # Accounts App
     path('accounts/', include('accounts.urls')),
 
-    # ✅ FIXED (ADD NAMESPACE)
+    # Teacher Panel (MAIN LANDING)
     path('', include(('teacher.urls', 'teacher'), namespace='teacher')),
-    path('student/', include('student.urls')),
+
+    # Student Panel
+    path('student/', include(('student.urls', 'student'), namespace='student')),
+
+    # ✅ NEW: Admin Panel (CUSTOM)
+    path('adminpanel/', include(('adminpanel.urls', 'adminpanel'), namespace='adminpanel')),
 ]
 
 # Serve media files in development

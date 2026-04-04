@@ -1,16 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
 from django.contrib import messages
 from .forms import RegisterForm
-from .models import UserProfile
+from .models import UserProfile, PendingTeacher
 
 # Moodle API
-from teacher.moodle_api import (
-    create_moodle_user,
-    create_teacher_parent_category,
-    create_default_child_categories
-)
+from teacher.moodle_api import create_moodle_user
 
 from student.models import Student
 
@@ -86,15 +83,45 @@ def login_view(request):
                 request.session.pop("moodle_user_id", None)
                 print("No Moodle user id found for this user")
 
+            # Admin login
+            if user.is_superuser:
+                return redirect("adminpanel:dashboard")
+
             # Teacher login
-            if user.is_staff or user.is_superuser:
+            if user.is_staff:
                 return redirect("teacher:teacher_dashboard")
 
             # Student login
             return redirect("/student/dashboard/")
 
         else:
-            messages.error(request, "Invalid username or password.")
+            username = request.POST.get("username", "").strip()
+            password = request.POST.get("password", "")
+
+            # Case 1: teacher already created in Django but pending approval
+            pending_teacher_user = User.objects.filter(
+                username=username,
+                is_staff=True,
+                is_superuser=False,
+                is_active=False
+            ).first()
+
+            if pending_teacher_user and pending_teacher_user.check_password(password):
+                messages.error(
+                    request,
+                    "Your teacher account request is pending admin approval. Please wait until the admin approves your account."
+                )
+            else:
+                # Case 2: teacher request only exists in PendingTeacher table
+                pending_teacher_request = PendingTeacher.objects.filter(username=username).first()
+
+                if pending_teacher_request and pending_teacher_request.password == password:
+                    messages.error(
+                        request,
+                        "Your teacher account request is pending admin approval. Please wait until the admin approves your account."
+                    )
+                else:
+                    messages.error(request, "Invalid username or password.")
 
     else:
         form = AuthenticationForm()
@@ -119,87 +146,64 @@ def register_view(request):
 
             is_student = role == "student"
 
-            # -------------------------------------
-            # Create Django user
-            # -------------------------------------
-            user = form.save(commit=False)
-
-            if is_student:
-                user.is_staff = False
-            else:
-                user.is_staff = True
-
-            user.save()
-
-            print("Django user created:", user.username)
-            print("Selected role:", role)
-
             password = form.cleaned_data.get("password1")
+            username = form.cleaned_data.get("username")
+            email = form.cleaned_data.get("email") or f"{username}@example.com"
+            firstname = form.cleaned_data.get("first_name") or username
+            lastname = form.cleaned_data.get("last_name") or ("Student" if is_student else "Teacher")
 
-            username = user.username
-            email = user.email if user.email else f"{username}@example.com"
-            firstname = user.first_name if user.first_name else username
-            lastname = user.last_name if user.last_name else ("Student" if is_student else "Teacher")
+            # -------------------------------------
+            # STUDENT FLOW (keep working)
+            # -------------------------------------
+            if is_student:
+                user = form.save(commit=False)
+                user.is_staff = False
+                user.is_active = True
+                user.save()
 
-            # =====================================
-            # CREATE MOODLE USER
-            # =====================================
-            try:
-                moodle_user_id, moodle_error = create_moodle_user(
-                    username=username,
-                    password=password,
-                    firstname=firstname,
-                    lastname=lastname,
-                    email=email
-                )
+                print("Student Django user created:", user.username)
 
-                if not moodle_user_id:
-                    print("Moodle user creation failed:", moodle_error)
-                    messages.error(
-                        request,
-                        f"Moodle user creation failed: {moodle_error or 'Please try again.'}"
+                try:
+                    moodle_user_id, moodle_error = create_moodle_user(
+                        username=username,
+                        password=password,
+                        firstname=firstname,
+                        lastname=lastname,
+                        email=email
                     )
+
+                    if not moodle_user_id:
+                        print("Moodle user creation failed:", moodle_error)
+                        user.delete()
+                        messages.error(
+                            request,
+                            f"Moodle user creation failed: {moodle_error or 'Please try again.'}"
+                        )
+                        return redirect("accounts:register")
+
+                    print("Student Moodle user created:", moodle_user_id)
+                    request.session["moodle_user_id"] = moodle_user_id
+
+                except Exception as e:
+                    print("Moodle user creation error:", e)
                     user.delete()
+                    messages.error(request, "Moodle connection error.")
                     return redirect("accounts:register")
 
-                print("Moodle user created:", moodle_user_id)
+                try:
+                    UserProfile.objects.update_or_create(
+                        user=user,
+                        defaults={
+                            "moodle_user_id": moodle_user_id,
+                        }
+                    )
+                    print("UserProfile created successfully.")
+                except Exception as e:
+                    print("UserProfile creation error:", e)
+                    user.delete()
+                    messages.error(request, "User profile creation failed.")
+                    return redirect("accounts:register")
 
-                # Save in session
-                request.session["moodle_user_id"] = moodle_user_id
-
-            except Exception as e:
-                print("Moodle user creation error:", e)
-
-                user.delete()
-
-                messages.error(
-                    request,
-                    "Moodle connection error."
-                )
-
-                return redirect("accounts:register")
-
-            # =====================================
-            # CREATE USER PROFILE FOR ALL USERS
-            # =====================================
-            try:
-                UserProfile.objects.update_or_create(
-                    user=user,
-                    defaults={
-                        "moodle_user_id": moodle_user_id,
-                    }
-                )
-                print("UserProfile created successfully.")
-            except Exception as e:
-                print("UserProfile creation error:", e)
-                user.delete()
-                messages.error(request, "User profile creation failed.")
-                return redirect("accounts:register")
-
-            # =====================================
-            # CREATE STUDENT PROFILE ONLY
-            # =====================================
-            if is_student:
                 try:
                     Student.objects.update_or_create(
                         user=user,
@@ -217,42 +221,48 @@ def register_view(request):
                     messages.error(request, "Student profile creation failed.")
                     return redirect("accounts:register")
 
-            # =====================================
-            # CREATE TEACHER CATEGORY ONLY
-            # =====================================
-            if not is_student:
-                try:
-                    print("Creating teacher parent category...")
-
-                    parent_category_id, category_error = create_teacher_parent_category(username)
-
-                    print("Parent category ID:", parent_category_id)
-
-                    if parent_category_id:
-                        create_default_child_categories(parent_category_id)
-                    else:
-                        print("Teacher category creation failed:", category_error)
-
-                except Exception as e:
-                    print("Category creation error:", e)
-
-            # -------------------------------------
-            # Login user after register
-            # -------------------------------------
-            login(request, user)
-
-            # Reconfirm session value after login
-            request.session["moodle_user_id"] = moodle_user_id
-
-            messages.success(request, "Account created successfully!")
-
-            # -------------------------------------
-            # Redirect by role
-            # -------------------------------------
-            if is_student:
+                login(request, user)
+                request.session["moodle_user_id"] = moodle_user_id
+                messages.success(request, "Student account created successfully!")
                 return redirect("/student/dashboard/")
+
+            # -------------------------------------
+            # TEACHER FLOW (save only in PendingTeacher)
+            # -------------------------------------
             else:
-                return redirect("teacher:teacher_dashboard")
+                # block duplicates in Django User
+                if User.objects.filter(username=username).exists():
+                    messages.error(request, "This username is already registered.")
+                    return redirect("accounts:register")
+
+                if User.objects.filter(email=email).exists():
+                    messages.error(request, "This email is already registered.")
+                    return redirect("accounts:register")
+
+                # block duplicates in PendingTeacher
+                if PendingTeacher.objects.filter(username=username).exists():
+                    messages.error(
+                        request,
+                        "A teacher request with this username is already pending admin approval."
+                    )
+                    return redirect("accounts:register")
+
+                PendingTeacher.objects.create(
+                    username=username,
+                    email=email,
+                    first_name=firstname,
+                    last_name=lastname,
+                    password=password,
+                )
+
+                print("Pending teacher request created:", username)
+
+                request.session.pop("moodle_user_id", None)
+                messages.success(
+                    request,
+                    "Teacher account request submitted successfully. After admin approval, your Django and Moodle accounts will be created with the same password."
+                )
+                return redirect("accounts:login")
 
         else:
             messages.error(request, "Please correct the form errors.")
