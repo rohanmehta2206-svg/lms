@@ -26,6 +26,9 @@ urlpatterns = [
     path('take-quiz/<int:module_id>/', views.take_quiz, name='take_quiz'),
     path('read-theory/<int:module_id>/', views.read_theory, name='read_theory'),
 
+    # Video heartbeat
+    path('video-heartbeat/<int:module_id>/', views.save_video_heartbeat, name='save_video_heartbeat'),
+
     # Mark module as completed
     path('mark-complete/<int:module_id>/', views.mark_module_complete, name='mark_module_complete'),
 

@@ -1,16 +1,21 @@
 import os
+import time
+import hmac
+import hashlib
 import subprocess
 import requests
 import json
+import re
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.http import FileResponse, HttpResponse
 from django.contrib import messages
-from .models import Course, Section, Module, QuizQuestion
-from .forms import CourseForm
 from django.views.decorators.clickjacking import xframe_options_exempt
 
+from .models import Course, Section, Module, QuizQuestion
+from .forms import CourseForm
 from .moodle_api import (
     create_moodle_course,
     sync_django_category_with_moodle,
@@ -27,6 +32,251 @@ MOODLE_TOKEN = "53a8b7519e7d735edc9b6423e84f2b54"
 MOODLE_AUTO_ENROLL_USER_ID = 2
 MOODLE_AUTO_ENROLL_ROLE_ID = 3
 
+# ==========================================
+# SECURE STREAMING CONFIG
+# ==========================================
+
+STREAM_TOKEN_TTL_SECONDS = 60 * 30  # 30 minutes
+
+
+# ==========================================
+# SECURE STREAMING HELPERS
+# ==========================================
+
+def normalize_stream_path(path):
+    return str(path or "").replace("\\", "/").lstrip("/")
+
+
+def get_stream_signing_secret():
+    return settings.SECRET_KEY.encode("utf-8")
+
+
+def get_stream_resource_key(path):
+    normalized_path = normalize_stream_path(path)
+    return os.path.dirname(normalized_path).replace("\\", "/")
+
+
+def build_stream_signature_message(path, user_id, expires):
+    resource_key = get_stream_resource_key(path)
+    return f"{resource_key}|{user_id}|{expires}"
+
+
+def generate_stream_token(path, user_id, expires):
+    message = build_stream_signature_message(path, user_id, expires).encode("utf-8")
+    return hmac.new(
+        get_stream_signing_secret(),
+        message,
+        hashlib.sha256
+    ).hexdigest()
+
+
+def build_signed_stream_url(request, path, user_id=None, expires_in=STREAM_TOKEN_TTL_SECONDS):
+    normalized_path = normalize_stream_path(path)
+    user_id = user_id or getattr(request.user, "id", 0) or 0
+    expires = int(time.time()) + int(expires_in)
+    token = generate_stream_token(normalized_path, user_id, expires)
+    return f"/stream/{normalized_path}?expires={expires}&token={token}"
+
+
+def stream_token_is_valid(path, user_id, expires, token):
+    if not path or expires is None or token is None:
+        return False
+
+    if user_id is None:
+        return False
+
+    try:
+        expires = int(expires)
+        user_id = int(user_id)
+    except Exception:
+        return False
+
+    if expires < int(time.time()):
+        return False
+
+    expected_token = generate_stream_token(path, user_id, expires)
+    return hmac.compare_digest(str(token), expected_token)
+
+
+def get_stream_content_type(file_path):
+    lower_path = file_path.lower()
+
+    if lower_path.endswith(".mpd"):
+        return "application/dash+xml"
+    if lower_path.endswith(".m4s"):
+        return "video/mp4"
+    if lower_path.endswith(".pdf"):
+        return "application/pdf"
+    if lower_path.endswith(".doc"):
+        return "application/msword"
+    if lower_path.endswith(".docx"):
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    if lower_path.endswith(".ppt"):
+        return "application/vnd.ms-powerpoint"
+    if lower_path.endswith(".pptx"):
+        return "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    if lower_path.endswith(".txt"):
+        return "text/plain"
+
+    return "application/octet-stream"
+
+def inject_stream_token_into_mpd(mpd_text, expires, token):
+    """
+    Add expires/token into MPD segment references so dash.js requests
+    .m4s/.mp4 files with valid signed query params too.
+    """
+    if not mpd_text or expires is None or token is None:
+        return mpd_text
+
+    def add_query(uri):
+        lower_uri = str(uri).lower()
+
+        if not (
+            lower_uri.endswith(".m4s")
+            or lower_uri.endswith(".mp4")
+            or lower_uri.endswith(".m4a")
+        ):
+            return uri
+
+        if "expires=" in uri and "token=" in uri:
+            return uri
+
+        joiner = "&" if "?" in uri else "?"
+        return f"{uri}{joiner}expires={expires}&token={token}"
+
+    # initialization="..."
+    mpd_text = re.sub(
+        r'(initialization=")([^"]+)(")',
+        lambda m: f'{m.group(1)}{add_query(m.group(2))}{m.group(3)}',
+        mpd_text
+    )
+
+    # media="..."
+    mpd_text = re.sub(
+        r'(media=")([^"]+)(")',
+        lambda m: f'{m.group(1)}{add_query(m.group(2))}{m.group(3)}',
+        mpd_text
+    )
+
+    # single-quote support if present
+    mpd_text = re.sub(
+        r"(initialization=')([^']+)(')",
+        lambda m: f"{m.group(1)}{add_query(m.group(2))}{m.group(3)}",
+        mpd_text
+    )
+
+    mpd_text = re.sub(
+        r"(media=')([^']+)(')",
+        lambda m: f"{m.group(1)}{add_query(m.group(2))}{m.group(3)}",
+        mpd_text
+    )
+
+    # <BaseURL>...</BaseURL> support
+    mpd_text = re.sub(
+        r'(<BaseURL>)([^<]+)(</BaseURL>)',
+        lambda m: f"{m.group(1)}{add_query(m.group(2))}{m.group(3)}",
+        mpd_text
+    )
+
+    return mpd_text
+
+
+def is_video_stream_request(path):
+    lower_path = normalize_stream_path(path).lower()
+    return lower_path.endswith(".mpd") or lower_path.endswith(".m4s")
+
+
+def is_safe_storage_path(base_path, relative_path):
+    absolute_base = os.path.abspath(base_path)
+    absolute_file = os.path.abspath(os.path.join(base_path, relative_path))
+    return absolute_file.startswith(absolute_base), absolute_file
+
+
+def get_video_module_from_stream_path(path):
+    normalized_path = normalize_stream_path(path)
+
+    # Direct MPD path match
+    direct_module = Module.objects.filter(
+        type="video",
+        video_mpd=normalized_path
+    ).select_related("section", "section__course").first()
+
+    if direct_module:
+        return direct_module
+
+    # Segment file match by folder
+    directory = os.path.dirname(normalized_path).replace("\\", "/")
+    if not directory:
+        return None
+
+    possible_mpd_path = f"{directory}/stream.mpd"
+    return Module.objects.filter(
+        type="video",
+        video_mpd=possible_mpd_path
+    ).select_related("section", "section__course").first()
+
+
+def request_user_has_video_access(request, module):
+    user = getattr(request, "user", None)
+
+    if not user or not user.is_authenticated:
+        return False
+
+    if user.is_staff or user.is_superuser:
+        return True
+
+    try:
+        from student.models import Enrollment
+    except Exception:
+        return False
+
+    return Enrollment.objects.filter(
+        student=user,
+        course=module.section.course,
+        is_active=True
+    ).exists()
+
+
+def request_user_can_access_stream(request, path):
+    """
+    Rules:
+    - Staff / superuser logged into Django: allowed directly
+    - Non-video files: allowed directly
+    - Video files:
+        * logged-in student/teacher -> valid token + access check
+        * Moodle iframe / signed public request -> valid token for user_id=0
+    """
+    user = getattr(request, "user", None)
+
+    if user and user.is_authenticated and (user.is_staff or user.is_superuser):
+        return True, None, "Staff access allowed."
+
+    if not is_video_stream_request(path):
+        return True, None, "Non-video file allowed."
+
+    module = get_video_module_from_stream_path(path)
+
+    if not module:
+        return False, None, "Video module mapping not found."
+
+    expires = request.GET.get("expires")
+    token = request.GET.get("token")
+
+    # Logged-in Django user flow
+    if user and user.is_authenticated:
+        if not stream_token_is_valid(path, user.id, expires, token):
+            return False, module, "Invalid or expired stream token."
+
+        if not request_user_has_video_access(request, module):
+            return False, module, "You do not have access to this video."
+
+        return True, module, "Access granted."
+
+    # Moodle iframe / unsigned Django session but signed URL present
+    if stream_token_is_valid(path, 0, expires, token):
+        return True, module, "Signed iframe access allowed."
+
+    return False, module, "Login required or invalid stream token."
 
 # ==========================================
 # MOODLE API FUNCTIONS
@@ -167,7 +417,7 @@ def get_video_completion_payload():
     So Moodle should NOT auto-complete on activity view.
     """
     return {
-        "completion": 1,
+        "completion": 2,
         "completionview": 0,
     }
 
@@ -341,6 +591,108 @@ def send_material_to_moodle(course_id, section_number, title, file_url, filename
             "success": False,
             "error": str(e)
         }
+    
+def normalize_compare_text(value):
+    return " ".join(str(value or "").strip().lower().split())
+
+
+def fetch_moodle_course_contents(course_id):
+    data = {
+        "wstoken": MOODLE_TOKEN,
+        "wsfunction": "core_course_get_contents",
+        "moodlewsrestformat": "json",
+        "courseid": course_id,
+    }
+
+    response = requests.post(MOODLE_URL, data=data)
+
+    print("Recover mapping status code:", response.status_code)
+    print("Recover mapping raw response:", response.text[:700])
+
+    try:
+        json_data = response.json()
+        if isinstance(json_data, dict) and json_data.get("exception"):
+            return None, json_data.get("message", "Moodle returned an exception.")
+        return json_data, None
+    except Exception:
+        return None, response.text[:700]
+
+
+def flatten_moodle_course_modules(course_contents):
+    rows = []
+
+    if not isinstance(course_contents, list):
+        return rows
+
+    for section in course_contents:
+        section_number = section.get("section")
+        modules = section.get("modules") or []
+
+        for item in modules:
+            rows.append({
+                "section_number": section_number,
+                "cmid": item.get("id"),
+                "instanceid": item.get("instance"),
+                "modname": item.get("modname"),
+                "name": item.get("name"),
+            })
+
+    return rows
+
+
+def recover_moodle_module_mapping(module):
+    """
+    Best-effort recovery for old modules where moodle_cmid was not saved.
+    Match by:
+    - Moodle course id
+    - section number
+    - module title
+    """
+    if not module:
+        return False, "Module is missing."
+
+    moodle_course_id = getattr(module.section.course, "moodle_course_id", None)
+    section_number = getattr(module.section, "moodle_section_number", None)
+    module_title = normalize_compare_text(module.title)
+
+    if not moodle_course_id:
+        return False, "Moodle course id is missing."
+
+    if section_number is None:
+        return False, "Moodle section number is missing."
+
+    course_contents, error = fetch_moodle_course_contents(moodle_course_id)
+    if error:
+        return False, f"Could not fetch Moodle course contents: {error}"
+
+    flat_rows = flatten_moodle_course_modules(course_contents)
+
+    exact_matches = [
+        row for row in flat_rows
+        if row.get("section_number") == section_number
+        and normalize_compare_text(row.get("name")) == module_title
+    ]
+
+    if not exact_matches:
+        return False, "No matching Moodle activity found for this module."
+
+    matched = exact_matches[-1]
+
+    recovered_result = {
+        "cmid": matched.get("cmid"),
+        "instanceid": matched.get("instanceid"),
+    }
+
+    save_moodle_module_mapping(module, recovered_result)
+
+    if module.moodle_cmid:
+        print(
+            f"✅ Recovered Moodle mapping for module {module.id}: "
+            f"cmid={module.moodle_cmid}, instanceid={module.moodle_instance_id}"
+        )
+        return True, "Moodle module mapping recovered successfully."
+
+    return False, "Matched Moodle activity found, but cmid could not be saved."
 
 
 def moodle_result_ok(result):
@@ -377,6 +729,7 @@ def save_moodle_module_mapping(module, moodle_result):
 
     moodle_instance_id = (
         moodle_result.get("instanceid")
+        or moodle_result.get("instance")
         or moodle_result.get("id")
     )
 
@@ -669,7 +1022,23 @@ def course_detail(request, course_id):
 @xframe_options_exempt
 def play_module(request, module_id):
     module = get_object_or_404(Module, id=module_id)
-    return render(request, "teacher/play_module.html", {"module": module})
+
+    secure_mpd_url = None
+    if module.video_mpd:
+        secure_mpd_url = build_signed_stream_url(
+            request=request,
+            path=module.video_mpd,
+            user_id=getattr(request.user, "id", 0) or 0
+        )
+
+    return render(
+        request,
+        "teacher/play_module.html",
+        {
+            "module": module,
+            "secure_mpd_url": secure_mpd_url,
+        }
+    )
 
 
 # ==========================================
@@ -762,6 +1131,10 @@ def module_builder(request, section_id):
                         player_url
                     )
                     save_moodle_module_mapping(module, moodle_result)
+
+                if moodle_result_ok(moodle_result) and not module.moodle_cmid:
+                    recover_ok, recover_message = recover_moodle_module_mapping(module)
+                    print("Video module recover mapping:", recover_ok, recover_message)
 
                 if moodle_result_ok(moodle_result):
                     messages.success(request, "Video uploaded successfully in Django and Moodle.")
@@ -914,31 +1287,55 @@ def module_builder(request, section_id):
 # ==========================================
 
 def serve_dash(request, path):
+    normalized_path = normalize_stream_path(path)
     base_path = settings.LMS_STORAGE_PATH
-    file_path = os.path.join(base_path, path)
+
+    is_safe, file_path = is_safe_storage_path(base_path, normalized_path)
+    if not is_safe:
+        return HttpResponse("Invalid file path", status=403)
 
     if not os.path.exists(file_path):
         return HttpResponse("File not found", status=404)
 
-    lower_path = file_path.lower()
+    is_allowed, module, message = request_user_can_access_stream(request, normalized_path)
+    if not is_allowed:
+        print("❌ Stream denied:", message, "| path:", normalized_path)
+        return HttpResponse(message, status=403)
 
-    if lower_path.endswith(".mpd"):
-        content_type = "application/dash+xml"
-    elif lower_path.endswith(".m4s"):
-        content_type = "video/mp4"
-    elif lower_path.endswith(".pdf"):
-        content_type = "application/pdf"
-    elif lower_path.endswith(".doc"):
-        content_type = "application/msword"
-    elif lower_path.endswith(".docx"):
-        content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    elif lower_path.endswith(".ppt"):
-        content_type = "application/vnd.ms-powerpoint"
-    elif lower_path.endswith(".pptx"):
-        content_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-    elif lower_path.endswith(".txt"):
-        content_type = "text/plain"
-    else:
-        content_type = "application/octet-stream"
+    content_type = get_stream_content_type(file_path)
 
-    return FileResponse(open(file_path, "rb"), content_type=content_type)
+    # MPD file: rewrite segment URLs and attach signed token
+    if normalized_path.lower().endswith(".mpd"):
+        expires = request.GET.get("expires")
+        token = request.GET.get("token")
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            mpd_text = f.read()
+
+        updated_mpd = inject_stream_token_into_mpd(
+            mpd_text=mpd_text,
+            expires=expires,
+            token=token,
+        )
+
+        print(
+            "✅ MPD served with signed segment URLs |",
+            "path:", normalized_path,
+            "| module:", getattr(module, "id", None),
+            "| user:", getattr(getattr(request, "user", None), "username", None),
+        )
+
+        response = HttpResponse(updated_mpd, content_type="application/dash+xml")
+        response["Cache-Control"] = "no-store"
+        return response
+
+    print(
+        "✅ Stream allowed |",
+        "path:", normalized_path,
+        "| module:", getattr(module, "id", None),
+        "| user:", getattr(getattr(request, "user", None), "username", None),
+    )
+
+    response = FileResponse(open(file_path, "rb"), content_type=content_type)
+    response["Cache-Control"] = "no-store"
+    return response

@@ -15,6 +15,7 @@ from reportlab.graphics.shapes import Drawing
 from reportlab.graphics import renderPDF
 
 from teacher.models import Course, Section, Module
+from teacher.views import build_signed_stream_url
 from teacher.moodle_api import (
     enroll_student_to_course,
     mark_moodle_activity_complete,
@@ -22,8 +23,16 @@ from teacher.moodle_api import (
     issue_moodle_certificate_record,
     update_moodle_user_profile_from_django_user,
 )
-from .models import Enrollment, StudentModuleProgress, QuizAttempt, Student
+from .models import (
+    Enrollment,
+    StudentModuleProgress,
+    QuizAttempt,
+    Student,
+    VideoWatchProgress,
+    VideoWatchEvent,
+)
 from accounts.models import UserProfile
+from django.views.decorators.http import require_POST
 
 
 # =====================================
@@ -135,19 +144,28 @@ def get_next_unlocked_module_id(user, course):
 
 
 def get_locked_module_ids(user, course):
+    """
+    Strict guided flow:
+    - completed modules before the first pending module stay open
+    - first pending module stays unlocked
+    - every module after the first pending module stays locked
+    """
     ordered_modules = get_ordered_course_modules(course)
     completed_module_ids = get_completed_module_ids(user, course)
-    next_unlocked_module_id = get_next_unlocked_module_id(user, course)
 
     locked_module_ids = set()
+    first_pending_found = False
 
     for module in ordered_modules:
-        if module.id in completed_module_ids:
+        if not first_pending_found:
+            if module.id in completed_module_ids:
+                continue
+
+            # first incomplete module = current unlocked module
+            first_pending_found = True
             continue
 
-        if module.id == next_unlocked_module_id:
-            continue
-
+        # everything after first pending stays locked
         locked_module_ids.add(module.id)
 
     return locked_module_ids
@@ -652,7 +670,89 @@ def complete_module_and_try_moodle_sync(user, module):
     progress_obj = complete_module_for_user(user, module)
     moodle_sync = try_sync_module_completion_to_moodle(user, module)
     return progress_obj, moodle_sync
+# =====================================
+# HELPER: VIDEO WATCH VALIDATION
+# =====================================
+def get_or_create_video_watch_progress(user, module):
+    return VideoWatchProgress.objects.get_or_create(
+        student=user,
+        module=module,
+        defaults={
+            "total_duration": 0,
+            "watched_seconds": 0,
+            "watched_percent": 0,
+            "last_position": 0,
+            "max_position_reached": 0,
+            "heartbeat_count": 0,
+            "is_completed": False,
+        }
+    )
 
+
+def get_video_watch_progress(user, module):
+    return VideoWatchProgress.objects.filter(
+        student=user,
+        module=module
+    ).first()
+
+
+def calculate_safe_watched_increment(progress_obj, event_type, current_time):
+    """
+    This prevents fake progress from large jumps.
+    Only small forward movement is counted as real watch time.
+    """
+    if not progress_obj:
+        return 0
+
+    if event_type in ["seek"]:
+        return 0
+
+    if event_type in ["play", "pause"]:
+        return 0
+
+    previous_position = float(progress_obj.last_position or 0)
+    current_time = float(current_time or 0)
+
+    if current_time < previous_position:
+        return 0
+
+    difference = current_time - previous_position
+
+    # Count only small realistic movement
+    # If student jumps too much, do not count it
+    if difference < 0:
+        return 0
+
+    if difference > 20:
+        return 0
+
+    return difference
+
+
+def complete_video_module_after_validation(user, module):
+    progress_obj, moodle_sync = complete_module_and_try_moodle_sync(user, module)
+    return progress_obj, moodle_sync
+
+
+def build_video_progress_payload(progress_obj):
+    if not progress_obj:
+        return {
+            "watched_seconds": 0,
+            "watched_percent": 0,
+            "last_position": 0,
+            "max_position_reached": 0,
+            "heartbeat_count": 0,
+            "is_completed": False,
+        }
+
+    return {
+        "watched_seconds": round(float(progress_obj.watched_seconds or 0), 2),
+        "watched_percent": round(float(progress_obj.watched_percent or 0), 2),
+        "last_position": round(float(progress_obj.last_position or 0), 2),
+        "max_position_reached": round(float(progress_obj.max_position_reached or 0), 2),
+        "heartbeat_count": int(progress_obj.heartbeat_count or 0),
+        "is_completed": bool(progress_obj.is_completed),
+    }
 
 # =====================================
 # HELPER: QUIZ SCORING
@@ -727,14 +827,19 @@ def build_course_state_for_user(user, course):
         for module in ordered_modules:
             latest_attempt = get_latest_quiz_attempt(user, module) if module.type == "quiz" else None
 
+            # strict UI rule:
+            # if module is locked by sequence, do not show it as completed/available
+            is_locked = module.id in locked_module_ids
+            is_completed = (module.id in completed_module_ids) and not is_locked
+
             modules_payload.append({
                 "id": module.id,
                 "section_id": section.id,
                 "title": module.title,
                 "type": module.type,
-                "is_completed": module.id in completed_module_ids,
-                "is_locked": module.id in locked_module_ids,
-                "is_available": module.id not in locked_module_ids,
+                "is_completed": is_completed,
+                "is_locked": is_locked,
+                "is_available": not is_locked,
                 "is_current": module.id == next_unlocked_module_id,
                 "latest_quiz_score": latest_attempt.score_percent if latest_attempt else None,
             })
@@ -1278,7 +1383,11 @@ def play_video(request, module_id):
 
     mpd_url = None
     if module.video_mpd:
-        mpd_url = f"/stream/{str(module.video_mpd).replace(os.sep, '/')}"
+        mpd_url = build_signed_stream_url(
+            request=request,
+            path=str(module.video_mpd).replace(os.sep, "/"),
+            user_id=request.user.id
+        )
 
     is_completed = StudentModuleProgress.objects.filter(
         student=request.user,
@@ -1286,14 +1395,94 @@ def play_video(request, module_id):
         is_completed=True
     ).exists()
 
+    watch_progress, _ = get_or_create_video_watch_progress(request.user, module)
+
     context = {
         "module": module,
         "course": module.section.course,
         "section": module.section,
         "mpd_url": mpd_url,
         "is_completed": is_completed,
+        "video_watch_progress": watch_progress,
+        "watched_percent": round(float(watch_progress.watched_percent or 0), 2),
+        "watched_seconds": round(float(watch_progress.watched_seconds or 0), 2),
+        "required_watch_percent": 90,
+        "heartbeat_url": f"/student/video-heartbeat/{module.id}/",
     }
     return render(request, "student/play_video.html", context)
+
+# =====================================
+# VIDEO HEARTBEAT API
+# =====================================
+@login_required
+@require_POST
+def save_video_heartbeat(request, module_id):
+    module = get_object_or_404(Module, id=module_id, type="video")
+    course = module.section.course
+
+    if not ensure_module_access(request, module):
+        return JsonResponse({
+            "success": False,
+            "error": "This module is locked or you are not enrolled in this course."
+        }, status=403)
+
+    try:
+        event_type = (request.POST.get("event_type") or "heartbeat").strip().lower()
+        current_time = float(request.POST.get("current_time") or 0)
+        duration = float(request.POST.get("duration") or 0)
+    except Exception:
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid heartbeat data."
+        }, status=400)
+
+    if event_type not in ["play", "pause", "heartbeat", "seek", "ended"]:
+        event_type = "heartbeat"
+
+    progress_obj, _ = get_or_create_video_watch_progress(request.user, module)
+
+    increment_seconds = calculate_safe_watched_increment(
+        progress_obj=progress_obj,
+        event_type=event_type,
+        current_time=current_time
+    )
+
+    VideoWatchEvent.objects.create(
+        student=request.user,
+        module=module,
+        event_type=event_type,
+        current_time=current_time,
+        duration=duration,
+    )
+
+    progress_obj.update_progress(
+        current_time=current_time,
+        duration=duration,
+        increment_seconds=increment_seconds
+    )
+
+    moodle_sync = None
+    django_progress = StudentModuleProgress.objects.filter(
+        student=request.user,
+        module=module,
+        is_completed=True
+    ).first()
+
+    if progress_obj.is_completed and not django_progress:
+        _, moodle_sync = complete_video_module_after_validation(request.user, module)
+
+    state = build_course_state_for_user(request.user, course)
+
+    return JsonResponse({
+        "success": True,
+        "message": "Heartbeat saved successfully.",
+        "event_type": event_type,
+        "increment_seconds": round(float(increment_seconds or 0), 2),
+        "video_progress": build_video_progress_payload(progress_obj),
+        "completed_module_id": module.id if progress_obj.is_completed else None,
+        "course_state": state,
+        "moodle_sync": moodle_sync,
+    })
 
 
 # =====================================
@@ -1450,9 +1639,55 @@ def mark_module_complete(request, module_id):
             }, status=400)
         return redirect("student:take_quiz", module_id=module.id)
 
-    if module.type == "video" and not is_ajax:
-        messages.warning(request, "Video module completes automatically after 90% watch.")
-        return redirect("student:play_video", module_id=module.id)
+    if module.type == "video":
+        video_progress = get_video_watch_progress(request.user, module)
+
+        if not video_progress or not video_progress.is_completed:
+            message = "Video module will complete only after minimum 90% verified watch."
+
+            if is_ajax:
+                return JsonResponse({
+                    "success": False,
+                    "error": message,
+                    "video_progress": build_video_progress_payload(video_progress),
+                }, status=400)
+
+            messages.warning(request, message)
+            return redirect("student:play_video", module_id=module.id)
+
+        django_progress = StudentModuleProgress.objects.filter(
+            student=request.user,
+            module=module,
+            is_completed=True
+        ).first()
+
+        if not django_progress:
+            _, moodle_sync = complete_video_module_after_validation(request.user, module)
+        else:
+            moodle_sync = {
+                "success": True,
+                "message": "Video module already completed."
+            }
+
+        if is_ajax:
+            state = build_course_state_for_user(request.user, course)
+            current_module_data = next(
+                (item for item in state["modules"] if item["id"] == module.id),
+                None
+            )
+
+            return JsonResponse({
+                "success": True,
+                "message": "Video module already completed after server-side validation.",
+                "completed_module_id": module.id,
+                "current_module": current_module_data,
+                "course_state": state,
+                "moodle_sync": moodle_sync,
+                "video_progress": build_video_progress_payload(video_progress),
+            })
+
+        messages.success(request, "Video module completed successfully.")
+        return redirect("student:course_detail", course_id=course.id)
 
     _, moodle_sync = complete_module_and_try_moodle_sync(request.user, module)
 
@@ -1487,7 +1722,6 @@ def mark_module_complete(request, module_id):
         messages.warning(request, f"Module completed in Django, but Moodle sync failed: {moodle_sync['message']}")
 
     return redirect("student:course_detail", course_id=course.id)
-
 
 # =====================================
 # SERVE MATERIAL FILE FROM LMS STORAGE

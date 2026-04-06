@@ -429,6 +429,46 @@
         line-height: 1.6;
     }
 
+        .tracking-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(160px, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .tracking-card {
+        background: #ffffff;
+        border: 1px solid #dbeafe;
+        border-radius: 12px;
+        padding: 14px;
+    }
+
+    .tracking-card-label {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 6px;
+    }
+
+    .tracking-card-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .tracking-card-value.good {
+        color: #166534;
+    }
+
+    .tracking-card-value.warn {
+        color: #1d4ed8;
+    }
+
+    @media (max-width: 768px) {
+        .tracking-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
     .unlock-note {
         margin-top: 12px;
         display: none;
@@ -635,7 +675,7 @@
                 <div class="completed-badge" id="completedBadge">✅ Module Completed</div>
             {% else %}
                 <div class="auto-complete-box" id="autoCompleteMessage">
-                    Watch 90% of the video to complete this module automatically in Django. You can drag backward on the same time bar, but you cannot drag forward beyond the watched point.
+                    Watch 90% of the video to complete this module automatically. Backward drag is allowed, but forward drag is blocked beyond your watched position.
                 </div>
             {% endif %}
         </div>
@@ -725,23 +765,71 @@
                 </div>
             </div>
 
-            {% if not is_completed and mpd_url %}
-            <div class="watch-progress-box">
+            {% if mpd_url %}
+                        <div class="watch-progress-box">
                 <div class="watch-progress-top">
                     <div class="watch-progress-label">Video Watch Progress</div>
-                    <div class="watch-progress-value" id="watchPercentText">0%</div>
+                    <div class="watch-progress-value" id="watchPercentText">
+                        {% if watched_percent %}
+                            {{ watched_percent|floatformat:0 }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </div>
                 </div>
 
                 <div class="watch-progress-bar-bg">
-                    <div class="watch-progress-bar-fill" id="watchProgressBar"></div>
+                    <div
+                        class="watch-progress-bar-fill"
+                        id="watchProgressBar"
+                        style="width: {% if watched_percent %}{{ watched_percent|floatformat:0 }}%{% else %}0%{% endif %};"
+                    ></div>
+                </div>
+
+                <div class="tracking-grid">
+                    <div class="tracking-card">
+                        <div class="tracking-card-label">Watched Time</div>
+                        <div class="tracking-card-value" id="watchedSecondsText">
+                            {% if watched_seconds %}
+                                {{ watched_seconds|floatformat:0 }} sec
+                            {% else %}
+                                0 sec
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="tracking-card">
+                        <div class="tracking-card-label">Required Target</div>
+                        <div class="tracking-card-value warn" id="requiredPercentText">
+                            {{ required_watch_percent }}%
+                        </div>
+                    </div>
+
+                    <div class="tracking-card">
+                        <div class="tracking-card-label">Allowed Position</div>
+                        <div class="tracking-card-value" id="allowedPositionText">
+                            0 sec
+                        </div>
+                    </div>
+
+                    <div class="tracking-card">
+                        <div class="tracking-card-label">Tracking Status</div>
+                        <div class="tracking-card-value {% if is_completed %}good{% else %}warn{% endif %}" id="trackingStatusText">
+                            {% if is_completed %}
+                                Completed
+                            {% else %}
+                                In Progress
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
 
                 <div class="watch-note">
-                    Watch at least <strong>90%</strong> of the video. On the same time bar, backward drag is allowed and forward drag is blocked.
+                    Watch at least <strong>{{ required_watch_percent }}%</strong> of the video. Backward drag is allowed, but forward drag is blocked beyond the watched point.
                 </div>
 
                 <div class="unlock-note" id="unlockNote">
-                    ✅ 90% reached. Saving completion automatically...
+                    ✅ Required watch progress reached. Saving completion automatically...
                 </div>
 
                 <div class="skip-warning" id="skipWarning">
@@ -772,7 +860,12 @@
     document.addEventListener("DOMContentLoaded", function () {
         const mpdUrl = "{{ mpd_url|escapejs }}";
         const completeUrl = "{% url 'student:mark_module_complete' module.id %}";
+        const heartbeatUrl = "{{ heartbeat_url|escapejs }}";
         const courseDetailUrl = "{% url 'student:course_detail' course.id %}";
+        const requiredWatchPercent = Number("{{ required_watch_percent|default:90 }}");
+        const initialWatchedPercent = Number("{{ watched_percent|default:0 }}");
+        const initialWatchedSeconds = Number("{{ watched_seconds|default:0 }}");
+        const alreadyCompleted = "{% if is_completed %}true{% else %}false{% endif %}" === "true";
 
         const playerShell = document.getElementById("playerShell");
         const video = document.getElementById("videoPlayer");
@@ -786,6 +879,9 @@
 
         const watchPercentText = document.getElementById("watchPercentText");
         const watchProgressBar = document.getElementById("watchProgressBar");
+        const watchedSecondsText = document.getElementById("watchedSecondsText");
+        const allowedPositionText = document.getElementById("allowedPositionText");
+        const trackingStatusText = document.getElementById("trackingStatusText");
 
         const unlockNote = document.getElementById("unlockNote");
         const skipWarning = document.getElementById("skipWarning");
@@ -796,11 +892,18 @@
         const qualityStatus = document.getElementById("qualityStatus");
 
         let player = null;
-        let highestPercent = 0;
-        let completionTriggered = false;
+        let completionTriggered = alreadyCompleted;
+        let completionRequestSent = false;
         let maxAllowedTime = 0;
         let isForcedSeek = false;
         let isTimelineDragging = false;
+        let heartbeatInterval = null;
+        let seekStartTime = 0;
+        let localWatchedPercent = Math.max(0, initialWatchedPercent);
+        let serverWatchedPercent = Math.max(0, initialWatchedPercent);
+        let serverWatchedSeconds = Math.max(0, initialWatchedSeconds);
+        let serverMaxPositionReached = 0;
+        let serverCompleted = alreadyCompleted;
 
         function getCookie(name) {
             let cookieValue = null;
@@ -822,6 +925,9 @@
             const mins = Math.floor(seconds / 60);
             const secs = seconds % 60;
             return String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+        }
+        function formatSecondsLabel(seconds) {
+            return Math.max(0, Math.floor(seconds || 0)) + " sec";
         }
 
         function updateTimeDisplay() {
@@ -845,14 +951,24 @@
             }
         }
 
-        function setCompletedUI() {
+         function setCompletedUI() {
+            serverCompleted = true;
+            completionTriggered = true;
+
             if (autoCompleteMessage) {
                 autoCompleteMessage.textContent = "✅ Module completed successfully. You can go back to the course and continue.";
+                autoCompleteMessage.classList.remove("error");
                 autoCompleteMessage.classList.add("success");
             }
 
             if (videoStatusText) {
                 videoStatusText.textContent = "Completed";
+            }
+
+            if (trackingStatusText) {
+                trackingStatusText.textContent = "Completed";
+                trackingStatusText.classList.remove("warn");
+                trackingStatusText.classList.add("good");
             }
 
             if (unlockNote) {
@@ -869,11 +985,28 @@
                 continueBtn.setAttribute("href", courseDetailUrl);
                 continueBtn.textContent = "Go to Course";
             }
+
+            if (watchPercentText) {
+                watchPercentText.textContent = Math.max(requiredWatchPercent, Math.floor(serverWatchedPercent || localWatchedPercent)) + "%";
+            }
+
+            if (watchProgressBar) {
+                watchProgressBar.style.width = Math.max(requiredWatchPercent, Math.floor(serverWatchedPercent || localWatchedPercent)) + "%";
+            }
+
+            if (watchedSecondsText) {
+                watchedSecondsText.textContent = formatSecondsLabel(serverWatchedSeconds || 0);
+            }
+
+            if (allowedPositionText) {
+                allowedPositionText.textContent = formatSecondsLabel(maxAllowedTime || 0);
+            }
         }
 
         function setErrorUI(message) {
             if (autoCompleteMessage) {
                 autoCompleteMessage.textContent = message;
+                autoCompleteMessage.classList.remove("success");
                 autoCompleteMessage.classList.add("error");
             }
 
@@ -893,64 +1026,57 @@
 
             window.clearTimeout(showSkipWarning._timer);
             showSkipWarning._timer = window.setTimeout(function () {
-                if (skipWarning && !completionTriggered) {
+                if (skipWarning && !serverCompleted) {
                     skipWarning.style.display = "none";
                 }
             }, 2200);
         }
 
-        function saveCompletionAutomatically() {
-            if (completionTriggered) {
-                return;
+        function updateWatchProgressUI(percentValue) {
+            const safePercent = Math.max(0, Math.min(100, percentValue || 0));
+            const roundedPercent = Math.floor(safePercent);
+
+            if (watchPercentText) {
+                watchPercentText.textContent = roundedPercent + "%";
             }
 
-            completionTriggered = true;
-
-            if (unlockNote) {
-                unlockNote.style.display = "block";
-                unlockNote.textContent = "✅ 90% reached. Saving completion automatically...";
+            if (watchProgressBar) {
+                watchProgressBar.style.width = roundedPercent + "%";
             }
 
-            fetch(completeUrl, {
-                method: "POST",
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRFToken": getCookie("csrftoken")
-                }
-            })
-            .then(async function(response) {
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || "Could not save video completion.");
-                }
-                return data;
-            })
-            .then(function(data) {
-                if (data.success) {
-                    setCompletedUI();
-                } else {
-                    completionTriggered = false;
-                    setErrorUI(data.error || "Could not save video completion.");
-                }
-            })
-            .catch(function(error) {
-                completionTriggered = false;
-                setErrorUI(error.message || "Could not save video completion.");
-            });
+            if (watchedSecondsText) {
+                watchedSecondsText.textContent = formatSecondsLabel(serverWatchedSeconds || 0);
+            }
+
+            if (allowedPositionText) {
+                allowedPositionText.textContent = formatSecondsLabel(maxAllowedTime || 0);
+            }
+
+            if (trackingStatusText && !serverCompleted) {
+                trackingStatusText.textContent = "In Progress";
+                trackingStatusText.classList.remove("good");
+                trackingStatusText.classList.add("warn");
+            }
         }
 
-        function forceBackToAllowedTime() {
-            if (!video) {
+        function syncLocalAllowedTimeFromServer() {
+            if (!video || !video.duration || isNaN(video.duration) || video.duration <= 0) {
                 return;
             }
 
-            isForcedSeek = true;
-            video.currentTime = Math.max(0, maxAllowedTime);
-            showSkipWarning();
+            if (serverMaxPositionReached > 0) {
+                maxAllowedTime = Math.max(maxAllowedTime, serverMaxPositionReached);
+                return;
+            }
 
-            window.setTimeout(function() {
-                isForcedSeek = false;
-            }, 180);
+            if (serverWatchedSeconds > 0) {
+                maxAllowedTime = Math.max(maxAllowedTime, serverWatchedSeconds);
+                return;
+            }
+
+            if (serverWatchedPercent > 0) {
+                maxAllowedTime = Math.max(maxAllowedTime, (serverWatchedPercent / 100) * video.duration);
+            }
         }
 
         function updateTimeline() {
@@ -977,7 +1103,7 @@
             }
         }
 
-        function updateWatchProgress() {
+        function updateLocalProgressFromPlayback() {
             if (!video || !video.duration || isNaN(video.duration) || video.duration <= 0) {
                 updateTimeDisplay();
                 return;
@@ -985,32 +1111,169 @@
 
             const currentTime = video.currentTime;
             const duration = video.duration;
-            const currentPercent = Math.min((currentTime / duration) * 100, 100);
 
             if (currentTime > maxAllowedTime) {
                 maxAllowedTime = currentTime;
             }
 
-            if (currentPercent > highestPercent) {
-                highestPercent = currentPercent;
-            }
+            const localPercentByPosition = Math.min((maxAllowedTime / duration) * 100, 100);
+            localWatchedPercent = Math.max(localWatchedPercent, localPercentByPosition, serverWatchedPercent);
 
-            const roundedPercent = Math.floor(highestPercent);
-
-            if (watchPercentText) {
-                watchPercentText.textContent = roundedPercent + "%";
-            }
-
-            if (watchProgressBar) {
-                watchProgressBar.style.width = roundedPercent + "%";
-            }
-
+            updateWatchProgressUI(localWatchedPercent);
             updateTimeDisplay();
             updateTimeline();
+        }
 
-            if (highestPercent >= 90) {
-                saveCompletionAutomatically();
+        function updateFromServerProgress(data) {
+    if (!data || !data.video_progress) {
+        return;
+    }
+
+    const progress = data.video_progress;
+
+    serverWatchedPercent = Number(progress.watched_percent || 0);
+    serverWatchedSeconds = Number(progress.watched_seconds || 0);
+    serverMaxPositionReached = Number(progress.max_position_reached || 0);
+    serverCompleted = Boolean(progress.is_completed);
+
+    // 🔥 Update allowed position FIRST
+    if (serverMaxPositionReached > 0) {
+        maxAllowedTime = Math.max(maxAllowedTime, serverMaxPositionReached);
+    } else if (video && video.duration && serverWatchedPercent > 0) {
+        maxAllowedTime = Math.max(maxAllowedTime, (serverWatchedPercent / 100) * video.duration);
+    }
+
+    // 🔥 Update UI AFTER calculation
+    if (watchedSecondsText) {
+        watchedSecondsText.textContent = formatSecondsLabel(serverWatchedSeconds || 0);
+    }
+
+    if (allowedPositionText) {
+        allowedPositionText.textContent = formatSecondsLabel(maxAllowedTime || 0);
+    }
+
+    localWatchedPercent = Math.max(localWatchedPercent, serverWatchedPercent);
+
+    updateWatchProgressUI(localWatchedPercent);
+    updateTimeline();
+
+    if (serverCompleted) {
+        setCompletedUI();
+    }
+}
+
+        function postHeartbeat(eventType) {
+            if (!video || !heartbeatUrl) {
+                return Promise.resolve(null);
             }
+
+            const formData = new FormData();
+            formData.append("event_type", eventType || "heartbeat");
+            formData.append("current_time", video.currentTime || 0);
+            formData.append("duration", video.duration || 0);
+
+            return fetch(heartbeatUrl, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: formData
+            })
+            .then(async function(response) {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "Could not save heartbeat.");
+                }
+                return data;
+            })
+            .then(function(data) {
+                updateFromServerProgress(data);
+
+                if (data && data.video_progress && data.video_progress.is_completed) {
+                    saveCompletionAutomatically();
+                }
+
+                return data;
+            })
+            .catch(function(error) {
+                console.error("Heartbeat error:", error);
+                return null;
+            });
+        }
+
+        function startHeartbeatLoop() {
+            stopHeartbeatLoop();
+
+            heartbeatInterval = window.setInterval(function () {
+                if (!video.paused && !video.ended) {
+                    postHeartbeat("heartbeat");
+                }
+            }, 10000);
+        }
+
+        function stopHeartbeatLoop() {
+            if (heartbeatInterval) {
+                window.clearInterval(heartbeatInterval);
+                heartbeatInterval = null;
+            }
+        }
+
+        function saveCompletionAutomatically() {
+            if (completionRequestSent || serverCompleted) {
+                return;
+            }
+
+            completionRequestSent = true;
+
+            if (unlockNote) {
+                unlockNote.style.display = "block";
+                unlockNote.textContent = "✅ Required watch progress reached. Saving completion automatically...";
+            }
+
+            fetch(completeUrl, {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": getCookie("csrftoken")
+                }
+            })
+            .then(async function(response) {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "Could not save video completion.");
+                }
+                return data;
+            })
+            .then(function(data) {
+                if (data.success) {
+                    if (data.video_progress) {
+                        updateFromServerProgress(data);
+                    }
+                    setCompletedUI();
+                } else {
+                    completionRequestSent = false;
+                    setErrorUI(data.error || "Could not save video completion.");
+                }
+            })
+            .catch(function(error) {
+                completionRequestSent = false;
+                setErrorUI(error.message || "Could not save video completion.");
+            });
+        }
+
+        function forceBackToAllowedTime() {
+            if (!video) {
+                return;
+            }
+
+            isForcedSeek = true;
+            video.currentTime = Math.max(0, maxAllowedTime);
+            showSkipWarning();
+
+            window.setTimeout(function() {
+                isForcedSeek = false;
+            }, 180);
         }
 
         function updateQualityUI() {
@@ -1210,23 +1473,39 @@
             }
 
             video.addEventListener("loadedmetadata", function () {
-                maxAllowedTime = 0;
+                syncLocalAllowedTimeFromServer();
                 updateTimeDisplay();
                 updatePlayState();
                 updateTimeline();
+                updateWatchProgressUI(Math.max(localWatchedPercent, serverWatchedPercent));
+
+                if (serverCompleted) {
+                    setCompletedUI();
+                }
             });
 
-            video.addEventListener("play", updatePlayState);
-            video.addEventListener("pause", updatePlayState);
+            video.addEventListener("play", function () {
+                updatePlayState();
+                postHeartbeat("play");
+                startHeartbeatLoop();
+            });
+
+            video.addEventListener("pause", function () {
+                updatePlayState();
+                postHeartbeat("pause");
+                stopHeartbeatLoop();
+            });
 
             video.addEventListener("timeupdate", function () {
-                updateWatchProgress();
+                updateLocalProgressFromPlayback();
             });
 
             video.addEventListener("seeking", function () {
                 if (isForcedSeek || isTimelineDragging) {
                     return;
                 }
+
+                seekStartTime = video.currentTime;
 
                 if (video.currentTime > maxAllowedTime + 0.05) {
                     forceBackToAllowedTime();
@@ -1240,7 +1519,10 @@
 
                 if (video.currentTime > maxAllowedTime + 0.05) {
                     forceBackToAllowedTime();
+                    return;
                 }
+
+                postHeartbeat("seek");
             });
 
             video.addEventListener("ratechange", function () {
@@ -1251,8 +1533,13 @@
             });
 
             video.addEventListener("ended", function () {
-                updateWatchProgress();
+                updateLocalProgressFromPlayback();
                 updatePlayState();
+                stopHeartbeatLoop();
+
+                postHeartbeat("ended").then(function() {
+                    saveCompletionAutomatically();
+                });
             });
 
             document.addEventListener("keydown", function (event) {
@@ -1262,6 +1549,10 @@
                     event.preventDefault();
                     showSkipWarning();
                 }
+            });
+
+            window.addEventListener("beforeunload", function () {
+                stopHeartbeatLoop();
             });
         }
     });
