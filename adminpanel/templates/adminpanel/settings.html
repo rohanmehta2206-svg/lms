@@ -2,56 +2,217 @@
 
 {% block title %}Settings & Compliance{% endblock %}
 
+{% block hero_title %}System Settings & Compliance{% endblock %}
+{% block hero_description %}Manage platform configuration, secure learning settings, and Moodle integration visibility from one place.{% endblock %}
+{% block hero_badge %}System Control{% endblock %}
+{% block hero_label %}Health Status{% endblock %}
+{% block hero_value %}Active{% endblock %}
+
 {% block extra_css %}
 <style>
-    .header {
-        margin-bottom: 24px;
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 26px;
     }
 
-    .header h2 {
+    .stat-card {
+        background: #ffffff;
+        padding: 18px;
+        border-radius: 18px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+        border: 1px solid #eef2f7;
+    }
+
+    .stat-title {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
         font-size: 22px;
         font-weight: 700;
-        margin: 0;
-    }
-
-    .stats {
-        display: flex;
-        gap: 14px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-    }
-
-    .stat-box {
-        background: white;
-        padding: 14px 18px;
-        border-radius: 14px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        font-size: 14px;
-        font-weight: 600;
+        color: #111827;
     }
 
     .grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 22px;
     }
 
     .card {
-        background: white;
-        border-radius: 20px;
-        padding: 22px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        background: #ffffff;
+        border-radius: 22px;
+        padding: 24px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+        border: 1px solid #eef2f7;
     }
 
     .card h3 {
-        margin-bottom: 14px;
         font-size: 18px;
         font-weight: 700;
+        margin: 0 0 18px;
+        color: #0f172a;
+    }
+
+    .card-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        line-height: 1.7;
+        margin: -6px 0 18px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group.full-width {
+        grid-column: span 2;
+    }
+
+    .form-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid #dbe3ee;
+        outline: none;
+        font-size: 14px;
+        color: #111827;
+        background: #ffffff;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .input-help {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 6px;
+        line-height: 1.5;
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 22px 0 12px;
+        color: #1d4ed8;
+    }
+
+    .divider {
+        height: 1px;
+        background: #e5e7eb;
+        margin: 22px 0;
+    }
+
+    .sub-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 18px;
+        margin-bottom: 18px;
+    }
+
+    .sub-card .form-grid {
+        margin-bottom: 0;
+    }
+
+    .toggle-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin: 8px 0 20px;
+    }
+
+    .toggle-item {
+        border: 1px solid #eef2f7;
+        border-radius: 16px;
+        padding: 14px 16px;
+        background: #f8fafc;
+    }
+
+    .toggle-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+    }
+
+    .toggle-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 4px;
+    }
+
+    .toggle-desc {
+        font-size: 13px;
+        color: #6b7280;
+        line-height: 1.6;
+    }
+
+    .check-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .check-wrap input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #2563eb;
+        cursor: pointer;
+    }
+
+    .check-wrap span {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .save-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #2563eb;
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+
+    .save-btn:hover {
+        background: #1d4ed8;
     }
 
     .setting-item {
+        padding: 12px 0;
         border-bottom: 1px solid #f1f5f9;
-        padding: 10px 0;
     }
 
     .setting-item:last-child {
@@ -59,6 +220,7 @@
     }
 
     .setting-title {
+        font-size: 14px;
         font-weight: 600;
         color: #111827;
     }
@@ -67,15 +229,16 @@
         font-size: 13px;
         color: #6b7280;
         margin-top: 4px;
+        line-height: 1.6;
     }
 
     .badge {
-        padding: 6px 10px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 600;
         display: inline-block;
         margin-top: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
     }
 
     .active {
@@ -112,11 +275,27 @@
         font-size: 13px;
         color: #6b7280;
         margin-top: 4px;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 1100px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     @media (max-width: 768px) {
-        .grid {
+        .form-grid,
+        .toggle-grid {
             grid-template-columns: 1fr;
+        }
+
+        .form-group.full-width {
+            grid-column: span 1;
         }
     }
 </style>
@@ -124,44 +303,167 @@
 
 {% block content %}
 
-<div class="header">
-    <h2>Settings & Compliance</h2>
-</div>
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-title">Total Courses</div>
+        <div class="stat-value">{{ total_courses }}</div>
+    </div>
 
-<!-- Stats -->
-<div class="stats">
-    <div class="stat-box">Total Courses: {{ total_courses }}</div>
-    <div class="stat-box">Synced: {{ synced_courses }}</div>
-    <div class="stat-box">Not Synced: {{ unsynced_courses }}</div>
-    <div class="stat-box">Published: {{ published_courses }}</div>
-    <div class="stat-box">Unpublished: {{ unpublished_courses }}</div>
+    <div class="stat-card">
+        <div class="stat-title">Synced Courses</div>
+        <div class="stat-value">{{ synced_courses }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">Unsynced Courses</div>
+        <div class="stat-value">{{ unsynced_courses }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">Published</div>
+        <div class="stat-value">{{ published_courses }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-title">Unpublished</div>
+        <div class="stat-value">{{ unpublished_courses }}</div>
+    </div>
 </div>
 
 <div class="grid">
 
-    <!-- System Settings -->
     <div class="card">
-        <h3>System Settings</h3>
+        <h3>Editable System Settings</h3>
+        <p class="card-subtitle">
+            Update platform configuration, security rules, and Moodle integration settings.
+        </p>
 
-        {% for item in system_settings %}
-        <div class="setting-item">
-            <div class="setting-title">{{ item.title }} ({{ item.value }})</div>
-            <div class="setting-desc">{{ item.description }}</div>
+        <form method="post">
+            {% csrf_token %}
 
-            {% if item.status == 'Active' %}
-                <span class="badge active">Active</span>
-            {% elif item.status == 'Protected' %}
-                <span class="badge protected">Protected</span>
-            {% else %}
-                <span class="badge enforced">Enforced</span>
-            {% endif %}
-        </div>
-        {% endfor %}
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label class="form-label" for="video_host">Video Host</label>
+                    <input type="text" id="video_host" name="video_host" class="form-input" value="{{ settings_obj.video_host }}">
+                    <div class="input-help">Base host used for streaming and secure video access.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="token_expiry_seconds">Token Expiry (Seconds)</label>
+                    <input type="number" id="token_expiry_seconds" name="token_expiry_seconds" class="form-input" value="{{ settings_obj.token_expiry_seconds }}" min="1">
+                    <div class="input-help">Signed URL expiry time for secure access.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="watch_validation_percent">Watch Validation Percent</label>
+                    <input type="number" id="watch_validation_percent" name="watch_validation_percent" class="form-input" value="{{ settings_obj.watch_validation_percent }}" min="1" max="100">
+                    <div class="input-help">Minimum watch percent required for video completion.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="certificate_signer">Certificate Signer</label>
+                    <input type="text" id="certificate_signer" name="certificate_signer" class="form-input" value="{{ settings_obj.certificate_signer }}">
+                    <div class="input-help">Name shown on the generated certificate.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="signer_role">Signer Role</label>
+                    <input type="text" id="signer_role" name="signer_role" class="form-input" value="{{ settings_obj.signer_role }}">
+                    <div class="input-help">Role shown under the signature area.</div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label" for="verification_label">Verification Label</label>
+                    <input type="text" id="verification_label" name="verification_label" class="form-input" value="{{ settings_obj.verification_label }}">
+                    <div class="input-help">Label shown near QR verification text on certificates.</div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section-title">Moodle Configuration</div>
+
+            <div class="sub-card">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label" for="moodle_base_url">Moodle Base URL</label>
+                        <input type="text" id="moodle_base_url" name="moodle_base_url" class="form-input" value="{{ settings_obj.moodle_base_url }}">
+                        <div class="input-help">Base URL used for Moodle web service communication.</div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label" for="moodle_token">Moodle Token</label>
+                        <input type="password" id="moodle_token" name="moodle_token" class="form-input" value="{{ settings_obj.moodle_token }}" placeholder="Enter Moodle Token">
+                        <div class="input-help">Sensitive API token used for Moodle integration.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="moodle_admin_id">Admin ID</label>
+                        <input type="number" id="moodle_admin_id" name="moodle_admin_id" class="form-input" value="{{ settings_obj.moodle_admin_id }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="moodle_teacher_role">Teacher Role ID</label>
+                        <input type="number" id="moodle_teacher_role" name="moodle_teacher_role" class="form-input" value="{{ settings_obj.moodle_teacher_role }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="moodle_student_role">Student Role ID</label>
+                        <input type="number" id="moodle_student_role" name="moodle_student_role" class="form-input" value="{{ settings_obj.moodle_student_role }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="toggle-grid">
+                <div class="toggle-item">
+                    <div class="toggle-head">
+                        <div>
+                            <div class="toggle-title">QR Verification Enabled</div>
+                            <div class="toggle-desc">Allow QR-based verification flow for certificate authenticity checks.</div>
+                        </div>
+                        <label class="check-wrap">
+                            <input type="checkbox" name="qr_verification_enabled" {% if settings_obj.qr_verification_enabled %}checked{% endif %}>
+                            <span>Enabled</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="toggle-item">
+                    <div class="toggle-head">
+                        <div>
+                            <div class="toggle-title">Secure Streaming Enabled</div>
+                            <div class="toggle-desc">Keep protected streaming enabled for secure access to learning media.</div>
+                        </div>
+                        <label class="check-wrap">
+                            <input type="checkbox" name="secure_streaming_enabled" {% if settings_obj.secure_streaming_enabled %}checked{% endif %}>
+                            <span>Enabled</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="toggle-item">
+                    <div class="toggle-head">
+                        <div>
+                            <div class="toggle-title">Quiz Completion Enabled</div>
+                            <div class="toggle-desc">Require quiz completion as part of the guided learning flow.</div>
+                        </div>
+                        <label class="check-wrap">
+                            <input type="checkbox" name="quiz_completion_enabled" {% if settings_obj.quiz_completion_enabled %}checked{% endif %}>
+                            <span>Enabled</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="save-btn">Save Settings</button>
+        </form>
     </div>
 
-    <!-- Compliance Checks -->
     <div class="card">
         <h3>Compliance Checks</h3>
+        <p class="card-subtitle">
+            These checks summarize the current Moodle sync status and overall administrative health of the platform.
+        </p>
 
         {% for check in compliance_checks %}
         <div class="setting-item">
@@ -171,12 +473,31 @@
             {% if check.status == 'Good' %}
                 <span class="badge status-good">Good</span>
             {% elif check.status == 'Pending' %}
-                <span class="badge status-pending">Pending</span>
+                <span class="badge status-pending">Attention Needed</span>
             {% else %}
                 <span class="badge status-enabled">Enabled</span>
             {% endif %}
         </div>
         {% endfor %}
+
+        <div style="margin-top: 22px;">
+            <h3 style="font-size:16px; margin-bottom:12px;">Current Saved Values</h3>
+
+            {% for item in system_settings %}
+            <div class="setting-item">
+                <div class="setting-title">{{ item.title }} ({{ item.value }})</div>
+                <div class="setting-desc">{{ item.description }}</div>
+
+                {% if item.status == 'Active' %}
+                    <span class="badge active">Active</span>
+                {% elif item.status == 'Protected' %}
+                    <span class="badge protected">Protected</span>
+                {% else %}
+                    <span class="badge enforced">Enforced</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
     </div>
 
 </div>

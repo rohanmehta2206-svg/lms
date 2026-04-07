@@ -10,8 +10,9 @@ urlpatterns = [
     path('certificates/', views.certificates, name='certificates'),
     path('profile/', views.profile_page, name='profile'),
 
-    # Certificate download
+    # Certificate routes
     path('certificate/download/<int:course_id>/', views.download_certificate, name='download_certificate'),
+    path('certificate/verify/<int:course_id>/<int:user_id>/', views.verify_certificate, name='verify_certificate'),
 
     # Enrollment
     path('enroll/<int:course_id>/', views.enroll_course, name='enroll_course'),

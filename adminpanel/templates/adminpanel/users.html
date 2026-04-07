@@ -2,127 +2,244 @@
 
 {% block title %}User Management{% endblock %}
 
+{% block hero_title %}User Management{% endblock %}
+{% block hero_description %}Manage students, teachers, and admin accounts with approval flow and Moodle sync visibility.{% endblock %}
+{% block hero_badge %}Access Control{% endblock %}
+{% block hero_label %}Management Status{% endblock %}
+{% block hero_value %}Organized{% endblock %}
+
 {% block extra_css %}
 <style>
-    .header {
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 26px;
+    }
+
+    .stat-card {
+        background: #ffffff;
+        border-radius: 22px;
+        padding: 22px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+        border: 1px solid #eef2f7;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 12px;
+    }
+
+    .stat-value {
+        font-size: 30px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+
+    .stat-note {
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.5;
+    }
+
+    .section-block {
+        margin-bottom: 26px;
+    }
+
+    .section-head {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
-    }
-
-    .header h2 {
-        margin: 0;
-        font-size: 22px;
-        font-weight: 700;
-    }
-
-    .stats {
-        display: flex;
         gap: 14px;
-        margin-bottom: 20px;
+        margin-bottom: 14px;
         flex-wrap: wrap;
     }
 
-    .stat-box {
-        background: white;
-        padding: 14px 18px;
-        border-radius: 14px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        font-size: 14px;
-        font-weight: 600;
-    }
-
     .section-title {
-        margin-top: 30px;
-        margin-bottom: 10px;
+        margin: 0;
+        font-size: 22px;
         font-weight: 700;
-        font-size: 18px;
+        color: #0f172a;
     }
 
-    .table-container {
-        background: white;
-        border-radius: 18px;
-        overflow: hidden;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    th, td {
-        padding: 14px 16px;
-        text-align: left;
+    .section-subtitle {
+        margin: 4px 0 0;
         font-size: 14px;
+        color: #6b7280;
     }
 
-    th {
-        background: #f9fafb;
-        font-weight: 700;
-        color: #374151;
-    }
-
-    tr {
-        border-bottom: 1px solid #f1f5f9;
-    }
-
-    tr:hover {
-        background: #f9fafb;
-    }
-
-    .badge {
-        padding: 6px 10px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .admin {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .teacher {
+    .section-count {
+        display: inline-block;
         background: #dbeafe;
         color: #1d4ed8;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 8px 14px;
+        border-radius: 999px;
     }
 
-    .student {
-        background: #dcfce7;
-        color: #166534;
+    .table-card {
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+        border: 1px solid #eef2f7;
+        overflow: hidden;
     }
 
-    .active {
-        background: #dcfce7;
-        color: #166534;
+    .table-wrap {
+        overflow-x: auto;
     }
 
-    .inactive {
-        background: #fee2e2;
-        color: #991b1b;
+    .user-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 980px;
     }
 
-    .pending {
-        background: #fef3c7;
-        color: #92400e;
+    .user-table th,
+    .user-table td {
+        padding: 18px 20px;
+        text-align: left;
+        border-bottom: 1px solid #eef2f7;
+        vertical-align: middle;
     }
 
-    .small-text {
+    .user-table th {
+        background: #f8fafc;
+        font-size: 13px;
+        font-weight: 700;
+        color: #475569;
+        letter-spacing: 0.2px;
+        white-space: nowrap;
+    }
+
+    .user-table tbody tr:hover {
+        background: #fbfdff;
+    }
+
+    .user-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .user-main {
+        min-width: 190px;
+    }
+
+    .user-name {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 4px;
+    }
+
+    .user-username {
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .user-email {
+        font-size: 14px;
+        color: #374151;
+        word-break: break-word;
+        min-width: 180px;
+    }
+
+    .joined-date {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 4px;
+        white-space: nowrap;
+    }
+
+    .joined-time {
         font-size: 12px;
         color: #6b7280;
     }
 
-    .action-btn {
-        padding: 6px 10px;
-        border-radius: 8px;
-        font-size: 12px;
+    .moodle-id {
+        font-size: 14px;
         font-weight: 600;
+        color: #111827;
+    }
+
+    .moodle-empty {
+        font-size: 13px;
+        color: #9ca3af;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .role-admin {
+        background: #ede9fe;
+        color: #6d28d9;
+    }
+
+    .role-teacher {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .role-student {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-inactive {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .sync-synced {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .sync-unsynced {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .action-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 14px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
         border: none;
-        cursor: pointer;
-        margin-right: 6px;
+        text-decoration: none;
+        transition: 0.2s ease;
     }
 
     .approve-btn {
@@ -142,126 +259,206 @@
     .reject-btn:hover {
         background: #dc2626;
     }
+
+    .empty-box {
+        padding: 32px 22px;
+        text-align: center;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    @media (max-width: 1200px) {
+        .stats-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 700px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .user-table th,
+        .user-table td {
+            padding: 14px 14px;
+        }
+
+        .section-title {
+            font-size: 20px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="header">
-    <h2>User Management</h2>
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value">{{ total_users }}</div>
+        <div class="stat-note">All users available in the platform.</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Students</div>
+        <div class="stat-value">{{ total_students }}</div>
+        <div class="stat-note">Learner accounts in the LMS.</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Teachers</div>
+        <div class="stat-value">{{ total_teachers }}</div>
+        <div class="stat-note">Approved teacher accounts.</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Admins</div>
+        <div class="stat-value">{{ total_admins }}</div>
+        <div class="stat-note">Administrative access accounts.</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Synced Users</div>
+        <div class="stat-value">{{ synced_users|default:0 }}</div>
+        <div class="stat-note">Users already linked with Moodle.</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Unsynced Users</div>
+        <div class="stat-value">{{ unsynced_users|default:0 }}</div>
+        <div class="stat-note">Users not yet linked with Moodle.</div>
+    </div>
 </div>
 
-<!-- Stats -->
-<div class="stats">
-    <div class="stat-box">Total Users: {{ total_users }}</div>
-    <div class="stat-box">Students: {{ total_students }}</div>
-    <div class="stat-box">Teachers: {{ total_teachers }}</div>
-    <div class="stat-box">Admins: {{ total_admins }}</div>
-</div>
-
-<!-- 🔥 Pending Teacher Requests -->
 {% if pending_teachers %}
-<div class="section-title">Pending Teacher Requests ({{ pending_teacher_count }})</div>
+<div class="section-block">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">Pending Teacher Requests</h2>
+            <p class="section-subtitle">Approve or reject teacher accounts before platform access is allowed.</p>
+        </div>
+        <div class="section-count">{{ pending_teacher_count }} Pending</div>
+    </div>
 
-<div class="table-container">
-    <table>
-        <thead>
-            <tr>
-                <th>Username</th>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Joined</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in pending_teachers %}
-            <tr>
-                <td>{{ user.username }}</td>
-                <td>{{ user.full_name }}</td>
-                <td>{{ user.email }}</td>
-
-                <td>
-                    {{ user.date_joined|date:"d M Y" }}
-                    <div class="small-text">
-                        {{ user.date_joined|date:"H:i" }}
-                    </div>
-                </td>
-
-                <td>
-                    <a href="{% url 'adminpanel:approve_teacher' user.id %}">
-                        <button class="action-btn approve-btn">Approve</button>
-                    </a>
-
-                    <a href="{% url 'adminpanel:reject_teacher' user.id %}">
-                        <button class="action-btn reject-btn">Reject</button>
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-card">
+        <div class="table-wrap">
+            <table class="user-table" style="min-width: 820px;">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Requested On</th>
+                        <th>Status</th>
+                        <th style="min-width: 180px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in pending_teachers %}
+                    <tr>
+                        <td class="user-main">
+                            <div class="user-name">{{ user.full_name }}</div>
+                            <div class="user-username">@{{ user.username }}</div>
+                        </td>
+                        <td class="user-email">{{ user.email }}</td>
+                        <td>
+                            <div class="joined-date">{{ user.date_joined|date:"d M Y" }}</div>
+                            <div class="joined-time">{{ user.date_joined|date:"H:i" }}</div>
+                        </td>
+                        <td>
+                            <span class="badge status-pending">Pending Approval</span>
+                        </td>
+                        <td>
+                            <div class="action-group">
+                                <a href="{% url 'adminpanel:approve_teacher' user.id %}" class="action-btn approve-btn">Approve</a>
+                                <a href="{% url 'adminpanel:reject_teacher' user.id %}" class="action-btn reject-btn">Reject</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endif %}
 
-<!-- All Users -->
-<div class="section-title">All Users</div>
+<div class="section-block">
+    <div class="section-head">
+        <div>
+            <h2 class="section-title">All Users</h2>
+            <p class="section-subtitle">View all platform users with role, account status, Moodle ID, and sync visibility.</p>
+        </div>
+        <div class="section-count">{{ total_users }} Users</div>
+    </div>
 
-<div class="table-container">
-    <table>
-        <thead>
-            <tr>
-                <th>Username</th>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Joined</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ user.username }}</td>
-                <td>{{ user.full_name }}</td>
-                <td>{{ user.email }}</td>
-
-                <td>
-                    {% if user.role == 'Admin' %}
-                        <span class="badge admin">Admin</span>
-                    {% elif user.role == 'Teacher' %}
-                        <span class="badge teacher">Teacher</span>
-                    {% else %}
-                        <span class="badge student">Student</span>
-                    {% endif %}
-                </td>
-
-                <td>
-                    {% if user.approval_status == 'Pending Approval' %}
-                        <span class="badge pending">Pending</span>
-                    {% elif user.is_active %}
-                        <span class="badge active">Active</span>
-                    {% else %}
-                        <span class="badge inactive">Inactive</span>
-                    {% endif %}
-                </td>
-
-                <td>
-                    {{ user.date_joined|date:"d M Y" }}
-                    <div class="small-text">
-                        {{ user.date_joined|date:"H:i" }}
-                    </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6" style="text-align:center; padding: 20px;">
-                    No users found
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-card">
+        <div class="table-wrap">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Account Status</th>
+                        <th>Moodle User ID</th>
+                        <th>Sync Status</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td class="user-main">
+                            <div class="user-name">{{ user.full_name }}</div>
+                            <div class="user-username">@{{ user.username }}</div>
+                        </td>
+                        <td class="user-email">{{ user.email|default:"-" }}</td>
+                        <td>
+                            {% if user.role == 'Admin' %}
+                                <span class="badge role-admin">Admin</span>
+                            {% elif user.role == 'Teacher' %}
+                                <span class="badge role-teacher">Teacher</span>
+                            {% else %}
+                                <span class="badge role-student">Student</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_active %}
+                                <span class="badge status-active">Active</span>
+                            {% else %}
+                                <span class="badge status-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.moodle_user_id %}
+                                <span class="moodle-id">{{ user.moodle_user_id }}</span>
+                            {% else %}
+                                <span class="moodle-empty">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.sync_status == 'Synced' %}
+                                <span class="badge sync-synced">Synced</span>
+                            {% else %}
+                                <span class="badge sync-unsynced">Not Synced</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="joined-date">{{ user.date_joined|date:"d M Y" }}</div>
+                            <div class="joined-time">{{ user.date_joined|date:"H:i" }}</div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-box">No users found.</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 {% endblock %}

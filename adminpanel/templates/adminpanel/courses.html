@@ -2,74 +2,101 @@
 
 {% block title %}Courses{% endblock %}
 
+{% block hero_title %}Courses Overview{% endblock %}
+{% block hero_description %}Monitor course creation, publishing status, and Moodle synchronization across the platform.{% endblock %}
+{% block hero_badge %}Course Control{% endblock %}
+{% block hero_label %}System Status{% endblock %}
+{% block hero_value %}Operational{% endblock %}
+
 {% block extra_css %}
 <style>
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 26px;
     }
 
-    .header h2 {
-        margin: 0;
-        font-size: 22px;
-        font-weight: 700;
+    .stat-card {
+        background: #ffffff;
+        border-radius: 22px;
+        padding: 20px;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+        border: 1px solid #eef2f7;
     }
 
-    .stats {
-        display: flex;
-        gap: 14px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-    }
-
-    .stat-box {
-        background: white;
-        padding: 14px 18px;
-        border-radius: 14px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        font-size: 14px;
+    .stat-label {
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 10px;
         font-weight: 600;
     }
 
-    .table-container {
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .section-block {
+        margin-bottom: 26px;
+    }
+
+    .section-title {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .section-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 14px;
+    }
+
+    .table-card {
         background: white;
-        border-radius: 18px;
+        border-radius: 20px;
         overflow: hidden;
         box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        border: 1px solid #eef2f7;
+    }
+
+    .table-wrap {
+        overflow-x: auto;
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 900px;
     }
 
     th, td {
-        padding: 14px 16px;
+        padding: 16px;
         text-align: left;
         font-size: 14px;
     }
 
     th {
-        background: #f9fafb;
+        background: #f8fafc;
         font-weight: 700;
-        color: #374151;
+        color: #475569;
     }
 
     tr {
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid #eef2f7;
     }
 
     tr:hover {
-        background: #f9fafb;
+        background: #fbfdff;
     }
 
     .badge {
-        padding: 6px 10px;
+        padding: 6px 12px;
         border-radius: 999px;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 700;
     }
 
     .published {
@@ -82,14 +109,31 @@
         color: #991b1b;
     }
 
-    .small-text {
-        font-size: 12px;
+    .synced {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .not-synced {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .empty-box {
+        padding: 24px;
+        text-align: center;
         color: #6b7280;
     }
 
-    @media (max-width: 768px) {
-        table {
-            font-size: 13px;
+    @media (max-width: 1200px) {
+        .stats-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 700px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -97,63 +141,105 @@
 
 {% block content %}
 
-<div class="header">
-    <h2>Courses Overview</h2>
-</div>
-
 <!-- Stats -->
-<div class="stats">
-    <div class="stat-box">Total Courses: {{ total_courses }}</div>
-    <div class="stat-box">Published: {{ published_courses }}</div>
-    <div class="stat-box">Unpublished: {{ unpublished_courses }}</div>
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total Courses</div>
+        <div class="stat-value">{{ total_courses }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Published</div>
+        <div class="stat-value">{{ published_courses }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Unpublished</div>
+        <div class="stat-value">{{ unpublished_courses }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Synced Courses</div>
+        <div class="stat-value">{{ synced_courses }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Unsynced Courses</div>
+        <div class="stat-value">{{ unsynced_courses }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-label">Moodle Integration</div>
+        <div class="stat-value">
+            {% if synced_courses > 0 %}Active{% else %}Pending{% endif %}
+        </div>
+    </div>
 </div>
 
 <!-- Table -->
-<div class="table-container">
-    <table>
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Short Name</th>
-                <th>Course Code</th>
-                <th>Category</th>
-                <th>Status</th>
-                <th>Moodle ID</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for course in courses %}
-            <tr>
-                <td>{{ course.title }}</td>
-                <td>{{ course.short_name }}</td>
-                <td>{{ course.course_code }}</td>
-                <td>{{ course.category_name }}</td>
+<div class="section-block">
+    <div class="section-title">All Courses</div>
+    <div class="section-subtitle">Track publishing status and Moodle synchronization of all courses.</div>
 
-                <td>
-                    {% if course.is_published %}
-                        <span class="badge published">Published</span>
-                    {% else %}
-                        <span class="badge unpublished">Unpublished</span>
-                    {% endif %}
-                </td>
+    <div class="table-card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Short Name</th>
+                        <th>Course Code</th>
+                        <th>Category</th>
+                        <th>Publish Status</th>
+                        <th>Moodle ID</th>
+                        <th>Sync Status</th>
+                    </tr>
+                </thead>
 
-                <td>
-                    {% if course.moodle_course_id %}
-                        {{ course.moodle_course_id }}
-                    {% else %}
-                        <span class="small-text">Not Synced</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6" style="text-align:center; padding: 20px;">
-                    No courses found
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                <tbody>
+                    {% for course in courses %}
+                    <tr>
+                        <td>{{ course.title }}</td>
+                        <td>{{ course.short_name }}</td>
+                        <td>{{ course.course_code }}</td>
+                        <td>{{ course.category_name|default:"-" }}</td>
+
+                        <td>
+                            {% if course.is_published %}
+                                <span class="badge published">Published</span>
+                            {% else %}
+                                <span class="badge unpublished">Unpublished</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if course.moodle_course_id %}
+                                {{ course.moodle_course_id }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if course.sync_status == 'Synced' %}
+                                <span class="badge synced">Synced</span>
+                            {% else %}
+                                <span class="badge not-synced">Not Synced</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-box">No courses found</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 {% endblock %}

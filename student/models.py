@@ -140,6 +140,57 @@ class QuizAttempt(models.Model):
         return f"{self.student.username} - {self.module.title} - {self.score_percent}%"
 
 
+class StudentCertificate(models.Model):
+    STATUS_ISSUED = 'issued'
+    STATUS_REVOKED = 'revoked'
+
+    STATUS_CHOICES = [
+        (STATUS_ISSUED, 'Issued'),
+        (STATUS_REVOKED, 'Revoked'),
+    ]
+
+    student = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='student_certificates'
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name='student_certificates'
+    )
+
+    certificate_code = models.CharField(max_length=100, unique=True)
+    student_name = models.CharField(max_length=255)
+    course_title = models.CharField(max_length=255)
+
+    issued_at = models.DateTimeField(default=timezone.now)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ISSUED)
+
+    moodle_certificate_id = models.CharField(max_length=100, null=True, blank=True)
+    moodle_sync_status = models.CharField(max_length=50, default='Not Synced')
+    verification_url = models.URLField(max_length=500, blank=True)
+    revoke_reason = models.CharField(max_length=255, blank=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('student', 'course')
+        ordering = ['-issued_at']
+
+    def __str__(self):
+        return f"{self.student.username} - {self.course.title} - {self.certificate_code}"
+
+    @property
+    def is_revoked(self):
+        return self.status == self.STATUS_REVOKED
+
+    def revoke(self, reason=''):
+        self.status = self.STATUS_REVOKED
+        self.revoke_reason = reason or ''
+        self.revoked_at = timezone.now()
+        self.save(update_fields=['status', 'revoke_reason', 'revoked_at'])
+
+
 class VideoWatchProgress(models.Model):
     student = models.ForeignKey(
         User,

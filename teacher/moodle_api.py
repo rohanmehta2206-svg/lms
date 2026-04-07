@@ -5,21 +5,80 @@ import requests
 from django.conf import settings
 
 
-# ========================================
-# MOODLE CONFIGURATION
-# ========================================
-
-MOODLE_BASE_URL = getattr(settings, "MOODLE_BASE_URL", "http://127.0.0.1/moodle").rstrip("/")
-MOODLE_TOKEN = getattr(settings, "MOODLE_TOKEN", "53a8b7519e7d735edc9b6423e84f2b54")
-
-MOODLE_API_URL = f"{MOODLE_BASE_URL}/webservice/rest/server.php"
-MOODLE_UPLOAD_URL = f"{MOODLE_BASE_URL}/webservice/upload.php"
-
-MOODLE_ADMIN_ID = getattr(settings, "MOODLE_ADMIN_ID", 2)
-MOODLE_TEACHER_ROLE = getattr(settings, "MOODLE_TEACHER_ROLE", 3)
-MOODLE_STUDENT_ROLE = getattr(settings, "MOODLE_STUDENT_ROLE", 5)
-
 DEFAULT_TIMEOUT = 30
+
+
+# ========================================
+# DYNAMIC MOODLE CONFIGURATION
+# ========================================
+
+def get_system_settings_object():
+    """
+    Read Moodle configuration from adminpanel SystemSettings if available.
+    Falls back safely to Django settings.py values.
+    """
+    try:
+        from adminpanel.models import SystemSettings
+        settings_obj = SystemSettings.objects.order_by("id").first()
+        if settings_obj:
+            return settings_obj
+    except Exception as e:
+        print("Could not load SystemSettings from DB:", e)
+
+    return None
+
+
+def get_moodle_base_url():
+    settings_obj = get_system_settings_object()
+
+    if settings_obj and getattr(settings_obj, "moodle_base_url", None):
+        return str(settings_obj.moodle_base_url).rstrip("/")
+
+    return getattr(settings, "MOODLE_BASE_URL", "http://127.0.0.1/moodle").rstrip("/")
+
+
+def get_moodle_token():
+    settings_obj = get_system_settings_object()
+
+    if settings_obj and getattr(settings_obj, "moodle_token", None):
+        return str(settings_obj.moodle_token).strip()
+
+    return getattr(settings, "MOODLE_TOKEN", "53a8b7519e7d735edc9b6423e84f2b54")
+
+
+def get_moodle_api_url():
+    return f"{get_moodle_base_url()}/webservice/rest/server.php"
+
+
+def get_moodle_upload_url():
+    return f"{get_moodle_base_url()}/webservice/upload.php"
+
+
+def get_moodle_admin_id():
+    settings_obj = get_system_settings_object()
+
+    if settings_obj and getattr(settings_obj, "moodle_admin_id", None):
+        return int(settings_obj.moodle_admin_id)
+
+    return int(getattr(settings, "MOODLE_ADMIN_ID", 2))
+
+
+def get_moodle_teacher_role():
+    settings_obj = get_system_settings_object()
+
+    if settings_obj and getattr(settings_obj, "moodle_teacher_role", None):
+        return int(settings_obj.moodle_teacher_role)
+
+    return int(getattr(settings, "MOODLE_TEACHER_ROLE", 3))
+
+
+def get_moodle_student_role():
+    settings_obj = get_system_settings_object()
+
+    if settings_obj and getattr(settings_obj, "moodle_student_role", None):
+        return int(settings_obj.moodle_student_role)
+
+    return int(getattr(settings, "MOODLE_STUDENT_ROLE", 5))
 
 
 # ========================================
@@ -30,8 +89,11 @@ def call_moodle_api(function_name, params=None, timeout=DEFAULT_TIMEOUT):
     if params is None:
         params = {}
 
+    moodle_token = get_moodle_token()
+    moodle_api_url = get_moodle_api_url()
+
     payload = {
-        "wstoken": MOODLE_TOKEN,
+        "wstoken": moodle_token,
         "wsfunction": function_name,
         "moodlewsrestformat": "json",
     }
@@ -39,7 +101,7 @@ def call_moodle_api(function_name, params=None, timeout=DEFAULT_TIMEOUT):
 
     try:
         response = requests.post(
-            MOODLE_API_URL,
+            moodle_api_url,
             data=payload,
             timeout=timeout
         )
@@ -141,9 +203,6 @@ def find_moodle_category_by_name(category_name, parent_id=None):
     if not exact_matches:
         return None, f"Moodle category '{category_name}' not found by name"
 
-    # IMPORTANT:
-    # If parent_id is provided, return ONLY a category under that parent.
-    # Do not fall back to a same-name category from another parent.
     if parent_id is not None:
         for category in exact_matches:
             try:
@@ -289,11 +348,6 @@ def update_moodle_course(course_id, fullname=None, shortname=None, category_id=N
 # ========================================
 
 def is_user_enrolled_in_moodle_course(user_id, course_id):
-    """
-    Checks whether a Moodle user is already enrolled in a Moodle course.
-    Useful when enrol_manual_enrol_users returns a message error
-    but the actual enrollment may still be completed.
-    """
     if not user_id or not course_id:
         return False
 
@@ -320,12 +374,15 @@ def is_user_enrolled_in_moodle_course(user_id, course_id):
     return False
 
 
-def enroll_user_to_course(user_id, course_id, role_id=MOODLE_TEACHER_ROLE):
+def enroll_user_to_course(user_id, course_id, role_id=None):
     if not user_id:
         return False, "Moodle user id is required"
 
     if not course_id:
         return False, "Moodle course id is required"
+
+    if role_id is None:
+        role_id = get_moodle_teacher_role()
 
     if is_user_enrolled_in_moodle_course(user_id, course_id):
         return True, None
@@ -356,13 +413,13 @@ def enroll_user_to_course(user_id, course_id, role_id=MOODLE_TEACHER_ROLE):
 
 def enroll_admin_to_course(course_id):
     return enroll_user_to_course(
-        MOODLE_ADMIN_ID,
+        get_moodle_admin_id(),
         course_id,
-        MOODLE_TEACHER_ROLE
+        get_moodle_teacher_role()
     )
 
 
-def enroll_student_to_course(moodle_user_id, moodle_course_id, role_id=MOODLE_STUDENT_ROLE):
+def enroll_student_to_course(moodle_user_id, moodle_course_id, role_id=None):
     """
     Enroll a real student into a real Moodle course.
     This should be called when a student clicks Enroll in Django.
@@ -372,6 +429,9 @@ def enroll_student_to_course(moodle_user_id, moodle_course_id, role_id=MOODLE_ST
 
     if not moodle_course_id:
         return False, "Course Moodle course id is missing"
+
+    if role_id is None:
+        role_id = get_moodle_student_role()
 
     return enroll_user_to_course(
         user_id=moodle_user_id,
@@ -385,9 +445,6 @@ def enroll_student_to_course(moodle_user_id, moodle_course_id, role_id=MOODLE_ST
 # ========================================
 
 def get_course_completion_status(moodle_course_id, moodle_user_id):
-    """
-    Returns Moodle course completion data for one user in one course.
-    """
     if not moodle_course_id:
         return False, "Moodle course id is required", None
 
@@ -408,9 +465,6 @@ def get_course_completion_status(moodle_course_id, moodle_user_id):
 
 
 def get_activities_completion_status(moodle_course_id, moodle_user_id):
-    """
-    Returns all activity completion rows for one user in one course.
-    """
     if not moodle_course_id:
         return False, "Moodle course id is required", None
 
@@ -443,15 +497,6 @@ def _is_missing_custom_completion_function(error_text):
 
 
 def mark_moodle_activity_complete(moodle_user_id, cmid):
-    """
-    Mark one Moodle activity complete for a specific student.
-
-    Preferred path:
-    - use custom Moodle function local_djangoapi_mark_activity_complete
-
-    Fallback path:
-    - old core API, only if custom function is not available yet
-    """
     if not moodle_user_id:
         return False, "Moodle user id is required"
 
@@ -488,9 +533,6 @@ def mark_moodle_activity_complete(moodle_user_id, cmid):
 
 
 def mark_moodle_activity_incomplete(moodle_user_id, cmid):
-    """
-    Mark one Moodle activity incomplete for a specific student.
-    """
     if not moodle_user_id:
         return False, "Moodle user id is required"
 
@@ -527,9 +569,6 @@ def mark_moodle_activity_incomplete(moodle_user_id, cmid):
 
 
 def get_single_activity_completion_state(moodle_course_id, moodle_user_id, cmid):
-    """
-    Checks whether one Moodle activity is complete by reading the course activity completion list.
-    """
     ok, error, data = get_activities_completion_status(moodle_course_id, moodle_user_id)
 
     if not ok:
@@ -559,9 +598,9 @@ def get_single_activity_completion_state(moodle_course_id, moodle_user_id, cmid)
 def issue_moodle_certificate_record(moodle_user_id, moodle_course_id, certificate_id, certificate_url="", issuedate=None):
     """
     Store certificate issue record in Moodle via custom local plugin function.
-    Django remains the certificate generator.
-    Moodle stores the issued certificate record for proof/integration.
+    Returns Moodle certificate record id (if available).
     """
+
     if not moodle_user_id:
         return False, "Moodle user id is required", None
 
@@ -590,7 +629,19 @@ def issue_moodle_certificate_record(moodle_user_id, moodle_course_id, certificat
     result = call_moodle_api("local_djangoapi_issue_certificate", params)
 
     if result["success"]:
-        return True, None, result.get("data")
+        data = result.get("data")
+
+        moodle_cert_id = None
+
+        if isinstance(data, dict):
+            moodle_cert_id = data.get("id") or data.get("certificateid")
+
+        elif isinstance(data, list) and data:
+            first = data[0]
+            if isinstance(first, dict):
+                moodle_cert_id = first.get("id") or first.get("certificateid")
+
+        return True, None, moodle_cert_id
 
     return False, result.get("error", "Could not store certificate issue record in Moodle"), None
 
@@ -604,11 +655,14 @@ def upload_course_image(image_path):
         if not os.path.exists(image_path):
             return None, f"Image file not found: {image_path}"
 
+        moodle_upload_url = get_moodle_upload_url()
+        moodle_token = get_moodle_token()
+
         with open(image_path, "rb") as f:
             response = requests.post(
-                MOODLE_UPLOAD_URL,
+                moodle_upload_url,
                 params={
-                    "token": MOODLE_TOKEN,
+                    "token": moodle_token,
                     "filepath": "/",
                     "itemid": 0
                 },

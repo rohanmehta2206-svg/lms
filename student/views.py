@@ -1,5 +1,6 @@
 import os
 import time
+
 from django.conf import settings
 from django.http import FileResponse, Http404, JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
@@ -18,7 +19,7 @@ from reportlab.graphics.barcode import qr
 from reportlab.graphics.shapes import Drawing
 from reportlab.graphics import renderPDF
 
-from teacher.models import Course, Section, Module
+from teacher.models import Course, Section, Module, CertificateSettings
 from teacher.views import build_signed_stream_url
 from teacher.moodle_api import (
     enroll_student_to_course,
@@ -32,6 +33,7 @@ from .models import (
     StudentModuleProgress,
     QuizAttempt,
     Student,
+    StudentCertificate,
     VideoWatchProgress,
     VideoWatchEvent,
     WebcamSnapshot,
@@ -266,31 +268,96 @@ def get_certificate_student_name(user):
     return getattr(user, "username", "Student")
 
 
+def get_certificate_verification_url(request, course, user):
+    verify_path = f"/student/certificate/verify/{course.id}/{user.id}/"
+    if request:
+        return request.build_absolute_uri(verify_path)
+    return verify_path
+
+
+def get_or_create_student_certificate(request, user, course):
+    certificate_code = get_certificate_id(user, course)
+    student_name = get_certificate_student_name(user)
+    verification_url = get_certificate_verification_url(request, course, user)
+
+    certificate_obj, created = StudentCertificate.objects.get_or_create(
+        student=user,
+        course=course,
+        defaults={
+            "certificate_code": certificate_code,
+            "student_name": student_name,
+            "course_title": str(course.title),
+            "verification_url": verification_url,
+            "status": StudentCertificate.STATUS_ISSUED,
+        }
+    )
+
+    needs_update = False
+
+    if certificate_obj.certificate_code != certificate_code:
+        certificate_obj.certificate_code = certificate_code
+        needs_update = True
+
+    if certificate_obj.student_name != student_name:
+        certificate_obj.student_name = student_name
+        needs_update = True
+
+    if certificate_obj.course_title != str(course.title):
+        certificate_obj.course_title = str(course.title)
+        needs_update = True
+
+    if certificate_obj.verification_url != verification_url:
+        certificate_obj.verification_url = verification_url
+        needs_update = True
+
+    if certificate_obj.status != StudentCertificate.STATUS_ISSUED and not certificate_obj.is_revoked:
+        certificate_obj.status = StudentCertificate.STATUS_ISSUED
+        needs_update = True
+
+    if needs_update:
+        certificate_obj.save()
+
+    return certificate_obj
+
+
 def get_completed_courses_for_certificates(user):
     completed_rows = []
     courses = get_student_active_courses(user)
+
+    existing_certificates = {
+        cert.course_id: cert
+        for cert in StudentCertificate.objects.filter(student=user).select_related("course")
+    }
 
     for course in courses:
         sections = get_course_sections(course)
         progress_data = get_course_progress_data(user, course, sections)
 
         if progress_data["total_modules"] > 0 and progress_data["progress_percent"] == 100:
+            certificate_obj = existing_certificates.get(course.id)
+
             completed_rows.append({
                 "course": course,
                 "total_modules": progress_data["total_modules"],
                 "completed_modules": progress_data["completed_modules"],
                 "progress_percent": progress_data["progress_percent"],
                 "certificate_id": get_certificate_id(user, course),
+                "certificate_obj": certificate_obj,
+                "issued_at": certificate_obj.issued_at if certificate_obj else None,
+                "moodle_certificate_id": certificate_obj.moodle_certificate_id if certificate_obj else None,
+                "moodle_sync_status": certificate_obj.moodle_sync_status if certificate_obj else "Not Synced",
+                "status": certificate_obj.status if certificate_obj else "issued",
             })
 
     return completed_rows
 
 
-def try_issue_certificate_record_to_moodle(request, user, course):
+def try_issue_certificate_record_to_moodle(request, user, course, certificate_obj=None):
     """
     Best-effort sync:
     - Django remains certificate generator
     - Moodle stores certificate issue record
+    - returned Moodle certificate record id is saved into StudentCertificate
     """
     try:
         moodle_user_id = get_user_moodle_id(user)
@@ -300,22 +367,21 @@ def try_issue_certificate_record_to_moodle(request, user, course):
         if not moodle_user_id:
             return {
                 "success": False,
-                "message": "Moodle user id is missing."
+                "message": "Moodle user id is missing.",
+                "moodle_certificate_id": None,
             }
 
         if not moodle_course_id:
             return {
                 "success": False,
-                "message": "Moodle course id is missing."
+                "message": "Moodle course id is missing.",
+                "moodle_certificate_id": None,
             }
 
-        certificate_url = request.build_absolute_uri(
-            f"/student/certificate/download/{course.id}/"
-        )
-
+        certificate_url = get_certificate_verification_url(request, course, user)
         issuedate = int(time.time())
 
-        ok, error, data = issue_moodle_certificate_record(
+        ok, error, moodle_certificate_id = issue_moodle_certificate_record(
             moodle_user_id=moodle_user_id,
             moodle_course_id=moodle_course_id,
             certificate_id=certificate_id,
@@ -323,28 +389,51 @@ def try_issue_certificate_record_to_moodle(request, user, course):
             issuedate=issuedate,
         )
 
+        if certificate_obj:
+            if ok:
+                certificate_obj.moodle_certificate_id = str(moodle_certificate_id or "").strip() or None
+                certificate_obj.moodle_sync_status = "Synced"
+            else:
+                certificate_obj.moodle_sync_status = "Not Synced"
+            certificate_obj.save(update_fields=["moodle_certificate_id", "moodle_sync_status"])
+
         if ok:
             return {
                 "success": True,
                 "message": "Certificate issue record stored in Moodle successfully.",
-                "data": data,
+                "moodle_certificate_id": moodle_certificate_id,
             }
 
         return {
             "success": False,
-            "message": error or "Could not store certificate issue record in Moodle."
+            "message": error or "Could not store certificate issue record in Moodle.",
+            "moodle_certificate_id": None,
         }
 
     except Exception as e:
+        if certificate_obj:
+            certificate_obj.moodle_sync_status = "Not Synced"
+            certificate_obj.save(update_fields=["moodle_sync_status"])
+
         return {
             "success": False,
-            "message": f"Moodle certificate sync error: {str(e)}"
+            "message": f"Moodle certificate sync error: {str(e)}",
+            "moodle_certificate_id": None,
         }
 
+def get_active_certificate_settings():
+    settings_obj = CertificateSettings.objects.filter(is_active=True).order_by("-updated_at", "-id").first()
 
-def draw_certificate_pdf(response, user, course):
+    if settings_obj:
+        return settings_obj
+
+    return None
+
+def draw_certificate_pdf(response, user, course, request=None):
     page_width, page_height = landscape(A4)
     pdf = canvas.Canvas(response, pagesize=landscape(A4))
+
+    certificate_settings = get_active_certificate_settings()
 
     border_blue = HexColor("#4fb6d6")
     text_dark = HexColor("#1f2937")
@@ -369,15 +458,60 @@ def draw_certificate_pdf(response, user, course):
     pdf.setLineWidth(3)
     pdf.line(70, page_height - 38, page_width - 70, page_height - 38)
 
+    # Dynamic certificate settings
+    certificate_title = "Certificate of Completion"
+    certificate_subtitle = "This certificate is proudly presented to"
+    organization_name = "Cryptographic Adaptive LMS"
+    issuer_name = "Instructor"
+    signer_name = "Authorized Signature"
+    signer_role = "Instructor"
+    verify_label = "Verify via LMS QR record"
+    signature_path = os.path.join(settings.MEDIA_ROOT, "signature.png")
+    seal_path = os.path.join(settings.MEDIA_ROOT, "seal.png")
+
+    if certificate_settings:
+        certificate_title = certificate_settings.title or certificate_title
+        certificate_subtitle = certificate_settings.subtitle or certificate_subtitle
+        organization_name = certificate_settings.organization_name or organization_name
+        issuer_name = certificate_settings.issuer_name or issuer_name
+        signer_name = certificate_settings.signer_name or signer_name
+        signer_role = certificate_settings.signer_role or signer_role
+        verify_label = certificate_settings.verify_label or verify_label
+
+        if certificate_settings.signature_image:
+            try:
+                signature_path = certificate_settings.signature_image.path
+            except Exception:
+                pass
+
+        if certificate_settings.seal_image:
+            try:
+                seal_path = certificate_settings.seal_image.path
+            except Exception:
+                pass
+
+    student_name = get_certificate_student_name(user)
+    course_title = str(course.title)
+    certificate_id = get_certificate_id(user, course)
+    completion_date = timezone.localdate().strftime("%d %b %Y")
+
+    if len(course_title) > 40:
+        course_title = course_title[:40] + "..."
+
+    verify_url = f"/student/certificate/verify/{course.id}/{user.id}/"
+    verification_url = verify_url
+
+    if request:
+        verification_url = request.build_absolute_uri(verify_url)
+
     # Title
     pdf.setFillColor(text_dark)
     pdf.setFont("Times-Italic", 30)
-    pdf.drawCentredString(page_width / 2, page_height - 120, "Certificate of Completion")
+    pdf.drawCentredString(page_width / 2, page_height - 120, certificate_title)
 
     # Seal on left
     seal_x = 78
     seal_y = page_height - 210
-    seal_path = os.path.join(settings.MEDIA_ROOT, "seal.png")
 
     if os.path.exists(seal_path):
         pdf.drawImage(
@@ -398,44 +532,36 @@ def draw_certificate_pdf(response, user, course):
         pdf.drawCentredString(seal_x + 30, seal_y + 27, "Seal")
 
     # Name and body text
-    student_name = get_certificate_student_name(user)
-    course_title = str(course.title)
-
-    if len(course_title) > 40:
-        course_title = course_title[:40] + "..."
+    pdf.setFillColor(text_mid)
+    pdf.setFont("Times-Italic", 16)
+    pdf.drawCentredString(page_width / 2, page_height - 182, certificate_subtitle)
 
     pdf.setFillColor(text_dark)
     pdf.setFont("Times-Bold", 20)
-    pdf.drawCentredString(page_width / 2, page_height - 210, student_name)
+    pdf.drawCentredString(page_width / 2, page_height - 220, student_name)
 
     pdf.setFillColor(text_mid)
     pdf.setFont("Times-Italic", 16)
-    pdf.drawCentredString(page_width / 2, page_height - 238, "has completed")
+    pdf.drawCentredString(page_width / 2, page_height - 248, "has completed")
 
     pdf.setFillColor(text_dark)
     pdf.setFont("Times-Bold", 21)
-    pdf.drawCentredString(page_width / 2, page_height - 275, course_title)
+    pdf.drawCentredString(page_width / 2, page_height - 285, course_title)
 
     pdf.setFillColor(text_mid)
     pdf.setFont("Times-Italic", 15)
-    pdf.drawCentredString(page_width / 2, page_height - 305, "offered by")
+    pdf.drawCentredString(page_width / 2, page_height - 315, "offered by")
 
     pdf.setFillColor(text_dark)
     pdf.setFont("Times-Bold", 18)
-    pdf.drawCentredString(page_width / 2, page_height - 336, "Cryptographic Adaptive LMS")
+    pdf.drawCentredString(page_width / 2, page_height - 346, organization_name)
+
+    pdf.setFillColor(text_mid)
+    pdf.setFont("Helvetica", 11)
+    pdf.drawCentredString(page_width / 2, page_height - 372, f"Issued by: {issuer_name}")
 
     # QR bottom left
-    certificate_id = get_certificate_id(user, course)
-    completion_date = timezone.localdate().strftime("%d %b %Y")
-
-    verification_text = (
-        f"Certificate ID: {certificate_id} | "
-        f"Student: {student_name} | "
-        f"Course: {course.title} | "
-        f"Date: {completion_date}"
-    )
-
-    qr_code = qr.QrCodeWidget(verification_text)
+    qr_code = qr.QrCodeWidget(verification_url)
     bounds = qr_code.getBounds()
     qr_width = bounds[2] - bounds[0]
     qr_height = bounds[3] - bounds[1]
@@ -456,7 +582,7 @@ def draw_certificate_pdf(response, user, course):
     pdf.setFont("Helvetica", 9)
     pdf.drawString(160, 137, f"Issued: {completion_date}")
     pdf.drawString(160, 121, f"Certificate No: {certificate_id}")
-    pdf.drawString(160, 105, "Verify via LMS QR record")
+    pdf.drawString(160, 105, verify_label)
 
     # Signature area right
     sign_line_x1 = page_width - 275
@@ -466,8 +592,6 @@ def draw_certificate_pdf(response, user, course):
     pdf.setStrokeColor(text_mid)
     pdf.setLineWidth(1)
     pdf.line(sign_line_x1, sign_y, sign_line_x2, sign_y)
-
-    signature_path = os.path.join(settings.MEDIA_ROOT, "signature.png")
 
     if os.path.exists(signature_path):
         pdf.drawImage(
@@ -481,11 +605,11 @@ def draw_certificate_pdf(response, user, course):
     else:
         pdf.setFillColor(text_dark)
         pdf.setFont("Times-Italic", 22)
-        pdf.drawCentredString((sign_line_x1 + sign_line_x2) / 2, sign_y + 24, "Authorized Signature")
+        pdf.drawCentredString((sign_line_x1 + sign_line_x2) / 2, sign_y + 24, signer_name)
 
     pdf.setFillColor(text_dark)
     pdf.setFont("Helvetica", 10)
-    pdf.drawCentredString((sign_line_x1 + sign_line_x2) / 2, sign_y - 14, "Instructor")
+    pdf.drawCentredString((sign_line_x1 + sign_line_x2) / 2, sign_y - 14, signer_role)
 
     # Footer
     pdf.setFillColor(soft_gray)
@@ -494,6 +618,31 @@ def draw_certificate_pdf(response, user, course):
 
     pdf.showPage()
     pdf.save()
+
+
+def verify_certificate(request, course_id, user_id):
+    course = get_object_or_404(Course, id=course_id, is_published=True)
+    from django.contrib.auth.models import User
+    student_user = get_object_or_404(User, id=user_id)
+
+    certificate_obj = StudentCertificate.objects.filter(
+        student=student_user,
+        course=course
+    ).first()
+
+    is_valid = is_course_completed_by_student(student_user, course)
+    is_revoked = bool(certificate_obj and certificate_obj.is_revoked)
+
+    context = {
+        "course": course,
+        "student_user": student_user,
+        "certificate_id": get_certificate_id(student_user, course),
+        "is_valid": is_valid and not is_revoked,
+        "is_revoked": is_revoked,
+        "issued_date": certificate_obj.issued_at if certificate_obj else timezone.localdate(),
+        "certificate_obj": certificate_obj,
+    }
+    return render(request, "student/verify_certificate.html", context)
 
 
 # =====================================
@@ -1297,11 +1446,17 @@ def download_certificate(request, course_id):
         messages.warning(request, "You can download the certificate only after completing the full course.")
         return redirect("student:certificates")
 
-    # Best-effort Moodle certificate issue record sync
+    certificate_obj = get_or_create_student_certificate(
+        request=request,
+        user=request.user,
+        course=course,
+    )
+
     moodle_certificate_sync = try_issue_certificate_record_to_moodle(
         request=request,
         user=request.user,
         course=course,
+        certificate_obj=certificate_obj,
     )
 
     if not moodle_certificate_sync["success"]:
@@ -1319,9 +1474,8 @@ def download_certificate(request, course_id):
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
 
-    draw_certificate_pdf(response, request.user, course)
+    draw_certificate_pdf(response, request.user, course, request=request)
     return response
-
 
 # =====================================
 # COURSE DETAIL

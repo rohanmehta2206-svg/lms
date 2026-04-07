@@ -303,3 +303,82 @@ class QuizQuestion(models.Model):
 
     def __str__(self):
         return f"{self.module.title} → Question"
+
+
+# ==========================================
+# CERTIFICATE SETTINGS MODEL
+# ==========================================
+
+class CertificateSettings(models.Model):
+    title = models.CharField(
+        max_length=255,
+        default="Certificate of Completion"
+    )
+
+    subtitle = models.CharField(
+        max_length=255,
+        blank=True,
+        default="This certificate is proudly presented to"
+    )
+
+    organization_name = models.CharField(
+        max_length=255,
+        default="Cryptographic Adaptive LMS"
+    )
+
+    issuer_name = models.CharField(
+        max_length=255,
+        blank=True,
+        default="Instructor"
+    )
+
+    signer_name = models.CharField(
+        max_length=255,
+        blank=True,
+        default="Authorized Signature"
+    )
+
+    signer_role = models.CharField(
+        max_length=255,
+        blank=True,
+        default="Instructor"
+    )
+
+    signature_image = models.ImageField(
+        upload_to="certificate/signatures/",
+        blank=True,
+        null=True
+    )
+
+    seal_image = models.ImageField(
+        upload_to="certificate/seals/",
+        blank=True,
+        null=True
+    )
+
+    verify_label = models.CharField(
+        max_length=255,
+        blank=True,
+        default="Verify via LMS QR record"
+    )
+
+    is_active = models.BooleanField(
+        default=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    class Meta:
+        ordering = ["-updated_at", "-created_at"]
+        verbose_name = "Certificate Settings"
+        verbose_name_plural = "Certificate Settings"
+
+    def __str__(self):
+        status = "Active" if self.is_active else "Inactive"
+        return f"{self.title} - {status}"
