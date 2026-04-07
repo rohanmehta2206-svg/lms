@@ -29,6 +29,10 @@ urlpatterns = [
     # Video heartbeat
     path('video-heartbeat/<int:module_id>/', views.save_video_heartbeat, name='save_video_heartbeat'),
 
+    # Anti-cheating logs
+    path('save-webcam-snapshot/<int:module_id>/', views.save_webcam_snapshot, name='save_webcam_snapshot'),
+    path('log-tab-switch/<int:module_id>/', views.log_tab_switch, name='log_tab_switch'),
+
     # Mark module as completed
     path('mark-complete/<int:module_id>/', views.mark_module_complete, name='mark_module_complete'),
 

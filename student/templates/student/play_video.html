@@ -645,6 +645,190 @@
             width: 100%;
         }
     }
+    /* ================= ANTI-CHEATING UI ================= */
+
+.anti-cheat-bar {
+    margin-top: 18px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.anti-cheat-chip {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.anti-cheat-chip.warn {
+    background: #fff7ed;
+    border-color: #fdba74;
+    color: #9a3412;
+}
+
+.anti-cheat-chip.good {
+    background: #ecfdf5;
+    border-color: #86efac;
+    color: #166534;
+}
+
+.micro-quiz-overlay,
+.webcam-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.72);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.micro-quiz-overlay.show,
+.webcam-overlay.show {
+    display: flex;
+}
+
+.micro-quiz-card,
+.webcam-card {
+    width: 100%;
+    max-width: 700px;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.micro-quiz-header,
+.webcam-header {
+    padding: 22px 24px;
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: white;
+}
+
+.micro-quiz-header h3,
+.webcam-header h3 {
+    margin: 0 0 6px 0;
+    font-size: 22px;
+    color: white;
+}
+
+.micro-quiz-header p,
+.webcam-header p {
+    margin: 0;
+    font-size: 14px;
+    color: rgba(255,255,255,0.95);
+    line-height: 1.6;
+}
+
+.micro-quiz-body,
+.webcam-body {
+    padding: 24px;
+}
+
+.micro-quiz-question {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 18px;
+    line-height: 1.6;
+}
+
+.micro-quiz-options {
+    display: grid;
+    gap: 12px;
+}
+
+.micro-quiz-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: 1px solid #dbeafe;
+    background: #f8fbff;
+    color: #111827;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.micro-quiz-option:hover {
+    background: #eff6ff;
+    border-color: #2563eb;
+}
+
+.micro-quiz-footer,
+.webcam-footer {
+    padding: 18px 24px 24px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.quiz-status-box {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    display: none;
+}
+
+.quiz-status-box.success {
+    display: block;
+    background: #ecfdf5;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.quiz-status-box.error {
+    display: block;
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+.webcam-preview-wrap {
+    display: grid;
+    gap: 16px;
+}
+
+.webcam-video-preview,
+.webcam-canvas-preview {
+    width: 100%;
+    background: #000;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+}
+
+.webcam-video-preview {
+    max-height: 320px;
+}
+
+.webcam-note {
+    font-size: 14px;
+    color: #4b5563;
+    line-height: 1.7;
+}
+
+.snapshot-status {
+    margin-top: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #2563eb;
+}
+
+.hidden-canvas {
+    display: none;
+}
 </style>
 
 <div class="lesson-page full-width">
@@ -827,6 +1011,17 @@
                 <div class="watch-note">
                     Watch at least <strong>{{ required_watch_percent }}%</strong> of the video. Backward drag is allowed, but forward drag is blocked beyond the watched point.
                 </div>
+                <div class="anti-cheat-bar">
+                    
+
+                    <span class="anti-cheat-chip" id="tabSwitchStatus">
+                        Browser Focus: Active
+                    </span>
+
+                    <span class="anti-cheat-chip" id="webcamStatus">
+                        Webcam: Optional
+                    </span>
+                </div>
 
                 <div class="unlock-note" id="unlockNote">
                     ✅ Required watch progress reached. Saving completion automatically...
@@ -855,6 +1050,8 @@
 </div>
 
 {% if mpd_url %}
+
+
 <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -866,6 +1063,8 @@
         const initialWatchedPercent = Number("{{ watched_percent|default:0 }}");
         const initialWatchedSeconds = Number("{{ watched_seconds|default:0 }}");
         const alreadyCompleted = "{% if is_completed %}true{% else %}false{% endif %}" === "true";
+        const tabSwitchLogUrl = "{% url 'student:log_tab_switch' module.id %}";
+        const webcamSnapshotUrl = "{% url 'student:save_webcam_snapshot' module.id %}";
 
         const playerShell = document.getElementById("playerShell");
         const video = document.getElementById("videoPlayer");
@@ -890,6 +1089,159 @@
         const continueBtn = document.getElementById("continueBtn");
         const qualitySelector = document.getElementById("qualitySelector");
         const qualityStatus = document.getElementById("qualityStatus");
+
+       
+
+// ================= TAB SWITCH DETECTION =================
+
+document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+        video.pause();
+
+        const tabSwitchStatus = document.getElementById("tabSwitchStatus");
+        if (tabSwitchStatus) {
+            tabSwitchStatus.textContent = "Browser Focus: Switched";
+            tabSwitchStatus.classList.add("warn");
+            tabSwitchStatus.classList.remove("good");
+        }
+
+        fetch(tabSwitchLogUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({
+                current_time: video.currentTime || 0,
+                note: "Browser tab switch detected during video playback."
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Tab switch logged:", data);
+        })
+        .catch(error => {
+            console.error("Tab switch log failed:", error);
+        });
+
+        alert("⚠️ Tab switching detected. Please stay on the video.");
+    } else {
+        const tabSwitchStatus = document.getElementById("tabSwitchStatus");
+        if (tabSwitchStatus) {
+            tabSwitchStatus.textContent = "Browser Focus: Active";
+            tabSwitchStatus.classList.remove("warn");
+            tabSwitchStatus.classList.add("good");
+        }
+    }
+});
+
+// ================= WEBCAM SAVE TO DJANGO =================
+
+function startWebcam() {
+    const allow = confirm("Allow webcam for verification?");
+
+    if (!allow) {
+        const webcamStatus = document.getElementById("webcamStatus");
+        if (webcamStatus) {
+            webcamStatus.textContent = "Webcam: Skipped";
+            webcamStatus.classList.add("warn");
+        }
+        return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function (stream) {
+            const webcamStatus = document.getElementById("webcamStatus");
+            if (webcamStatus) {
+                webcamStatus.textContent = "Webcam: Active";
+                webcamStatus.classList.add("good");
+                webcamStatus.classList.remove("warn");
+            }
+
+            const videoPreview = document.createElement("video");
+            videoPreview.autoplay = true;
+            videoPreview.playsInline = true;
+            videoPreview.muted = true;
+            videoPreview.srcObject = stream;
+
+            videoPreview.style.position = "fixed";
+            videoPreview.style.bottom = "20px";
+            videoPreview.style.right = "20px";
+            videoPreview.style.width = "200px";
+            videoPreview.style.height = "150px";
+            videoPreview.style.objectFit = "cover";
+            videoPreview.style.border = "2px solid white";
+            videoPreview.style.borderRadius = "10px";
+            videoPreview.style.zIndex = "9999";
+            videoPreview.style.background = "#000";
+
+            document.body.appendChild(videoPreview);
+
+            setTimeout(function () {
+                const canvas = document.createElement("canvas");
+                canvas.width = videoPreview.videoWidth || 320;
+                canvas.height = videoPreview.videoHeight || 240;
+
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(videoPreview, 0, 0, canvas.width, canvas.height);
+
+                const imageData = canvas.toDataURL("image/png");
+
+                fetch(webcamSnapshotUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: JSON.stringify({
+                        image: imageData,
+                        current_time: video.currentTime || 0
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Webcam snapshot saved:", data);
+
+                    if (data.success) {
+                        alert("📸 Snapshot captured and saved.");
+                    } else {
+                        alert("Snapshot captured but not saved.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Webcam snapshot save failed:", error);
+                    alert("Snapshot save failed.");
+                })
+                .finally(() => {
+                    stream.getTracks().forEach(track => track.stop());
+                    videoPreview.remove();
+
+                    const webcamStatus = document.getElementById("webcamStatus");
+                    if (webcamStatus) {
+                        webcamStatus.textContent = "Webcam: Saved";
+                        webcamStatus.classList.add("good");
+                        webcamStatus.classList.remove("warn");
+                    }
+                });
+
+            }, 5000);
+        })
+        .catch(function () {
+            const webcamStatus = document.getElementById("webcamStatus");
+            if (webcamStatus) {
+                webcamStatus.textContent = "Webcam: Denied";
+                webcamStatus.classList.add("warn");
+                webcamStatus.classList.remove("good");
+            }
+
+            alert("Webcam permission denied");
+        });
+}
+
+// run after 5 sec
+setTimeout(startWebcam, 5000);
 
         let player = null;
         let completionTriggered = alreadyCompleted;

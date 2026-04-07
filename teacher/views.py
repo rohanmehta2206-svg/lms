@@ -195,7 +195,19 @@ def is_safe_storage_path(base_path, relative_path):
 def get_video_module_from_stream_path(path):
     normalized_path = normalize_stream_path(path)
 
-    # Direct MPD path match
+    # 1) BEST MATCH: module id directly from folder name like module_45
+    match = re.search(r'/module_(\d+)(?:/|$)', f'/{normalized_path}')
+    if match:
+        module_id = int(match.group(1))
+        module = Module.objects.filter(
+            id=module_id,
+            type="video"
+        ).select_related("section", "section__course").first()
+
+        if module:
+            return module
+
+    # 2) Direct MPD exact path match
     direct_module = Module.objects.filter(
         type="video",
         video_mpd=normalized_path
@@ -204,16 +216,39 @@ def get_video_module_from_stream_path(path):
     if direct_module:
         return direct_module
 
-    # Segment file match by folder
+    # 3) Segment file match by folder -> stream.mpd
     directory = os.path.dirname(normalized_path).replace("\\", "/")
-    if not directory:
-        return None
+    if directory:
+        possible_mpd_path = f"{directory}/stream.mpd"
+        folder_module = Module.objects.filter(
+            type="video",
+            video_mpd=possible_mpd_path
+        ).select_related("section", "section__course").first()
 
-    possible_mpd_path = f"{directory}/stream.mpd"
-    return Module.objects.filter(
-        type="video",
-        video_mpd=possible_mpd_path
-    ).select_related("section", "section__course").first()
+        if folder_module:
+            return folder_module
+
+    # 4) Fallback: endswith match for old saved paths
+    all_video_modules = Module.objects.filter(type="video").select_related("section", "section__course")
+
+    for module in all_video_modules:
+        saved_path = normalize_stream_path(getattr(module, "video_mpd", ""))
+        if not saved_path:
+            continue
+
+        if normalized_path == saved_path:
+            return module
+
+        if normalized_path.endswith(saved_path):
+            return module
+
+        saved_dir = os.path.dirname(saved_path).replace("\\", "/")
+        current_dir = os.path.dirname(normalized_path).replace("\\", "/")
+
+        if saved_dir and current_dir and current_dir.endswith(saved_dir):
+            return module
+
+    return None
 
 
 def request_user_has_video_access(request, module):

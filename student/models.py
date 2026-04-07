@@ -2,6 +2,41 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from teacher.models import Course, Module
+import hashlib
+
+
+class ImmutableLogMixin(models.Model):
+    """
+    Append-only immutable log with hash chaining:
+    - allow create
+    - block update
+    - block delete
+    - save previous_hash and current_hash
+    """
+
+    previous_hash = models.CharField(max_length=64, blank=True, editable=False)
+    current_hash = models.CharField(max_length=64, blank=True, editable=False)
+
+    class Meta:
+        abstract = True
+
+    def build_hash_payload(self):
+        raise NotImplementedError("Child class must implement build_hash_payload().")
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            raise ValueError("Immutable log records cannot be updated.")
+
+        last_log = self.__class__.objects.order_by("-id").first()
+        self.previous_hash = last_log.current_hash if last_log and last_log.current_hash else "0"
+
+        payload = f"{self.previous_hash}|{self.build_hash_payload()}"
+        self.current_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValueError("Immutable log records cannot be deleted.")
 
 
 class Student(models.Model):
@@ -161,7 +196,7 @@ class VideoWatchProgress(models.Model):
         self.save()
 
 
-class VideoWatchEvent(models.Model):
+class VideoWatchEvent(ImmutableLogMixin):
     EVENT_CHOICES = [
         ('play', 'Play'),
         ('pause', 'Pause'),
@@ -188,5 +223,75 @@ class VideoWatchEvent(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    def build_hash_payload(self):
+        return "|".join([
+            str(self.student_id or ""),
+            str(self.module_id or ""),
+            str(self.event_type or ""),
+            str(self.current_time or 0),
+            str(self.duration or 0),
+            str(self.created_at or timezone.now()),
+        ])
+
     def __str__(self):
         return f"{self.student.username} - {self.module.title} - {self.event_type}"
+
+
+class WebcamSnapshot(ImmutableLogMixin):
+    student = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='webcam_snapshots'
+    )
+    module = models.ForeignKey(
+        Module,
+        on_delete=models.CASCADE,
+        related_name='webcam_snapshots'
+    )
+    image = models.ImageField(upload_to='webcam_snapshots/')
+    captured_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-captured_at']
+
+    def build_hash_payload(self):
+        return "|".join([
+            str(self.student_id or ""),
+            str(self.module_id or ""),
+            str(getattr(self.image, "name", "") or ""),
+            str(self.captured_at or timezone.now()),
+        ])
+
+    def __str__(self):
+        return f"{self.student.username} - {self.module.title} - Webcam Snapshot"
+
+
+class TabSwitchLog(ImmutableLogMixin):
+    student = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='tab_switch_logs'
+    )
+    module = models.ForeignKey(
+        Module,
+        on_delete=models.CASCADE,
+        related_name='tab_switch_logs'
+    )
+    switched_at = models.DateTimeField(auto_now_add=True)
+    current_time = models.FloatField(default=0)
+    note = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ['-switched_at']
+
+    def build_hash_payload(self):
+        return "|".join([
+            str(self.student_id or ""),
+            str(self.module_id or ""),
+            str(self.current_time or 0),
+            str(self.note or ""),
+            str(self.switched_at or timezone.now()),
+        ])
+
+    def __str__(self):
+        return f"{self.student.username} - {self.module.title} - Tab Switch"

@@ -7,6 +7,10 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib import messages
 
+import json
+import base64
+from django.core.files.base import ContentFile
+
 from reportlab.lib.pagesizes import landscape, A4
 from reportlab.lib.colors import HexColor, white
 from reportlab.pdfgen import canvas
@@ -30,6 +34,8 @@ from .models import (
     Student,
     VideoWatchProgress,
     VideoWatchEvent,
+    WebcamSnapshot,
+    TabSwitchLog,
 )
 from accounts.models import UserProfile
 from django.views.decorators.http import require_POST
@@ -1831,3 +1837,111 @@ def profile_page(request):
     }
 
     return render(request, "student/profile.html", context)
+
+# =====================================
+# SAVE WEBCAM SNAPSHOT
+# =====================================
+@login_required
+@require_POST
+def save_webcam_snapshot(request, module_id):
+    module = get_object_or_404(Module, id=module_id, type="video")
+
+    if not ensure_module_access(request, module):
+        return JsonResponse({
+            "success": False,
+            "error": "This module is locked or you are not enrolled in this course."
+        }, status=403)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except Exception:
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid JSON data."
+        }, status=400)
+
+    image_data = data.get("image")
+    current_time = float(data.get("current_time") or 0)
+
+    if not image_data:
+        return JsonResponse({
+            "success": False,
+            "error": "No image data received."
+        }, status=400)
+
+    if ";base64," not in image_data:
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid image format."
+        }, status=400)
+
+    try:
+        format_part, imgstr = image_data.split(";base64,")
+        ext = format_part.split("/")[-1]
+        file_name = f"webcam_{request.user.id}_{module.id}_{int(time.time())}.{ext}"
+        image_file = ContentFile(base64.b64decode(imgstr), name=file_name)
+
+        snapshot = WebcamSnapshot.objects.create(
+            student=request.user,
+            module=module,
+            image=image_file,
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": "Webcam snapshot saved successfully.",
+            "snapshot_id": snapshot.id,
+            "current_time": current_time,
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "error": f"Could not save webcam snapshot: {str(e)}"
+        }, status=500)
+
+
+# =====================================
+# LOG TAB SWITCH
+# =====================================
+@login_required
+@require_POST
+def log_tab_switch(request, module_id):
+    module = get_object_or_404(Module, id=module_id, type="video")
+
+    if not ensure_module_access(request, module):
+        return JsonResponse({
+            "success": False,
+            "error": "This module is locked or you are not enrolled in this course."
+        }, status=403)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except Exception:
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid JSON data."
+        }, status=400)
+
+    current_time = float(data.get("current_time") or 0)
+    note = (data.get("note") or "Browser tab switch detected.").strip()
+
+    try:
+        tab_log = TabSwitchLog.objects.create(
+            student=request.user,
+            module=module,
+            current_time=current_time,
+            note=note,
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": "Tab switch logged successfully.",
+            "log_id": tab_log.id,
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "error": f"Could not save tab switch log: {str(e)}"
+        }, status=500)
