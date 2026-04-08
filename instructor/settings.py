@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'teacher',
     'student',
     'adminpanel',
+    'core',
 ]
 
 

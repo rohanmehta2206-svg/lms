@@ -4,7 +4,7 @@ from . import views
 app_name = "teacher"
 
 urlpatterns = [
-    path('', views.teacher_dashboard, name='teacher_dashboard'),
+    path('dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
 
     path('courses/', views.course_list, name='course_list'),
     path('courses/create/', views.create_course, name='create_course'),
@@ -16,4 +16,7 @@ urlpatterns = [
     path('section/update/<int:section_id>/', views.update_section, name='update_section'),
 
     path('stream/<path:path>', views.serve_dash, name='serve_dash'),
+
+    # ✅ NEW: Teacher Profile
+    path('profile/', views.profile_page, name='profile'),
 ]

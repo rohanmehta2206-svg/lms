@@ -5,155 +5,244 @@
 {% block content %}
 
 <style>
-
-.page-title{
-font-size:28px;
-font-weight:600;
-margin-bottom:25px;
+.course-page {
+    width: 100%;
 }
 
-.create-btn{
-display:inline-block;
-margin-bottom:30px;
-background:#2563eb;
-color:white;
-padding:10px 16px;
-border-radius:6px;
-text-decoration:none;
-font-weight:500;
+.course-hero {
+    width: 100%;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    padding: 38px 36px;
+    border-radius: 22px;
+    margin-bottom: 28px;
+    box-shadow: 0 14px 32px rgba(37, 99, 235, 0.18);
 }
 
-.create-btn:hover{
-background:#1e40af;
+.course-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #eff6ff;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 14px;
 }
 
-.course-grid{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-gap:20px;
+.course-hero h1 {
+    margin: 0 0 10px;
+    font-size: 42px;
+    font-weight: 800;
 }
 
-.course-card{
-background:white;
-border-radius:12px;
-overflow:hidden;
-box-shadow:0 2px 10px rgba(0,0,0,0.06);
-transition:0.2s;
+.course-hero p {
+    margin: 0;
+    font-size: 17px;
+    color: #dbeafe;
 }
 
-.course-card:hover{
-transform:translateY(-3px);
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
 }
 
-.course-image{
-width:100%;
-height:180px;
-object-fit:cover;
-background:#e5e7eb;
+.top-left h2 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 800;
 }
 
-.course-body{
-padding:18px;
+.top-left p {
+    margin: 6px 0 0;
+    color: #64748b;
 }
 
-.course-title{
-font-size:18px;
-font-weight:600;
-margin-bottom:6px;
+.create-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #2563eb;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: 0.2s;
 }
 
-.course-desc{
-font-size:14px;
-color:#6b7280;
-margin-bottom:10px;
+.create-btn:hover {
+    background: #1d4ed8;
 }
 
-.course-footer{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-top:10px;
+.course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
 }
 
-.status{
-font-size:13px;
+.course-card {
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    transition: 0.2s;
 }
 
-.status.published{
-color:#16a34a;
-font-weight:500;
+.course-card:hover {
+    transform: translateY(-4px);
 }
 
-.status.unpublished{
-color:#dc2626;
-font-weight:500;
+.course-image-wrap {
+    width: 100%;
+    height: 210px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
 }
 
-.open-btn{
-text-decoration:none;
-font-size:14px;
-color:#2563eb;
-font-weight:500;
+.course-image {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
 }
 
-.open-btn:hover{
-text-decoration:underline;
+.course-body {
+    padding: 20px;
 }
 
+.course-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.course-desc {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 14px;
+}
+
+.course-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 20px;
+}
+
+.status.published {
+    color: #15803d;
+    background: #dcfce7;
+}
+
+.status.unpublished {
+    color: #b91c1c;
+    background: #fee2e2;
+}
+
+.open-btn {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.open-btn:hover {
+    text-decoration: underline;
+}
+
+.empty-box {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 16px;
+}
 </style>
 
+<div class="course-page">
 
-<div class="page-title">Manage Courses</div>
+    <div class="course-hero">
+        <div class="course-hero-badge">📘 Course Panel</div>
+        <h1>Manage Courses</h1>
+        <p>View and manage all your courses in one place.</p>
+    </div>
 
+    <div class="top-bar">
+        <div class="top-left">
+            <h2>Your Courses</h2>
+            <p>Organize and manage your learning content.</p>
+        </div>
 
-<a href="{% url 'teacher:create_course' %}" class="create-btn">
-+ Create Course
-</a>
+        <a href="{% url 'teacher:create_course' %}" class="create-btn">
+            + Create Course
+        </a>
+    </div>
 
+    <div class="course-grid">
 
-<div class="course-grid">
+        {% for course in courses %}
 
-{% for course in courses %}
+        <div class="course-card">
 
-<div class="course-card">
+            <div class="course-image-wrap">
+                {% if course.image %}
+                <img src="{{ course.image.url }}" class="course-image">
+                {% else %}
+                <img src="https://via.placeholder.com/600x300?text=Course+Image" class="course-image">
+                {% endif %}
+            </div>
 
-{% if course.image %}
-<img src="{{ course.image.url }}" class="course-image">
-{% else %}
-<img src="https://via.placeholder.com/600x300?text=Course+Image" class="course-image">
-{% endif %}
+            <div class="course-body">
 
-<div class="course-body">
+                <div class="course-title">{{ course.title }}</div>
 
-<div class="course-title">{{ course.title }}</div>
+                <div class="course-desc">
+                    {{ course.description|truncatechars:80 }}
+                </div>
 
-<div class="course-desc">
-{{ course.description|truncatechars:80 }}
-</div>
+                <div class="course-footer">
 
-<div class="course-footer">
+                    {% if course.is_published %}
+                    <span class="status published">Published</span>
+                    {% else %}
+                    <span class="status unpublished">Unpublished</span>
+                    {% endif %}
 
-{% if course.is_published %}
-<span class="status published">Published</span>
-{% else %}
-<span class="status unpublished">Unpublished</span>
-{% endif %}
+                    <a href="{% url 'teacher:course_detail' course.id %}" class="open-btn">
+                        Open →
+                    </a>
 
-<a href="{% url 'teacher:course_detail' course.id %}" class="open-btn">
-Open Course →
-</a>
+                </div>
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-</div>
+        {% empty %}
 
-{% empty %}
+        <div class="empty-box">
+            No courses created yet.
+        </div>
 
-<p>No courses created yet.</p>
+        {% endfor %}
 
-{% endfor %}
+    </div>
 
 </div>
 

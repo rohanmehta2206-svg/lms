@@ -1,150 +1,206 @@
 {% extends 'student/student_base.html' %}
-
 {% block title %}Student Dashboard{% endblock %}
 
 {% block content %}
 
 <style>
-    .dashboard-wrap {
-        display: flex;
-        flex-direction: column;
-        gap: 26px;
-    }
+.dashboard-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
 
-    .welcome {
-        background: linear-gradient(135deg, #2563eb, #1e40af);
-        color: white;
-        padding: 34px 38px;
-        border-radius: 18px;
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.18);
-    }
+/* HERO (same as teacher panel) */
+.hero {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    padding: 36px 34px;
+    border-radius: 22px;
+    box-shadow: 0 14px 32px rgba(37, 99, 235, 0.18);
+}
 
-    .welcome h2 {
-        margin: 0 0 10px;
-        font-size: 36px;
-        font-weight: 800;
-    }
+.hero h2 {
+    margin: 0 0 10px;
+    font-size: 38px;
+    font-weight: 800;
+}
 
-    .welcome p {
-        font-size: 16px;
-        opacity: 0.9;
-    }
+.hero p {
+    font-size: 16px;
+    color: #dbeafe;
+}
 
-    .stats {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 18px;
-    }
+/* STATS (card upgrade) */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
 
-    .card {
-        background: white;
-        border-radius: 18px;
-        padding: 26px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-        text-align: center;
-    }
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 28px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+    transition: 0.2s;
+}
 
-    .card h4 {
-        font-size: 14px;
-        color: #6b7280;
-        margin-bottom: 10px;
-    }
+.stat-card:hover {
+    transform: translateY(-3px);
+}
 
-    .card h2 {
-        font-size: 30px;
-        font-weight: bold;
-    }
+.stat-card h4 {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
 
-    .section {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
+.stat-card h2 {
+    font-size: 32px;
+    font-weight: 800;
+    color: #0f172a;
+}
 
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+/* SECTION */
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
 
-    .section h3 {
-        font-size: 22px;
-        font-weight: bold;
-    }
+.section h3 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+}
 
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 18px;
-    }
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
 
-    .box {
-        background: white;
-        border-radius: 16px;
-        padding: 22px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
+/* COURSE CARD (teacher style) */
+.course-card {
+    background: white;
+    border-radius: 18px;
+    padding: 22px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+    transition: 0.2s;
+}
 
-    .box h4 {
-        margin-bottom: 8px;
-    }
+.course-card:hover {
+    transform: translateY(-3px);
+}
 
-    .box p {
-        font-size: 14px;
-        color: #6b7280;
-        margin-bottom: 12px;
-    }
+/* PROGRESS BADGE */
+.progress-badge {
+    display: inline-block;
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
 
-    .box a {
-        color: #2563eb;
-        font-weight: 600;
-        text-decoration: none;
-    }
+/* COURSE TITLE */
+.course-title {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
 
-    .feature-badge {
-        background: #eff6ff;
-        color: #1d4ed8;
-        padding: 6px 10px;
-        border-radius: 999px;
-        font-size: 12px;
-        margin-bottom: 10px;
-        display: inline-block;
-    }
+/* COURSE TEXT */
+.course-text {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 14px;
+}
 
-    .empty-box {
-        text-align: center;
-    }
+/* BUTTON */
+.action-link {
+    font-weight: 700;
+    color: #2563eb;
+    text-decoration: none;
+}
 
-    @media (max-width: 900px) {
-        .stats, .grid {
-            grid-template-columns: 1fr;
-        }
+.action-link:hover {
+    text-decoration: underline;
+}
+
+/* FEATURE CARDS */
+.feature-card {
+    background: white;
+    border-radius: 18px;
+    padding: 22px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+.feature-card h4 {
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.feature-card p {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 12px;
+}
+
+.empty-box {
+    text-align: center;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1000px) {
+    .stats, .grid {
+        grid-template-columns: 1fr;
     }
+}
 </style>
 
 <div class="dashboard-wrap">
 
-    <!-- WELCOME -->
-    <div class="welcome">
-        <h2>Welcome Student 👋</h2>
+    <!-- HERO -->
+    <div class="hero">
+        <h2>
+            Welcome
+            {% if request.user.first_name %}
+                {{ request.user.first_name }}
+            {% else %}
+                {{ request.user.username }}
+            {% endif %}
+            👋
+        </h2>
         <p>Track your courses, progress, and learning journey.</p>
     </div>
 
     <!-- STATS -->
     <div class="stats">
-        <div class="card">
+        <div class="stat-card">
             <h4>Enrolled Courses</h4>
             <h2>{{ enrolled_courses_count }}</h2>
         </div>
-        <div class="card">
+
+        <div class="stat-card">
             <h4>Completed Courses</h4>
             <h2>{{ completed_courses_count }}</h2>
         </div>
-        <div class="card">
+
+        <div class="stat-card">
             <h4>Pending Modules</h4>
             <h2>{{ pending_modules_count }}</h2>
         </div>
-        <div class="card">
+
+        <div class="stat-card">
             <h4>Certificates</h4>
             <h2>{{ certificates_count }}</h2>
         </div>
@@ -152,32 +208,43 @@
 
     <!-- COURSE OVERVIEW -->
     <div class="section">
-        <div class="section-header">
-            <h3>📚 Course Overview</h3>
-        </div>
+        <h3>📚 Course Overview</h3>
 
         <div class="grid">
             {% for item in course_cards %}
-                <div class="box">
-                    <span class="feature-badge">{{ item.progress_percent }}% Progress</span>
-                    <h4>{{ item.course.title }}</h4>
+                <div class="course-card">
 
-                    <p>
+                    <span class="progress-badge">
+                        {{ item.progress_percent }}% Progress
+                    </span>
+
+                    <div class="course-title">
+                        {{ item.course.title }}
+                    </div>
+
+                    <div class="course-text">
                         {{ item.completed_modules }}/{{ item.total_modules }} modules completed <br>
                         Pending: {{ item.pending_modules }}
-                    </p>
+                    </div>
 
                     {% if item.is_completed %}
-                        <a href="{% url 'student:certificates' %}">View Certificate →</a>
+                        <a href="{% url 'student:certificates' %}" class="action-link">
+                            View Certificate →
+                        </a>
                     {% else %}
-                        <a href="{% url 'student:course_detail' item.course.id %}">Open Course →</a>
+                        <a href="{% url 'student:course_detail' item.course.id %}" class="action-link">
+                            Open Course →
+                        </a>
                     {% endif %}
+
                 </div>
             {% empty %}
-                <div class="box empty-box">
+                <div class="course-card empty-box">
                     <h4>No Courses</h4>
                     <p>Start learning by enrolling in a course.</p>
-                    <a href="{% url 'student:my_courses' %}">Browse Courses →</a>
+                    <a href="{% url 'student:my_courses' %}" class="action-link">
+                        Browse Courses →
+                    </a>
                 </div>
             {% endfor %}
         </div>
@@ -185,28 +252,28 @@
 
     <!-- MY LEARNING -->
     <div class="section">
-        <div class="section-header">
-            <h3>📘 My Learning</h3>
-        </div>
+        <h3>📘 My Learning</h3>
 
         <div class="grid">
-            <div class="box">
+
+            <div class="feature-card">
                 <h4>My Courses</h4>
                 <p>View all enrolled courses.</p>
-                <a href="{% url 'student:my_courses' %}">Open →</a>
+                <a href="{% url 'student:my_courses' %}" class="action-link">Open →</a>
             </div>
 
-            <div class="box">
+            <div class="feature-card">
                 <h4>Progress Tracker</h4>
                 <p>Check your learning progress.</p>
-                <a href="{% url 'student:progress_tracker' %}">View →</a>
+                <a href="{% url 'student:progress_tracker' %}" class="action-link">View →</a>
             </div>
 
-            <div class="box">
+            <div class="feature-card">
                 <h4>Certificates</h4>
                 <p>Download your certificates.</p>
-                <a href="{% url 'student:certificates' %}">View →</a>
+                <a href="{% url 'student:certificates' %}" class="action-link">View →</a>
             </div>
+
         </div>
     </div>
 

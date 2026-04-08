@@ -15,26 +15,29 @@
         body{
             font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height:100vh;
-            background:linear-gradient(135deg, #eaf1ff, #dfe9ff);
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            padding:30px 15px;
+            background:#f3f4f6;
+            color:#0f172a;
+            padding:32px 16px;
+        }
+
+        a{
+            text-decoration:none;
         }
 
         .page-wrapper{
             width:100%;
-            max-width:1200px;
+            max-width:1280px;
+            margin:0 auto;
         }
 
         .messages{
-            max-width:1100px;
+            max-width:1180px;
             margin:0 auto 18px auto;
         }
 
         .message{
             padding:12px 16px;
-            border-radius:8px;
+            border-radius:12px;
             margin-bottom:10px;
             font-size:14px;
             font-weight:600;
@@ -54,83 +57,123 @@
 
         .main-card{
             width:100%;
-            min-height:680px;
-            background:#fff;
-            border-radius:32px;
+            background:#ffffff;
+            border:1px solid #e5e7eb;
+            border-radius:28px;
             overflow:hidden;
-            box-shadow:0 20px 50px rgba(0,0,0,0.12);
+            box-shadow:0 18px 40px rgba(15, 23, 42, 0.06);
             display:grid;
-            grid-template-columns:1fr 1fr;
+            grid-template-columns:1.02fr 0.98fr;
+            min-height:680px;
         }
 
         .left-panel,
         .right-panel{
-            padding:55px 45px;
+            padding:54px 48px;
             display:flex;
             flex-direction:column;
             justify-content:center;
         }
 
         .left-panel{
-            background:linear-gradient(135deg, #4f6edb, #1fa2c9);
-            color:white;
+            background:#f8fafc;
+            border-right:1px solid #e5e7eb;
         }
 
         .panel-content{
-            max-width:430px;
-            margin:auto;
             width:100%;
+            max-width:460px;
+            margin:0 auto;
+        }
+
+        .eyebrow{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            background:#eff6ff;
+            color:#2563eb;
+            border:1px solid #dbeafe;
+            padding:8px 14px;
+            border-radius:999px;
+            font-size:13px;
+            font-weight:700;
+            margin-bottom:18px;
         }
 
         .left-panel h1{
-            font-size:56px;
+            font-size:54px;
+            line-height:1.1;
             font-weight:800;
-            line-height:1.15;
+            color:#0f172a;
             margin-bottom:18px;
         }
 
         .left-panel p{
             font-size:17px;
             line-height:1.8;
-            color:rgba(255,255,255,0.94);
-            margin-bottom:28px;
+            color:#475569;
+            margin-bottom:26px;
+        }
+
+        .feature-list{
+            display:grid;
+            gap:16px;
+            margin-bottom:26px;
         }
 
         .left-info-box{
-            background:rgba(255,255,255,0.12);
-            border:1px solid rgba(255,255,255,0.20);
+            background:#ffffff;
+            border:1px solid #e5e7eb;
             border-radius:18px;
             padding:18px;
-            margin-bottom:18px;
+        }
+
+        .box-head{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            margin-bottom:10px;
+        }
+
+        .box-icon{
+            width:42px;
+            height:42px;
+            border-radius:12px;
+            background:#eff6ff;
+            color:#2563eb;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:20px;
+            flex-shrink:0;
         }
 
         .left-info-box h3{
             font-size:21px;
-            margin-bottom:8px;
-            font-weight:700;
+            color:#111827;
+            font-weight:800;
         }
 
         .left-info-box p{
             font-size:14px;
-            line-height:1.7;
+            line-height:1.8;
+            color:#64748b;
             margin-bottom:0;
         }
 
         .switch-link{
             display:inline-block;
-            margin-top:14px;
-            padding:13px 28px;
-            border:2px solid white;
-            border-radius:32px;
-            text-decoration:none;
-            color:white;
+            padding:13px 24px;
+            border-radius:12px;
+            background:#2563eb;
+            color:#ffffff;
             font-weight:700;
-            transition:0.3s;
+            font-size:14px;
+            transition:0.25s ease;
         }
 
         .switch-link:hover{
-            background:white;
-            color:#2563eb;
+            background:#1d4ed8;
         }
 
         .right-panel{
@@ -138,25 +181,27 @@
         }
 
         .form-title{
-            font-size:50px;
+            font-size:48px;
             font-weight:800;
             color:#111827;
             margin-bottom:10px;
+            line-height:1.1;
         }
 
         .form-subtitle{
             color:#6b7280;
             font-size:15px;
-            margin-bottom:28px;
+            margin-bottom:26px;
+            line-height:1.7;
         }
 
         .toggle-role{
             display:flex;
-            background:#eef2ff;
+            background:#eef2f7;
             border-radius:14px;
             padding:6px;
             gap:6px;
-            margin-bottom:24px;
+            margin-bottom:18px;
         }
 
         .toggle-btn{
@@ -169,13 +214,13 @@
             cursor:pointer;
             background:transparent;
             color:#374151;
-            transition:0.3s;
+            transition:0.25s ease;
         }
 
         .toggle-btn.active{
-            background:linear-gradient(135deg, #4f6edb, #1fa2c9);
-            color:white;
-            box-shadow:0 6px 18px rgba(79,110,219,0.20);
+            background:#2563eb;
+            color:#ffffff;
+            box-shadow:0 8px 18px rgba(37, 99, 235, 0.16);
         }
 
         .role-note{
@@ -203,34 +248,35 @@
             border-radius:14px;
             font-size:14px;
             background:#f9fafb;
-            transition:0.25s;
+            color:#111827;
+            transition:0.25s ease;
         }
 
         input:focus{
             outline:none;
-            border-color:#4f6edb;
-            background:white;
-            box-shadow:0 0 0 4px rgba(79,110,219,0.10);
+            border-color:#2563eb;
+            background:#ffffff;
+            box-shadow:0 0 0 4px rgba(37, 99, 235, 0.10);
         }
 
         .submit-btn{
             width:100%;
             border:none;
-            background:linear-gradient(135deg, #6a3fc7, #4c2aa9);
-            color:white;
-            font-size:16px;
-            font-weight:700;
+            background:#2563eb;
+            color:#ffffff;
+            font-size:15px;
+            font-weight:800;
             padding:15px;
             border-radius:14px;
             cursor:pointer;
             margin-top:8px;
-            transition:0.3s;
-            box-shadow:0 10px 24px rgba(106,63,199,0.22);
+            transition:0.25s ease;
+            box-shadow:0 12px 24px rgba(37, 99, 235, 0.18);
         }
 
         .submit-btn:hover{
+            background:#1d4ed8;
             transform:translateY(-1px);
-            opacity:0.97;
         }
 
         .bottom-text{
@@ -241,8 +287,7 @@
         }
 
         .bottom-text a{
-            color:#3157c7;
-            text-decoration:none;
+            color:#2563eb;
             font-weight:700;
         }
 
@@ -255,23 +300,40 @@
                 grid-template-columns:1fr;
             }
 
+            .left-panel{
+                border-right:none;
+                border-bottom:1px solid #e5e7eb;
+            }
+
             .left-panel h1{
                 font-size:42px;
+            }
+
+            .form-title{
+                font-size:40px;
             }
         }
 
         @media (max-width: 640px){
+            body{
+                padding:18px 10px;
+            }
+
             .left-panel,
             .right-panel{
-                padding:40px 22px;
+                padding:34px 22px;
             }
 
             .form-title{
-                font-size:36px;
+                font-size:34px;
             }
 
             .left-panel h1{
-                font-size:36px;
+                font-size:34px;
+            }
+
+            .left-panel p{
+                font-size:15px;
             }
         }
     </style>
@@ -292,38 +354,46 @@
 
     <div class="main-card">
 
-        <!-- LEFT SIDE -->
         <div class="left-panel">
             <div class="panel-content">
-                <h1>Welcome Back 👋</h1>
+                <div class="eyebrow">🎓 Adaptive Learning LMS</div>
+
+                <h1>Welcome Back</h1>
                 <p>
-                    Login to continue your LMS journey. Teachers can manage courses and Moodle content,
-                    while students can access courses, streaming videos, theory, materials, and quizzes.
+                    Sign in to continue your learning journey. Teachers can manage courses and Moodle-connected content,
+                    while students can access lessons, videos, theory, materials, and quizzes in one platform.
                 </p>
 
-                <div class="left-info-box">
-                    <h3>Teacher Login</h3>
-                    <p>
-                        Access the teacher dashboard to manage courses, upload content, and control Moodle-connected learning modules.
-                    </p>
+                <div class="feature-list">
+                    <div class="left-info-box">
+                        <div class="box-head">
+                            <div class="box-icon">👨‍🏫</div>
+                            <h3>Teacher Access</h3>
+                        </div>
+                        <p>
+                            Manage courses, upload modules, organize sections, and control LMS content from the teacher dashboard.
+                        </p>
+                    </div>
+
+                    <div class="left-info-box">
+                        <div class="box-head">
+                            <div class="box-icon">👩‍🎓</div>
+                            <h3>Student Access</h3>
+                        </div>
+                        <p>
+                            Continue learning, stream videos, read theory, download materials, and attempt quizzes with guided progress.
+                        </p>
+                    </div>
                 </div>
 
-                <div class="left-info-box">
-                    <h3>Student Login</h3>
-                    <p>
-                        Access the student dashboard to continue learning, watch videos, read theory, download materials, and attempt quizzes.
-                    </p>
-                </div>
-
-                <a href="{% url 'accounts:register' %}" class="switch-link">CREATE ACCOUNT</a>
+                <a href="{% url 'accounts:register' %}" class="switch-link">Create Account</a>
             </div>
         </div>
 
-        <!-- RIGHT SIDE -->
         <div class="right-panel">
             <div class="panel-content">
                 <h2 class="form-title">Sign In</h2>
-                <p class="form-subtitle">Choose your role and enter your credentials</p>
+                <p class="form-subtitle">Choose your role and enter your credentials to access the system.</p>
 
                 <form method="POST">
                     {% csrf_token %}

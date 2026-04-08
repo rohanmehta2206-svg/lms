@@ -13,18 +13,21 @@
         }
 
         body{
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height:100vh;
-            background: linear-gradient(135deg, #eaf1ff, #dfe9ff);
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            padding:30px 15px;
+            background:#f3f4f6;
+            color:#0f172a;
+            padding:32px 16px;
+        }
+
+        a{
+            text-decoration:none;
         }
 
         .page-wrapper{
             width:100%;
-            max-width:1400px;
+            max-width:1320px;
+            margin:0 auto;
         }
 
         .messages{
@@ -34,7 +37,7 @@
 
         .message{
             padding:12px 16px;
-            border-radius:8px;
+            border-radius:12px;
             margin-bottom:10px;
             font-size:14px;
             font-weight:600;
@@ -55,136 +58,152 @@
         .main-card{
             width:100%;
             max-width:1200px;
-            min-height:700px;
+            min-height:720px;
             margin:auto;
-            background:#fff;
-            border-radius:30px;
+            background:#ffffff;
+            border:1px solid #e5e7eb;
+            border-radius:28px;
             overflow:hidden;
-            box-shadow:0 20px 50px rgba(0,0,0,0.12);
+            box-shadow:0 18px 40px rgba(15, 23, 42, 0.06);
             display:grid;
-            grid-template-columns:1fr 1fr;
+            grid-template-columns:1.02fr 0.98fr;
         }
 
         .left-panel,
         .right-panel{
-            padding:55px 45px;
+            padding:54px 48px;
             display:flex;
             flex-direction:column;
             justify-content:center;
         }
 
         .left-panel{
-            background:linear-gradient(135deg, #4f6edb, #1fa2c9);
-            color:white;
-            position:relative;
-        }
-
-        .left-panel::before{
-            content:"";
-            position:absolute;
-            top:0;
-            left:0;
-            width:100%;
-            height:100%;
-            background:rgba(255,255,255,0.03);
-            pointer-events:none;
+            background:#f8fafc;
+            border-right:1px solid #e5e7eb;
         }
 
         .right-panel{
             background:#ffffff;
         }
 
-        .brand{
-            position:absolute;
-            top:28px;
-            left:35px;
-            font-size:18px;
-            font-weight:700;
-            letter-spacing:0.3px;
+        .panel-content{
+            width:100%;
+            max-width:460px;
+            margin:0 auto;
         }
 
-        .panel-content{
-            position:relative;
-            z-index:2;
-            max-width:420px;
-            margin:auto;
-            width:100%;
+        .eyebrow{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            background:#eff6ff;
+            color:#2563eb;
+            border:1px solid #dbeafe;
+            padding:8px 14px;
+            border-radius:999px;
+            font-size:13px;
+            font-weight:700;
+            margin-bottom:18px;
         }
 
         .welcome-title{
             font-size:52px;
             font-weight:800;
-            line-height:1.15;
+            line-height:1.12;
             margin-bottom:18px;
+            color:#0f172a;
         }
 
         .welcome-text{
-            font-size:18px;
-            line-height:1.7;
-            color:rgba(255,255,255,0.92);
-            margin-bottom:30px;
+            font-size:17px;
+            line-height:1.8;
+            color:#475569;
+            margin-bottom:28px;
+        }
+
+        .feature-list{
+            display:grid;
+            gap:16px;
+            margin-bottom:26px;
         }
 
         .info-box{
-            background:rgba(255,255,255,0.12);
-            border:1px solid rgba(255,255,255,0.18);
+            background:#ffffff;
+            border:1px solid #e5e7eb;
             border-radius:18px;
-            padding:22px;
-            margin-bottom:22px;
-            backdrop-filter: blur(4px);
+            padding:18px;
+        }
+
+        .box-head{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            margin-bottom:10px;
+        }
+
+        .box-icon{
+            width:42px;
+            height:42px;
+            border-radius:12px;
+            background:#eff6ff;
+            color:#2563eb;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:20px;
+            flex-shrink:0;
         }
 
         .info-box h3{
-            font-size:22px;
-            margin-bottom:10px;
-            font-weight:700;
+            font-size:21px;
+            color:#111827;
+            font-weight:800;
         }
 
         .info-box p{
-            font-size:15px;
-            line-height:1.7;
-            color:rgba(255,255,255,0.95);
+            font-size:14px;
+            line-height:1.8;
+            color:#64748b;
         }
 
         .switch-link{
             display:inline-block;
-            margin-top:12px;
-            padding:13px 28px;
-            border:2px solid white;
-            border-radius:30px;
-            text-decoration:none;
-            color:white;
+            padding:13px 24px;
+            border-radius:12px;
+            background:#2563eb;
+            color:#ffffff;
             font-weight:700;
-            letter-spacing:0.3px;
-            transition:0.3s;
+            font-size:14px;
+            transition:0.25s ease;
         }
 
         .switch-link:hover{
-            background:white;
-            color:#2563eb;
+            background:#1d4ed8;
         }
 
         .form-title{
-            font-size:48px;
+            font-size:46px;
             font-weight:800;
-            text-align:center;
             color:#111827;
             margin-bottom:10px;
+            line-height:1.1;
+            text-align:left;
         }
 
         .form-subtitle{
-            text-align:center;
             color:#6b7280;
             font-size:15px;
-            margin-bottom:30px;
+            margin-bottom:24px;
+            line-height:1.7;
+            text-align:left;
         }
 
         .toggle-role{
             display:flex;
-            background:#eef2ff;
+            background:#eef2f7;
             border-radius:14px;
             padding:6px;
-            margin-bottom:24px;
+            margin-bottom:22px;
             gap:6px;
         }
 
@@ -198,18 +217,18 @@
             cursor:pointer;
             background:transparent;
             color:#374151;
-            transition:0.3s;
+            transition:0.25s ease;
         }
 
         .toggle-btn.active{
-            background:linear-gradient(135deg, #4f6edb, #1fa2c9);
-            color:white;
-            box-shadow:0 6px 18px rgba(79,110,219,0.22);
+            background:#2563eb;
+            color:#ffffff;
+            box-shadow:0 8px 18px rgba(37, 99, 235, 0.16);
         }
 
         .role-form{
             display:none;
-            animation:fadeIn 0.3s ease;
+            animation:fadeIn 0.25s ease;
         }
 
         .role-form.active{
@@ -249,17 +268,18 @@
             width:100%;
             padding:14px 16px;
             border:1px solid #d1d5db;
-            border-radius:12px;
+            border-radius:14px;
             font-size:14px;
             background:#f9fafb;
-            transition:0.25s;
+            color:#111827;
+            transition:0.25s ease;
         }
 
         input:focus{
             outline:none;
-            border-color:#4f6edb;
-            background:white;
-            box-shadow:0 0 0 4px rgba(79,110,219,0.10);
+            border-color:#2563eb;
+            background:#ffffff;
+            box-shadow:0 0 0 4px rgba(37, 99, 235, 0.10);
         }
 
         .errorlist{
@@ -271,8 +291,8 @@
         }
 
         .password-rules{
-            background:#f3f7ff;
-            border:1px solid #dbe7ff;
+            background:#f8fafc;
+            border:1px solid #e5e7eb;
             border-radius:14px;
             padding:15px 18px;
             margin-bottom:18px;
@@ -280,7 +300,7 @@
 
         .password-rules strong{
             display:block;
-            color:#3157c7;
+            color:#2563eb;
             margin-bottom:8px;
             font-size:14px;
         }
@@ -295,21 +315,21 @@
         .submit-btn{
             width:100%;
             border:none;
-            background:linear-gradient(135deg, #6a3fc7, #4c2aa9);
-            color:white;
-            font-size:16px;
-            font-weight:700;
+            background:#2563eb;
+            color:#ffffff;
+            font-size:15px;
+            font-weight:800;
             padding:15px;
-            border-radius:12px;
+            border-radius:14px;
             cursor:pointer;
             margin-top:6px;
-            transition:0.3s;
-            box-shadow:0 10px 24px rgba(106,63,199,0.22);
+            transition:0.25s ease;
+            box-shadow:0 12px 24px rgba(37, 99, 235, 0.18);
         }
 
         .submit-btn:hover{
+            background:#1d4ed8;
             transform:translateY(-1px);
-            opacity:0.96;
         }
 
         .bottom-text{
@@ -320,8 +340,7 @@
         }
 
         .bottom-text a{
-            color:#3157c7;
-            text-decoration:none;
+            color:#2563eb;
             font-weight:700;
         }
 
@@ -335,18 +354,27 @@
             }
 
             .left-panel{
-                min-height:320px;
+                border-right:none;
+                border-bottom:1px solid #e5e7eb;
             }
 
             .welcome-title{
                 font-size:40px;
             }
+
+            .form-title{
+                font-size:38px;
+            }
         }
 
         @media (max-width: 640px){
+            body{
+                padding:18px 10px;
+            }
+
             .left-panel,
             .right-panel{
-                padding:40px 22px;
+                padding:34px 22px;
             }
 
             .row{
@@ -354,16 +382,15 @@
             }
 
             .form-title{
-                font-size:34px;
+                font-size:32px;
             }
 
             .welcome-title{
                 font-size:34px;
             }
 
-            .brand{
-                position:static;
-                margin-bottom:20px;
+            .welcome-text{
+                font-size:15px;
             }
         }
     </style>
@@ -384,47 +411,51 @@
 
     <div class="main-card">
 
-        <!-- LEFT SIDE -->
         <div class="left-panel">
-            <div class="brand">Cryptographic Adaptive LMS</div>
-
             <div class="panel-content">
-                <h1 class="welcome-title">Welcome<br>Back!</h1>
+                <div class="eyebrow">🎓 Adaptive Learning LMS</div>
+
+                <h1 class="welcome-title">Create Your Account</h1>
                 <p class="welcome-text">
-                    Create your account to continue with the LMS platform.
-                    Teachers can manage courses and Moodle content, while students can access learning modules, videos, theory, materials, and quizzes.
+                    Join the LMS platform to continue teaching or learning in a clean, structured, and Moodle-connected environment.
                 </p>
 
-                <div class="info-box">
-                    <h3>Teacher Access</h3>
-                    <p>
-                        Upload courses, add streaming videos, create theory pages, materials, and quizzes connected with Moodle.
-                    </p>
+                <div class="feature-list">
+                    <div class="info-box">
+                        <div class="box-head">
+                            <div class="box-icon">👨‍🏫</div>
+                            <h3>Teacher Access</h3>
+                        </div>
+                        <p>
+                            Upload courses, add streaming videos, create theory pages, materials, and quizzes connected with Moodle.
+                        </p>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="box-head">
+                            <div class="box-icon">👩‍🎓</div>
+                            <h3>Student Access</h3>
+                        </div>
+                        <p>
+                            Access enrolled courses, watch videos, read theory, download materials, and attempt quizzes in sequence.
+                        </p>
+                    </div>
                 </div>
 
-                <div class="info-box">
-                    <h3>Student Access</h3>
-                    <p>
-                        Access enrolled courses, watch MPD videos, read theory, download materials, and attempt Moodle quizzes.
-                    </p>
-                </div>
-
-                <a href="{% url 'accounts:login' %}" class="switch-link">SIGN IN</a>
+                <a href="{% url 'accounts:login' %}" class="switch-link">Sign In</a>
             </div>
         </div>
 
-        <!-- RIGHT SIDE -->
         <div class="right-panel">
             <div class="panel-content">
                 <h2 class="form-title">Create Account</h2>
-                <p class="form-subtitle">Choose your role and complete the registration form</p>
+                <p class="form-subtitle">Choose your role and complete the registration form.</p>
 
                 <div class="toggle-role">
                     <button type="button" class="toggle-btn active" onclick="showRole('teacher')">Teacher</button>
                     <button type="button" class="toggle-btn" onclick="showRole('student')">Student</button>
                 </div>
 
-                <!-- TEACHER FORM -->
                 <form method="POST" id="teacher-form" class="role-form active">
                     {% csrf_token %}
                     <input type="hidden" name="role" value="teacher">
@@ -480,7 +511,6 @@
                     <button type="submit" class="submit-btn">SIGN UP AS TEACHER</button>
                 </form>
 
-                <!-- STUDENT FORM -->
                 <form method="POST" id="student-form" class="role-form">
                     {% csrf_token %}
                     <input type="hidden" name="role" value="student">

@@ -1,6 +1,6 @@
-{% extends 'student/student_base.html' %}
+{% extends 'teacher/base.html' %}
 
-{% block title %}My Profile{% endblock %}
+{% block title %}Teacher Profile{% endblock %}
 
 {% block content %}
 <style>
@@ -237,42 +237,6 @@
         margin: 26px 0;
     }
 
-    .message-wrap {
-        margin-bottom: 22px;
-    }
-
-    .alert {
-        padding: 14px 16px;
-        border-radius: 12px;
-        font-size: 14px;
-        margin-bottom: 10px;
-        border: 1px solid transparent;
-    }
-
-    .alert-success {
-        background: #ecfdf5;
-        color: #065f46;
-        border-color: #a7f3d0;
-    }
-
-    .alert-error {
-        background: #fef2f2;
-        color: #991b1b;
-        border-color: #fecaca;
-    }
-
-    .alert-warning {
-        background: #fffbeb;
-        color: #92400e;
-        border-color: #fde68a;
-    }
-
-    .alert-info {
-        background: #eff6ff;
-        color: #1e40af;
-        border-color: #bfdbfe;
-    }
-
     @media (max-width: 1100px) {
         .summary-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -323,25 +287,10 @@
 
 <div class="profile-page">
 
-    {% if messages %}
-    <div class="message-wrap">
-        {% for message in messages %}
-            <div class="alert
-                {% if message.tags == 'success' %}alert-success
-                {% elif message.tags == 'error' %}alert-error
-                {% elif message.tags == 'warning' %}alert-warning
-                {% else %}alert-info
-                {% endif %}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
     <div class="profile-header">
         <div class="profile-header-left">
             <div class="profile-avatar">
-                {{ user.username|default:"S"|first|upper }}
+                {{ user.username|default:"T"|first|upper }}
             </div>
 
             <div class="profile-user-info">
@@ -353,7 +302,7 @@
                     {% endif %}
                 </h1>
                 <p>{{ user.email|default:"No email added" }}</p>
-                <span class="role-badge">Student Account</span>
+                <span class="role-badge">Teacher Account</span>
             </div>
         </div>
 
@@ -365,23 +314,23 @@
 
     <div class="summary-grid">
         <div class="summary-card">
-            <h4>Enrolled Courses</h4>
-            <p class="value">{{ enrolled_courses_count }}</p>
+            <h4>Total Courses</h4>
+            <p class="value">{{ total_courses }}</p>
         </div>
 
         <div class="summary-card">
-            <h4>Completed Courses</h4>
-            <p class="value">{{ completed_courses_count }}</p>
+            <h4>Total Sections</h4>
+            <p class="value">{{ total_sections }}</p>
         </div>
 
         <div class="summary-card">
-            <h4>Pending Modules</h4>
-            <p class="value">{{ pending_modules_count }}</p>
+            <h4>Published Courses</h4>
+            <p class="value">{{ published_courses }}</p>
         </div>
 
         <div class="summary-card">
-            <h4>Certificates Earned</h4>
-            <p class="value">{{ certificates_count }}</p>
+            <h4>Draft Courses</h4>
+            <p class="value">{{ draft_courses }}</p>
         </div>
     </div>
 
@@ -389,7 +338,7 @@
         <div class="profile-card">
             <h2>Personal Information</h2>
             <p class="card-subtitle">
-                View your basic account details and student information connected to your LMS account.
+                View your basic account details and teacher information connected to your LMS account.
             </p>
 
             <div class="info-list">
@@ -437,7 +386,7 @@
         <div class="profile-card">
             <h2>Account Settings</h2>
             <p class="card-subtitle">
-                Update your account information and change your password securely.
+                Update your account information and change your password securely. Changes can also be synced to Moodle.
             </p>
 
             <form method="POST">

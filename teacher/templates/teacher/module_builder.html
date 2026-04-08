@@ -6,447 +6,660 @@
 <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
 
 <style>
-.section-header{
-    background:linear-gradient(90deg,#2563eb,#1d4ed8);
-    color:white;
-    padding:25px;
-    border-radius:12px;
-    margin-bottom:30px;
+.builder-page {
+    width: 100%;
 }
 
-.section-header h2{
-    margin:0 0 8px 0;
-    font-size:28px;
+.builder-hero {
+    width: 100%;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    padding: 36px 34px;
+    border-radius: 22px;
+    margin-bottom: 28px;
+    box-shadow: 0 14px 32px rgba(37, 99, 235, 0.18);
 }
 
-.section-header p{
-    margin:0;
-    opacity:0.92;
+.builder-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #eff6ff;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 14px;
 }
 
-.add-form{
-    background:white;
-    padding:25px;
-    border-radius:12px;
-    margin-bottom:30px;
-    box-shadow:0 2px 10px rgba(0,0,0,0.05);
+.builder-hero h1 {
+    margin: 0 0 10px;
+    font-size: 40px;
+    line-height: 1.15;
+    font-weight: 800;
 }
 
-.form-group{
-    margin-bottom:18px;
+.builder-hero p {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.75;
+    color: #dbeafe;
+    max-width: 920px;
 }
 
-.form-group label{
-    display:block;
-    margin-bottom:6px;
-    font-weight:600;
-    color:#1e293b;
+.context-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.context-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+.context-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 10px;
+}
+
+.context-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.4;
+}
+
+.add-form {
+    background: white;
+    padding: 26px;
+    border-radius: 20px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+    margin-bottom: 24px;
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 14px;
 }
 
 .form-group input,
 .form-group select,
-.form-group textarea{
-    width:100%;
-    padding:10px 12px;
-    border-radius:8px;
-    border:1px solid #e2e8f0;
-    font-size:14px;
-    outline:none;
-    transition:0.2s ease;
-    background:#fff;
+.form-group textarea {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 12px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    outline: none;
+    transition: 0.2s ease;
+    background: #f9fafb;
+    color: #111827;
 }
 
 .form-group input:focus,
 .form-group select:focus,
-.form-group textarea:focus{
-    border-color:#2563eb;
-    box-shadow:0 0 0 3px rgba(37,99,235,0.08);
+.form-group textarea:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10);
+    background: #ffffff;
 }
 
-.form-section{
-    background:#f8fafc;
-    padding:18px;
-    border-radius:10px;
-    border:1px solid #e2e8f0;
-    margin-top:10px;
+.form-section {
+    background: #f8fafc;
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    margin-top: 10px;
 }
 
-.submit-btn{
-    background:#2563eb;
-    color:white;
-    border:none;
-    padding:12px 18px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:600;
-    font-size:14px;
-    transition:0.2s ease;
+.submit-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 13px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    transition: 0.2s ease;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.16);
 }
 
-.submit-btn:hover{
-    background:#1d4ed8;
+.submit-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
 }
 
-.secondary-btn{
-    background:#e2e8f0;
-    color:#0f172a;
-    border:none;
-    padding:10px 14px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:600;
-    font-size:14px;
-    transition:0.2s ease;
-    margin-top:10px;
+.secondary-btn {
+    background: #e2e8f0;
+    color: #0f172a;
+    border: none;
+    padding: 11px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    transition: 0.2s ease;
+    margin-top: 10px;
 }
 
-.secondary-btn:hover{
-    background:#cbd5e1;
+.secondary-btn:hover {
+    background: #cbd5e1;
 }
 
-.activity-card{
-    background:white;
-    padding:20px;
-    border-radius:12px;
-    margin-bottom:18px;
-    box-shadow:0 2px 6px rgba(0,0,0,0.05);
-    border:1px solid #eef2f7;
+.modules-wrap {
+    width: 100%;
 }
 
-.activity-title{
-    font-weight:700;
-    font-size:18px;
-    margin-bottom:6px;
-    color:#0f172a;
+.modules-title-card {
+    background: #ffffff;
+    padding: 22px;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
 }
 
-.activity-type{
-    font-size:13px;
-    color:#64748b;
-    margin-bottom:14px;
-    text-transform:capitalize;
+.modules-panel {
+    display: grid;
+    gap: 18px;
 }
 
-.video-box{
-    margin-top:15px;
-    border-radius:10px;
-    overflow:hidden;
-    background:#000;
+.activity-card {
+    background: white;
+    padding: 22px;
+    border-radius: 18px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+    border: 1px solid #e5e7eb;
 }
 
-.video-box video{
-    width:100%;
-    display:block;
+.activity-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
 }
 
-.hidden{
-    display:none;
+.activity-title {
+    font-weight: 800;
+    font-size: 24px;
+    color: #0f172a;
+    line-height: 1.3;
+    margin-bottom: 6px;
 }
 
-.info-chip{
-    display:inline-block;
-    background:#eff6ff;
-    color:#1d4ed8;
-    padding:5px 10px;
-    border-radius:999px;
-    font-size:12px;
-    font-weight:600;
-    margin-bottom:12px;
+.activity-type {
+    font-size: 13px;
+    color: #2563eb;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: #eff6ff;
+    padding: 8px 12px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
 }
 
-.text-block{
-    background:#f8fafc;
-    border:1px solid #e2e8f0;
-    padding:14px;
-    border-radius:10px;
-    line-height:1.6;
-    color:#334155;
-    white-space:pre-wrap;
+.video-box {
+    margin-top: 14px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #000;
 }
 
-.quiz-box{
-    background:#f8fafc;
-    border:1px solid #e2e8f0;
-    padding:16px;
-    border-radius:10px;
+.video-box video {
+    width: 100%;
+    display: block;
 }
 
-.quiz-question-card{
-    background:white;
-    border:1px solid #e2e8f0;
-    border-radius:10px;
-    padding:16px;
-    margin-bottom:14px;
+.hidden {
+    display: none;
 }
 
-.quiz-question-card:last-child{
-    margin-bottom:0;
+.info-chip {
+    display: inline-block;
+    background: #eff6ff;
+    color: #1d4ed8;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 12px;
 }
 
-.quiz-box p{
-    margin:8px 0;
-    color:#334155;
+.text-block {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 16px;
+    border-radius: 12px;
+    line-height: 1.7;
+    color: #334155;
+    white-space: pre-wrap;
 }
 
-.quiz-options-list{
-    margin-top:8px;
-    padding-left:18px;
-    color:#334155;
+.quiz-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 16px;
+    border-radius: 12px;
 }
 
-.quiz-options-list li{
-    margin-bottom:4px;
+.quiz-question-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
 }
 
-.material-box{
-    background:#f8fafc;
-    border:1px solid #e2e8f0;
-    padding:16px;
-    border-radius:10px;
+.quiz-question-card:last-child {
+    margin-bottom: 0;
 }
 
-.material-link{
-    display:inline-block;
-    text-decoration:none;
-    background:#2563eb;
-    color:white;
-    padding:10px 14px;
-    border-radius:8px;
-    font-weight:600;
+.quiz-box p {
+    margin: 8px 0;
+    color: #334155;
+    line-height: 1.7;
 }
 
-.material-link:hover{
-    background:#1d4ed8;
+.quiz-options-list {
+    margin-top: 8px;
+    padding-left: 18px;
+    color: #334155;
 }
 
-.question-block{
-    background:#ffffff;
-    border:1px solid #e2e8f0;
-    border-radius:10px;
-    padding:16px;
-    margin-bottom:14px;
+.quiz-options-list li {
+    margin-bottom: 4px;
 }
 
-.question-block:last-child{
-    margin-bottom:0;
+.material-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 16px;
+    border-radius: 12px;
 }
 
-.question-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:12px;
+.material-link {
+    display: inline-block;
+    text-decoration: none;
+    background: #2563eb;
+    color: white;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 700;
 }
 
-.question-title{
-    font-weight:700;
-    color:#0f172a;
+.material-link:hover {
+    background: #1d4ed8;
 }
 
-.remove-question-btn{
-    background:#fee2e2;
-    color:#991b1b;
-    border:none;
-    padding:8px 12px;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:600;
+.question-block {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
 }
 
-.remove-question-btn:hover{
-    background:#fecaca;
+.question-block:last-child {
+    margin-bottom: 0;
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.question-title {
+    font-weight: 800;
+    color: #0f172a;
+    font-size: 16px;
+}
+
+.remove-question-btn {
+    background: #fee2e2;
+    color: #991b1b;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.remove-question-btn:hover {
+    background: #fecaca;
+}
+
+.empty-modules {
+    background: white;
+    border: 1px dashed #cbd5e1;
+    border-radius: 18px;
+    padding: 26px;
+    color: #64748b;
+    text-align: center;
+}
+
+@media (max-width: 900px) {
+    .context-grid,
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .builder-hero {
+        padding: 28px 22px;
+        border-radius: 18px;
+    }
+
+    .builder-hero h1 {
+        font-size: 32px;
+    }
+
+    .builder-hero p {
+        font-size: 15px;
+    }
+
+    .add-form,
+    .activity-card,
+    .context-card,
+    .modules-title-card {
+        padding: 22px;
+    }
+
+    .card-title {
+        font-size: 22px;
+    }
+
+    .activity-title {
+        font-size: 22px;
+    }
 }
 </style>
 
+<div class="builder-page">
 
-<div class="section-header">
-    <h2>Add Content</h2>
-    <p>Upload videos, theory, quizzes and material files</p>
-</div>
+    <div class="builder-hero">
+        <div class="builder-badge">🧩 Module Builder</div>
+        <h1>Add Content</h1>
+        <p>Upload videos, theory, quizzes, and material files for this section from one clean dashboard page.</p>
+    </div>
 
-
-<div class="add-form">
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-
-        <div class="form-group">
-            <label>Content Type</label>
-            <select name="type" id="contentType" onchange="toggleFields()" required>
-                <option value="video">Video</option>
-                <option value="theory">Theory</option>
-                <option value="quiz">Quiz</option>
-                <option value="material">Material</option>
-            </select>
+    <div class="context-grid">
+        <div class="context-card">
+            <div class="context-label">Course Name</div>
+            <div class="context-value">{{ section.course.title }}</div>
         </div>
 
-        <div class="form-group">
-            <label>Title</label>
-            <input type="text" name="title" required placeholder="Enter content title">
+        <div class="context-card">
+            <div class="context-label">Section Name</div>
+            <div class="context-value">{{ section.title }}</div>
+        </div>
+    </div>
+
+    <div class="add-form">
+        <div class="card-title">
+            <span class="card-icon">➕</span>
+            <span>Create New Content</span>
         </div>
 
-        <!-- VIDEO -->
-        <div class="form-section" id="videoField">
-            <div class="form-group">
-                <label>Upload Video (MP4)</label>
-                <input type="file" name="video" accept="video/mp4">
-            </div>
-        </div>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
 
-        <!-- THEORY -->
-        <div class="form-section hidden" id="theoryField">
-            <div class="form-group">
-                <label>Theory Content</label>
-                <textarea name="theory" rows="6" placeholder="Write theory content here"></textarea>
-            </div>
-        </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Content Type</label>
+                    <select name="type" id="contentType" onchange="toggleFields()" required>
+                        <option value="video">Video</option>
+                        <option value="theory">Theory</option>
+                        <option value="quiz">Quiz</option>
+                        <option value="material">Material</option>
+                    </select>
+                </div>
 
-        <!-- QUIZ -->
-        <div class="form-section hidden" id="quizField">
-            <div id="quizQuestionsWrapper">
-                <div class="question-block quiz-question-item">
-                    <div class="question-header">
-                        <div class="question-title">Question 1</div>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" name="title" required placeholder="Enter content title">
+                </div>
+
+                <div class="form-group full-width">
+                    <div class="form-section" id="videoField">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Upload Video (MP4)</label>
+                            <input type="file" name="video" accept="video/mp4">
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Quiz Type</label>
-                        <select name="quiz_type" class="quiz-type-select" onchange="toggleQuizTypeForBlock(this)">
-                            <option value="mcq">MCQ</option>
-                            <option value="true_false">True / False</option>
-                        </select>
+                    <div class="form-section hidden" id="theoryField">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Theory Content</label>
+                            <textarea name="theory" rows="6" placeholder="Write theory content here"></textarea>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Quiz Question</label>
-                        <textarea name="quiz_question" rows="4" placeholder="Enter quiz question"></textarea>
-                    </div>
+                    <div class="form-section hidden" id="quizField">
+                        <div id="quizQuestionsWrapper">
+                            <div class="question-block quiz-question-item">
+                                <div class="question-header">
+                                    <div class="question-title">Question 1</div>
+                                </div>
 
-                    <div class="form-group mcq-options-field">
-                        <label>Options</label>
-                        <textarea name="quiz_options" rows="4" placeholder="Example:
+                                <div class="form-group">
+                                    <label>Quiz Type</label>
+                                    <select name="quiz_type" class="quiz-type-select" onchange="toggleQuizTypeForBlock(this)">
+                                        <option value="mcq">MCQ</option>
+                                        <option value="true_false">True / False</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Quiz Question</label>
+                                    <textarea name="quiz_question" rows="4" placeholder="Enter quiz question"></textarea>
+                                </div>
+
+                                <div class="form-group mcq-options-field">
+                                    <label>Options</label>
+                                    <textarea name="quiz_options" rows="4" placeholder="Example:
 A. Option 1
 B. Option 2
 C. Option 3
 D. Option 4"></textarea>
+                                </div>
+
+                                <div class="form-group true-false-info hidden">
+                                    <label>True / False Options</label>
+                                    <input type="text" value="True, False" readonly>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label>Correct Answer</label>
+                                    <input type="text" name="quiz_answer" placeholder="Enter correct answer">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="secondary-btn" onclick="addQuizQuestion()">
+                            Add Another Question
+                        </button>
                     </div>
 
-                    <div class="form-group true-false-info hidden">
-                        <label>True / False Options</label>
-                        <input type="text" value="True, False" readonly>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Correct Answer</label>
-                        <input type="text" name="quiz_answer" placeholder="Enter correct answer">
+                    <div class="form-section hidden" id="materialField">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label>Upload Material File</label>
+                            <input type="file" name="material_file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt">
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <button type="button" class="secondary-btn" onclick="addQuizQuestion()">
-                Add Another Question
+            <button type="submit" class="submit-btn">
+                Add Content
             </button>
-        </div>
+        </form>
+    </div>
 
-        <!-- MATERIAL -->
-        <div class="form-section hidden" id="materialField">
-            <div class="form-group">
-                <label>Upload Material File</label>
-                <input type="file" name="material_file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt">
+    <div class="modules-wrap">
+        <div class="modules-title-card">
+            <div class="card-title" style="margin-bottom:0; padding-bottom:0; border-bottom:none;">
+                <span class="card-icon">📚</span>
+                <span>Added Content</span>
             </div>
         </div>
 
-        <button type="submit" class="submit-btn">
-            Add Content
-        </button>
-    </form>
-</div>
+        <div class="modules-panel">
+            {% for module in modules %}
+            <div class="activity-card">
 
-
-{% for module in modules %}
-<div class="activity-card">
-
-    <div class="activity-title">
-        {{ module.title }}
-    </div>
-
-    <div class="activity-type">
-        {{ module.type|title }}
-    </div>
-
-    {% if module.type == "video" %}
-
-        {% if module.video_mpd %}
-            <span class="info-chip">MPD Ready</span>
-
-            <div class="video-box">
-                <video id="video{{ module.id }}" controls></video>
-            </div>
-
-            <input type="hidden" id="mpd{{ module.id }}" value="http://127.0.0.1:8000/stream/{{ module.video_mpd }}">
-        {% else %}
-            <p style="color:gray;">Processing video...</p>
-        {% endif %}
-
-    {% elif module.type == "theory" %}
-
-        <div class="text-block">
-            {{ module.theory }}
-        </div>
-
-    {% elif module.type == "quiz" %}
-
-        <div class="quiz-box">
-            {% for question in module.questions.all %}
-                <div class="quiz-question-card">
-                    <span class="info-chip">
-                        {% if question.quiz_type == "mcq" %}
-                            MCQ
-                        {% elif question.quiz_type == "true_false" %}
-                            True / False
-                        {% else %}
-                            {{ question.quiz_type }}
-                        {% endif %}
-                    </span>
-
-                    <p><strong>Question {{ forloop.counter }}:</strong> {{ question.question }}</p>
-
-                    {% if question.quiz_type == "mcq" and question.options %}
-                        <p><strong>Options:</strong></p>
-                        <ul class="quiz-options-list">
-                            {% for option in question.options.splitlines %}
-                                {% if option.strip %}
-                                    <li>{{ option }}</li>
-                                {% endif %}
-                            {% endfor %}
-                        </ul>
-                    {% elif question.quiz_type == "true_false" %}
-                        <p><strong>Options:</strong> True / False</p>
-                    {% elif question.options %}
-                        <p><strong>Options:</strong> {{ question.options }}</p>
-                    {% endif %}
+                <div class="activity-head">
+                    <div>
+                        <div class="activity-title">{{ module.title }}</div>
+                        <div class="activity-type">{{ module.type|title }}</div>
+                    </div>
                 </div>
+
+                {% if module.type == "video" %}
+
+                    {% if module.video_mpd %}
+                        <span class="info-chip">MPD Ready</span>
+
+                        <div class="video-box">
+                            <video id="video{{ module.id }}" controls></video>
+                        </div>
+
+                        <input type="hidden" id="mpd{{ module.id }}" value="http://127.0.0.1:8000/stream/{{ module.video_mpd }}">
+                    {% else %}
+                        <p style="color:gray;">Processing video...</p>
+                    {% endif %}
+
+                {% elif module.type == "theory" %}
+
+                    <div class="text-block">
+                        {{ module.theory }}
+                    </div>
+
+                {% elif module.type == "quiz" %}
+
+                    <div class="quiz-box">
+                        {% for question in module.questions.all %}
+                            <div class="quiz-question-card">
+                                <span class="info-chip">
+                                    {% if question.quiz_type == "mcq" %}
+                                        MCQ
+                                    {% elif question.quiz_type == "true_false" %}
+                                        True / False
+                                    {% else %}
+                                        {{ question.quiz_type }}
+                                    {% endif %}
+                                </span>
+
+                                <p><strong>Question {{ forloop.counter }}:</strong> {{ question.question }}</p>
+
+                                {% if question.quiz_type == "mcq" and question.options %}
+                                    <p><strong>Options:</strong></p>
+                                    <ul class="quiz-options-list">
+                                        {% for option in question.options.splitlines %}
+                                            {% if option.strip %}
+                                                <li>{{ option }}</li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                {% elif question.quiz_type == "true_false" %}
+                                    <p><strong>Options:</strong> True / False</p>
+                                {% elif question.options %}
+                                    <p><strong>Options:</strong> {{ question.options }}</p>
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <p style="color:gray;">No questions added yet.</p>
+                        {% endfor %}
+                    </div>
+
+                {% elif module.type == "material" %}
+
+                    <div class="material-box">
+                        {% if module.material_file %}
+                            <a class="material-link" href="http://127.0.0.1:8000/stream/{{ module.material_file }}" target="_blank">
+                                Open Material
+                            </a>
+                        {% else %}
+                            <p style="color:gray;">Material file not available.</p>
+                        {% endif %}
+                    </div>
+
+                {% endif %}
+
+            </div>
             {% empty %}
-                <p style="color:gray;">No questions added yet.</p>
+            <div class="empty-modules">
+                No content added yet.
+            </div>
             {% endfor %}
         </div>
-
-    {% elif module.type == "material" %}
-
-        <div class="material-box">
-            {% if module.material_file %}
-                <a class="material-link" href="http://127.0.0.1:8000/stream/{{ module.material_file }}" target="_blank">
-                    Open Material
-                </a>
-            {% else %}
-                <p style="color:gray;">Material file not available.</p>
-            {% endif %}
-        </div>
-
-    {% endif %}
+    </div>
 
 </div>
-{% endfor %}
-
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
@@ -470,7 +683,6 @@ document.addEventListener("DOMContentLoaded", function(){
     initializeQuizBlocks();
 });
 </script>
-
 
 <script>
 function toggleFields(){

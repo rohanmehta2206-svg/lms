@@ -17,21 +17,22 @@
             color: #111827;
         }
 
-        /* NAVBAR */
         .navbar {
-            background: white;
-            padding: 15px 60px;
+            width: 100%;
+            background: #ffffff;
+            padding: 16px 28px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-bottom: 1px solid #e5e7eb;
             position: sticky;
             top: 0;
             z-index: 1000;
         }
 
         .brand {
-            font-size: 16px;
+            font-size: 20px;
             font-weight: 700;
             color: #111827;
         }
@@ -39,7 +40,7 @@
         .nav-links {
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: 24px;
             flex-wrap: wrap;
         }
 
@@ -48,25 +49,38 @@
             color: #374151;
             font-size: 14px;
             font-weight: 500;
-            transition: 0.3s ease;
+            position: relative;
+            padding-bottom: 6px;
+            transition: 0.2s ease;
         }
 
         .nav-links a:hover {
             color: #2563eb;
         }
 
-        /* NEW: PROFILE LINK STYLE */
-        .profile-link {
-            font-weight: 600;
-            color: #2563eb !important;
+        .nav-links a.active {
+            color: #2563eb;
+            font-weight: 700;
+        }
+
+        .nav-links a.active::after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: #2563eb;
+            bottom: 0;
+            left: 0;
         }
 
         .logout {
             background: #2563eb;
             color: white !important;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            border: none;
         }
 
         .logout:hover {
@@ -74,12 +88,16 @@
             color: white !important;
         }
 
-        /* MAIN */
-        .container {
-            padding: 40px 80px;
+        .logout::after {
+            display: none !important;
         }
 
-        /* DJANGO MESSAGES */
+        .container {
+            width: 100%;
+            padding: 28px;
+            margin: 0;
+        }
+
         .messages-wrap {
             margin-bottom: 24px;
         }
@@ -120,7 +138,6 @@
             border-color: #93c5fd;
         }
 
-        /* DEFAULT COMPONENTS */
         .welcome {
             background: linear-gradient(to right, #2563eb, #1e40af);
             color: white;
@@ -171,14 +188,14 @@
 
         @media (max-width: 992px) {
             .navbar {
-                padding: 15px 25px;
+                padding: 14px 16px;
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 12px;
             }
 
             .container {
-                padding: 25px;
+                padding: 16px;
             }
 
             .stats {
@@ -197,7 +214,7 @@
             }
 
             .nav-links {
-                gap: 12px;
+                gap: 14px;
             }
         }
     </style>
@@ -205,24 +222,39 @@
 
 <body>
 
-    <!-- NAVBAR -->
     <div class="navbar">
         <div class="brand">Cryptographic Adaptive LMS</div>
 
         <div class="nav-links">
-            <a href="{% url 'student:student_dashboard' %}">Dashboard</a>
-            <a href="{% url 'student:my_courses' %}">My Courses</a>
-            <a href="{% url 'student:progress_tracker' %}">Progress</a>
-            <a href="{% url 'student:certificates' %}">Certificates</a>
+            <a href="{% url 'student:student_dashboard' %}"
+               class="{% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}">
+               Dashboard
+            </a>
 
-            <!-- ✅ NEW PROFILE LINK -->
-            <a href="{% url 'student:profile' %}" class="profile-link">Profile</a>
+            <a href="{% url 'student:my_courses' %}"
+               class="{% if request.resolver_match.url_name == 'my_courses' or request.resolver_match.url_name == 'course_detail' %}active{% endif %}">
+               My Courses
+            </a>
+
+            <a href="{% url 'student:progress_tracker' %}"
+               class="{% if request.resolver_match.url_name == 'progress_tracker' %}active{% endif %}">
+               Progress
+            </a>
+
+            <a href="{% url 'student:certificates' %}"
+               class="{% if request.resolver_match.url_name == 'certificates' %}active{% endif %}">
+               Certificates
+            </a>
+
+            <a href="{% url 'student:profile' %}"
+               class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+               Profile
+            </a>
 
             <a href="{% url 'accounts:logout' %}" class="logout">Logout</a>
         </div>
     </div>
 
-    <!-- CONTENT -->
     <div class="container">
 
         {% if messages %}

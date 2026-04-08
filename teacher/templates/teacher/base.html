@@ -7,141 +7,173 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-
 *{
-box-sizing:border-box;
+    box-sizing:border-box;
 }
 
 body{
-margin:0;
-font-family:'Segoe UI',sans-serif;
-background:#f3f4f6;
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    background:#f3f4f6;
+    color:#111827;
 }
 
 /* NAVBAR */
-
 .navbar{
-background:white;
-padding:16px 60px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-box-shadow:0 2px 8px rgba(0,0,0,0.06);
+    width:100%;
+    background:#ffffff;
+    padding:16px 28px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.06);
+    border-bottom:1px solid #e5e7eb;
 }
 
 .logo{
-font-size:20px;
-font-weight:600;
-color:#111827;
+    font-size:20px;
+    font-weight:700;
+    color:#111827;
 }
 
 .nav-links{
-display:flex;
-align-items:center;
-gap:26px;
+    display:flex;
+    align-items:center;
+    gap:26px;
+    flex-wrap:wrap;
 }
 
+/* NAV LINKS */
 .nav-links a{
-text-decoration:none;
-color:#374151;
-font-weight:500;
-position:relative;
-padding-bottom:6px;
-transition:0.2s;
+    text-decoration:none;
+    color:#374151;
+    font-weight:500;
+    position:relative;
+    padding-bottom:6px;
+    transition:0.2s;
 }
 
 .nav-links a:hover{
-color:#2563eb;
+    color:#2563eb;
 }
 
 .nav-links a.active{
-color:#2563eb;
+    color:#2563eb;
 }
 
 .nav-links a.active::after{
-content:"";
-position:absolute;
-width:100%;
-height:2px;
-background:#2563eb;
-bottom:0;
-left:0;
+    content:"";
+    position:absolute;
+    width:100%;
+    height:2px;
+    background:#2563eb;
+    bottom:0;
+    left:0;
 }
 
+/* PROFILE BUTTON */
+.profile-link{
+    background:#f1f5f9;
+    padding:8px 14px;
+    border-radius:8px;
+    font-weight:600;
+}
+
+.profile-link:hover{
+    background:#e2e8f0;
+}
+
+/* LOGOUT */
 .logout-form{
-margin:0;
+    margin:0;
 }
 
 .logout-btn{
-background:#2563eb;
-color:white;
-border:none;
-padding:8px 18px;
-border-radius:20px;
-cursor:pointer;
-font-weight:500;
-transition:0.25s;
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:10px 22px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:700;
+    font-size:15px;
+    transition:0.25s;
 }
 
 .logout-btn:hover{
-background:#1e40af;
+    background:#1d4ed8;
 }
 
 /* MAIN CONTAINER */
-
 .container{
-padding:50px 60px;
-max-width:1250px;
-margin:auto;
+    width:100%;
+    padding:28px;
+    margin:0;
 }
 
+/* MOBILE */
+@media (max-width: 768px){
+    .navbar{
+        padding:14px 16px;
+        flex-direction:column;
+        gap:12px;
+        align-items:flex-start;
+    }
+
+    .nav-links{
+        width:100%;
+        gap:18px;
+    }
+
+    .container{
+        padding:16px;
+    }
+}
 </style>
 
 </head>
 
 <body>
 
-<!-- NAVBAR -->
-
 <div class="navbar">
 
-<div class="logo">
-Cryptographic Adaptive LMS
+    <div class="logo">
+        Cryptographic Adaptive LMS
+    </div>
+
+    <div class="nav-links">
+
+        <!-- DASHBOARD -->
+        <a href="{% url 'teacher:teacher_dashboard' %}"
+        class="{% if request.resolver_match.url_name == 'teacher_dashboard' %}active{% endif %}">
+            Dashboard
+        </a>
+
+        <!-- COURSES -->
+        <a href="{% url 'teacher:course_list' %}"
+        class="{% if request.resolver_match.url_name == 'course_list' or request.resolver_match.url_name == 'course_detail' or request.resolver_match.url_name == 'create_course' %}active{% endif %}">
+            Courses
+        </a>
+
+        <!-- PROFILE (FIXED ACTIVE STATE) -->
+        <a href="{% url 'teacher:profile' %}"
+        class="profile-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            Profile
+        </a>
+
+        <!-- LOGOUT -->
+        <form method="post" action="{% url 'accounts:logout' %}" class="logout-form">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+
+    </div>
+
 </div>
-
-<div class="nav-links">
-
-<a href="{% url 'teacher:teacher_dashboard' %}"
-class="{% if request.resolver_match.url_name == 'teacher_dashboard' %}active{% endif %}">
-Dashboard
-</a>
-
-<a href="{% url 'teacher:course_list' %}"
-class="{% if request.resolver_match.url_name == 'course_list' or request.resolver_match.url_name == 'course_detail' %}active{% endif %}">
-Courses
-</a>
-
-<a href="{% url 'teacher:create_course' %}"
-class="{% if request.resolver_match.url_name == 'create_course' %}active{% endif %}">
-Create
-</a>
-
-<form method="post" action="{% url 'accounts:logout' %}" class="logout-form">
-{% csrf_token %}
-<button type="submit" class="logout-btn">Logout</button>
-</form>
-
-</div>
-
-</div>
-
-<!-- PAGE CONTENT -->
 
 <div class="container">
-
-{% block content %}
-{% endblock %}
-
+    {% block content %}
+    {% endblock %}
 </div>
 
 </body>

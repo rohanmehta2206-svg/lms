@@ -4,299 +4,517 @@
 {% block content %}
 
 <style>
-
-.page-wrapper {
-    max-width: 1100px;
-    margin: 60px auto;
-    padding: 0 20px;
+.course-detail-page {
+    width: 100%;
 }
 
-.course-header {
-    background: white;
+.detail-hero {
+    width: 100%;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    padding: 34px 36px;
+    border-radius: 22px;
+    margin-bottom: 28px;
+    box-shadow: 0 14px 32px rgba(37, 99, 235, 0.18);
+}
+
+.detail-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #eff6ff;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 14px;
+}
+
+.detail-hero h1 {
+    margin: 0 0 10px;
+    font-size: 40px;
+    line-height: 1.15;
+    font-weight: 800;
+}
+
+.detail-hero p {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.75;
+    color: #dbeafe;
+    max-width: 920px;
+}
+
+.top-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 24px;
+    margin-bottom: 24px;
+    align-items: stretch;
+}
+
+.course-banner-card,
+.info-card,
+.sections-card {
+    background: #ffffff;
     border-radius: 20px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+.course-banner-card {
     overflow: hidden;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.08);
-    margin-bottom: 50px;
 }
 
 .course-banner {
     width: 100%;
-    height: 420px;
-    background: #f1f5f9;
+    min-height: 420px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 26px;
 }
 
 .course-banner img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    max-width: 100%;
+    max-height: 360px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
 }
 
-.course-details {
-    padding: 35px 45px;
-}
-
-.course-title {
-    font-size: 32px;
-    font-weight: 700;
-    margin-bottom: 12px;
-}
-
-.course-description {
-    color: #64748b;
-    margin-bottom: 20px;
+.no-banner {
+    color: #94a3b8;
     font-size: 16px;
+    text-align: center;
+}
+
+.info-card {
+    padding: 26px;
+}
+
+.info-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.info-title-wrap h2 {
+    margin: 0 0 8px;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #111827;
+}
+
+.info-subtext {
+    margin: 0;
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.7;
 }
 
 .status-badge {
-    padding: 7px 20px;
-    border-radius: 30px;
+    padding: 8px 16px;
+    border-radius: 999px;
     font-size: 13px;
-    font-weight: 600;
-    display: inline-block;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
 }
 
 .published {
-    background: #22c55e;
-    color: white;
+    background: #dcfce7;
+    color: #15803d;
 }
 
 .draft {
-    background: #ef4444;
-    color: white;
+    background: #fee2e2;
+    color: #b91c1c;
 }
 
-.main-grid {
+.info-list {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 35px;
+    gap: 12px;
 }
 
-.card {
-    background: white;
-    border-radius: 18px;
-    padding: 28px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    flex-wrap: wrap;
+}
+
+.info-label {
+    color: #475569;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.info-value {
+    color: #111827;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+}
+
+.sections-card {
+    padding: 26px;
 }
 
 .card-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-/* SECTION ITEM */
+.card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.sections-list {
+    display: grid;
+    gap: 16px;
+}
+
 .section-item {
-    padding: 16px 20px;
-    border-radius: 14px;
+    padding: 20px;
+    border-radius: 18px;
     background: #f8fafc;
-    margin-bottom: 14px;
+    border: 1px solid #e5e7eb;
+    transition: 0.2s ease;
 }
 
-/* TOP ROW */
+.section-item:hover {
+    background: #ffffff;
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.04);
+}
+
 .section-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    gap: 14px;
+    flex-wrap: wrap;
 }
 
 .section-title {
-    font-weight: 600;
-    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-weight: 800;
+    font-size: 18px;
+    color: #111827;
+    line-height: 1.5;
 }
 
-/* EDIT BUTTON */
-.edit-btn {
-    font-size: 13px;
+.content-count {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #eff6ff;
     color: #2563eb;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.section-actions-top {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.edit-btn,
+.add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
     text-decoration: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    transition: 0.2s ease;
+}
+
+.edit-btn {
+    background: #eff6ff;
+    color: #2563eb;
 }
 
 .edit-btn:hover {
-    text-decoration: underline;
+    background: #dbeafe;
 }
 
-/* SECOND ROW */
-.section-actions {
-    margin-top: 8px;
+.add-btn {
+    background: #2563eb;
+    color: white;
 }
 
-.section-actions a {
-    font-size: 13px;
-    text-decoration: none;
-    color: #2563eb;
-    font-weight: 500;
-}
-
-.section-actions a:hover {
-    text-decoration: underline;
+.add-btn:hover {
+    background: #1d4ed8;
 }
 
 .section-desc {
     font-size: 14px;
     color: #64748b;
-    margin-top: 6px;
+    margin-top: 10px;
+    line-height: 1.8;
 }
 
-/* EDIT FORM */
+.edit-form {
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 .edit-form input {
-    padding: 6px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+    flex: 1;
+    min-width: 220px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    background: #ffffff;
+}
+
+.edit-form input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10);
 }
 
 .edit-form button {
-    padding: 6px 10px;
+    padding: 11px 16px;
     background: #2563eb;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 10px;
     cursor: pointer;
+    font-weight: 700;
 }
 
-.sidebar .card {
-    margin-bottom: 30px;
+.edit-form button:hover {
+    background: #1d4ed8;
 }
 
-.info p {
-    margin-bottom: 12px;
-    font-size: 14px;
+.empty-state {
+    color: #64748b;
+    font-size: 15px;
 }
 
-@media (max-width: 992px) {
-    .main-grid {
+@media (max-width: 1100px) {
+    .top-grid {
         grid-template-columns: 1fr;
     }
 }
 
+@media (max-width: 768px) {
+    .detail-hero {
+        padding: 28px 22px;
+        border-radius: 18px;
+    }
+
+    .detail-hero h1 {
+        font-size: 32px;
+    }
+
+    .detail-hero p {
+        font-size: 15px;
+    }
+
+    .course-banner {
+        min-height: 260px;
+        padding: 20px;
+    }
+
+    .course-banner img {
+        max-height: 240px;
+    }
+
+    .info-card,
+    .sections-card {
+        padding: 22px;
+    }
+
+    .info-title-wrap h2 {
+        font-size: 26px;
+    }
+
+    .card-title {
+        font-size: 22px;
+    }
+}
 </style>
 
+<div class="course-detail-page">
 
-<div class="page-wrapper">
+    <div class="detail-hero">
+        <div class="detail-hero-badge">📘 Course Detail</div>
+        <h1>{{ course.title }}</h1>
+        <p>
+            View course information, manage sections, and continue building course content from one full-width page.
+        </p>
+    </div>
 
-<div class="course-header">
+    <div class="top-grid">
 
-<div class="course-banner">
-{% if course.image %}
-<img src="{{ course.image.url }}">
-{% else %}
-<div style="padding:150px;text-align:center;color:#94a3b8;">
-No Thumbnail Uploaded
-</div>
-{% endif %}
-</div>
-
-<div class="course-details">
-
-<div class="course-title">{{ course.title }}</div>
-
-<div class="course-description">
-{{ course.description|default:"No description provided." }}
-</div>
-
-{% if course.is_published %}
-<span class="status-badge published">Published</span>
-{% else %}
-<span class="status-badge draft">Draft</span>
-{% endif %}
-
-</div>
-</div>
-
-
-<div class="main-grid">
-
-<div class="card">
-
-<div class="card-title">
-Course Sections ({{ sections.count }})
-</div>
-
-{% for section in sections %}
-
-<div class="section-item">
-
-    <!-- TOP ROW -->
-    <div class="section-header">
-
-        <div class="section-title">
-            {{ section.order }}. {{ section.title }}
+        <div class="course-banner-card">
+            <div class="course-banner">
+                {% if course.image %}
+                    <img src="{{ course.image.url }}">
+                {% else %}
+                    <div class="no-banner">
+                        No Thumbnail Uploaded
+                    </div>
+                {% endif %}
+            </div>
         </div>
 
-        <a href="#" onclick="toggleEdit('{{ section.id }}')" class="edit-btn">
-            Edit
-        </a>
+        <div class="info-card">
+            <div class="info-header">
+                <div class="info-title-wrap">
+                    <h2>{{ course.title }}</h2>
+                    <p class="info-subtext">
+                        {{ course.description|default:"No description provided." }}
+                    </p>
+                </div>
+
+                {% if course.is_published %}
+                    <span class="status-badge published">✅ Published</span>
+                {% else %}
+                    <span class="status-badge draft">📝 Draft</span>
+                {% endif %}
+            </div>
+
+            <div class="info-list">
+                <div class="info-row">
+                    <span class="info-label">Short Name</span>
+                    <span class="info-value">{{ course.short_name|default:"—" }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Category</span>
+                    <span class="info-value">{{ course.category.name|default:"—" }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Start Date</span>
+                    <span class="info-value">{{ course.start_date|default:"—" }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">End Date</span>
+                    <span class="info-value">{{ course.end_date|default:"—" }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Course Code</span>
+                    <span class="info-value">{{ course.course_code|default:"—" }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Completion Tracking</span>
+                    <span class="info-value">
+                        {% if course.completion_tracking %}
+                            Enabled
+                        {% else %}
+                            Disabled
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Total Sections</span>
+                    <span class="info-value">{{ sections.count }}</span>
+                </div>
+            </div>
+        </div>
 
     </div>
 
-    <!-- SECOND ROW -->
-    <div class="section-actions">
-        <a href="{% url 'teacher:module_builder' section.id %}">
-            Add Content →
-        </a>
+    <div class="sections-card">
+        <div class="card-title">
+            <span class="card-icon">📚</span>
+            <span>Course Sections ({{ sections.count }})</span>
+        </div>
+
+        <div class="sections-list">
+            {% for section in sections %}
+                <div class="section-item">
+
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span>{{ section.order }}. {{ section.title }}</span>
+                            <span class="content-count">{{ section.modules.count }} Content</span>
+                        </div>
+
+                        <div class="section-actions-top">
+                            <a href="{% url 'teacher:module_builder' section.id %}" class="add-btn">
+                                Add Content →
+                            </a>
+
+                            <a href="#" onclick="toggleEdit('{{ section.id }}')" class="edit-btn">
+                                Edit
+                            </a>
+                        </div>
+                    </div>
+
+                    {% if section.description %}
+                        <div class="section-desc">
+                            {{ section.description }}
+                        </div>
+                    {% endif %}
+
+                    <form method="POST" action="{% url 'teacher:update_section' section.id %}"
+                          id="edit-form-{{ section.id }}" class="edit-form" style="display:none;">
+                        {% csrf_token %}
+                        <input type="text" name="title" value="{{ section.title }}" required>
+                        <button type="submit">Save</button>
+                    </form>
+
+                </div>
+            {% empty %}
+                <div class="empty-state">No sections created yet.</div>
+            {% endfor %}
+        </div>
     </div>
 
-    {% if section.description %}
-    <div class="section-desc">
-        {{ section.description }}
-    </div>
-    {% endif %}
-
-    <!-- EDIT FORM -->
-    <form method="POST" action="{% url 'teacher:update_section' section.id %}" 
-          id="edit-form-{{ section.id }}" class="edit-form" style="display:none;">
-        
-        {% csrf_token %}
-        <input type="text" name="title" value="{{ section.title }}" required>
-        <button type="submit">Save</button>
-    </form>
-
 </div>
 
-{% empty %}
-<p>No sections created yet.</p>
-{% endfor %}
-
-</div>
-
-
-<div class="sidebar">
-
-<div class="card info">
-
-<div class="card-title">Course Information</div>
-
-<p><strong>Short Name:</strong> {{ course.short_name|default:"—" }}</p>
-
-<p><strong>Category:</strong> {{ course.category.name|default:"—" }}</p>
-
-<p><strong>Start Date:</strong> {{ course.start_date|default:"—" }}</p>
-
-<p><strong>End Date:</strong> {{ course.end_date|default:"—" }}</p>
-
-<p><strong>Course Code:</strong> {{ course.course_code|default:"—" }}</p>
-
-<p><strong>Completion Tracking:</strong>
-{% if course.completion_tracking %}
-Enabled
-{% else %}
-Disabled
-{% endif %}
-</p>
-
-<p><strong>Total Sections:</strong> {{ sections.count }}</p>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- JS -->
 <script>
 function toggleEdit(id){
     let form = document.getElementById("edit-form-" + id);

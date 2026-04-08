@@ -19,6 +19,7 @@ from .forms import CourseForm
 from .moodle_api import (
     create_moodle_course,
     sync_django_category_with_moodle,
+    update_moodle_user_profile_from_django_user,
 )
 
 # ==========================================
@@ -1374,3 +1375,99 @@ def serve_dash(request, path):
     response = FileResponse(open(file_path, "rb"), content_type=content_type)
     response["Cache-Control"] = "no-store"
     return response
+
+# ==========================================
+# TEACHER PROFILE
+# ==========================================
+
+@login_required
+def profile_page(request):
+    user = request.user
+
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
+        email = (request.POST.get("email") or "").strip()
+        full_name = (request.POST.get("full_name") or "").strip()
+
+        current_password = (request.POST.get("current_password") or "").strip()
+        new_password = (request.POST.get("new_password") or "").strip()
+        confirm_password = (request.POST.get("confirm_password") or "").strip()
+
+        # ----------------------------------
+        # BASIC PROFILE UPDATE
+        # ----------------------------------
+        if username:
+            user.username = username
+
+        if email:
+            user.email = email
+
+        if full_name:
+            name_parts = full_name.split()
+            user.first_name = name_parts[0]
+            user.last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
+        # ----------------------------------
+        # PASSWORD UPDATE
+        # ----------------------------------
+        if current_password or new_password or confirm_password:
+            if not current_password or not new_password or not confirm_password:
+                messages.error(request, "Please fill all password fields.")
+                return redirect("teacher:profile")
+
+            if not user.check_password(current_password):
+                messages.error(request, "Current password is incorrect.")
+                return redirect("teacher:profile")
+
+            if new_password != confirm_password:
+                messages.error(request, "New passwords do not match.")
+                return redirect("teacher:profile")
+
+            # Save password in Django first
+            user.set_password(new_password)
+            user.save()
+
+            # Sync password to Moodle
+            moodle_ok, moodle_error = update_moodle_user_profile_from_django_user(
+                user,
+                password=new_password
+            )
+
+            if moodle_ok:
+                messages.success(
+                    request,
+                    "Password updated successfully in Django and Moodle. Please login again."
+                )
+            else:
+                messages.warning(
+                    request,
+                    f"Password updated in Django, but Moodle sync failed: {moodle_error}"
+                )
+
+            return redirect("accounts:login")
+
+        # Save basic profile in Django
+        user.save()
+
+        # Sync basic profile to Moodle
+        moodle_ok, moodle_error = update_moodle_user_profile_from_django_user(user)
+
+        if moodle_ok:
+            messages.success(request, "Profile updated successfully in Django and Moodle.")
+        else:
+            messages.warning(
+                request,
+                f"Profile updated in Django, but Moodle sync failed: {moodle_error}"
+            )
+
+        return redirect("teacher:profile")
+
+    context = {
+        "user": user,
+        "total_courses": Course.objects.count(),
+        "total_sections": Section.objects.count(),
+        "published_courses": Course.objects.filter(is_published=True).count(),
+        "draft_courses": Course.objects.filter(is_published=False).count(),
+    }
+
+    return render(request, "teacher/profile.html", context)

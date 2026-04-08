@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Learning LMS</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: #f3f4f6;
+            color: #0f172a;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .navbar {
+            width: 100%;
+            background: #f3f4f6;
+            padding: 18px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: #2563eb;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .login-btn {
+            background: #2563eb;
+            color: #ffffff !important;
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .hero {
+            width: 100%;
+            padding: 20px 60px 20px;
+        }
+
+        .hero-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            margin: 0 0 16px;
+            font-size: 58px;
+            line-height: 1.12;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .hero-text p {
+            margin: 0 0 24px;
+            max-width: 760px;
+            font-size: 18px;
+            line-height: 1.7;
+            color: #475569;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            display: inline-block;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #dbe1ea;
+            color: #0f172a;
+        }
+
+        .btn-secondary:hover {
+            background: #cfd6df;
+        }
+
+        .hero-image-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 320px;
+        }
+
+        .hero-image {
+            width: 100%;
+            max-width: 640px;
+            max-height: 340px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .features {
+            width: 100%;
+            padding: 24px 60px 50px;
+        }
+
+        .features-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .features h2 {
+            margin: 0 0 28px;
+            text-align: center;
+            font-size: 34px;
+            color: #0f172a;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 28px 24px;
+            text-align: center;
+            transition: 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+        }
+
+        .icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 16px;
+            border-radius: 14px;
+            background: #eff6ff;
+            color: #2563eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .card h3 {
+            margin: 0 0 12px;
+            font-size: 24px;
+            color: #111827;
+        }
+
+        .card p {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.7;
+            color: #64748b;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 18px;
+            border-top: 1px solid #e5e7eb;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        @media (max-width: 992px) {
+            .navbar {
+                padding: 16px 20px;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .hero {
+                padding: 24px 20px 16px;
+            }
+
+            .hero-container {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .hero-text h1 {
+                font-size: 40px;
+            }
+
+            .hero-text p {
+                font-size: 16px;
+            }
+
+            .hero-image-wrap {
+                min-height: auto;
+            }
+
+            .hero-image {
+                max-height: 260px;
+            }
+
+            .features {
+                padding: 20px 20px 40px;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .brand {
+                font-size: 18px;
+            }
+
+            .hero-text h1 {
+                font-size: 32px;
+            }
+
+            .buttons {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <div class="brand">
+            <div class="brand-icon">🎓</div>
+            Adaptive Learning LMS
+        </div>
+
+        <div class="nav-links">
+            <a href="/accounts/login/" class="login-btn">Login</a>
+        </div>
+    </div>
+
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-text">
+                <h1>Secure Smart Learning Platform</h1>
+                <p>
+                    A modern LMS powered by Django and Moodle. Manage courses, track progress,
+                    conduct quizzes, and deliver structured learning in a simple and secure way.
+                </p>
+
+                <div class="buttons">
+                    <a href="/accounts/login/" class="btn-primary">Get Started</a>
+                    <a href="#features" class="btn-secondary">Learn More</a>
+                </div>
+            </div>
+
+            <div class="hero-image-wrap">
+                <img src="/media/hero.png" alt="Adaptive Learning LMS" class="hero-image">
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="features-container">
+            <h2>Features</h2>
+
+            <div class="feature-grid">
+                <div class="card">
+                    <div class="icon">📚</div>
+                    <h3>Course Management</h3>
+                    <p>Create and manage courses, sections, and learning modules in a structured way.</p>
+                </div>
+
+                <div class="card">
+                    <div class="icon">🎥</div>
+                    <h3>Video Streaming</h3>
+                    <p>Deliver secure adaptive video learning through modern streaming support.</p>
+                </div>
+
+                <div class="card">
+                    <div class="icon">📈</div>
+                    <h3>Progress Tracking</h3>
+                    <p>Track completion, monitor learning flow, and control module unlocking.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="footer">
+        © 2026 Adaptive Learning LMS. All rights reserved.
+    </div>
+
+</body>
+</html>
