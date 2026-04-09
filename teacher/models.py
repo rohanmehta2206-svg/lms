@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 # ==========================================
@@ -38,6 +39,14 @@ class Category(models.Model):
 # ==========================================
 
 class Course(models.Model):
+
+    teacher = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="teacher_courses",
+        null=True,
+        blank=True
+    )
 
     title = models.CharField(
         max_length=200
@@ -202,6 +211,10 @@ class Module(models.Model):
         max_length=20,
         choices=MODULE_TYPE_CHOICES,
         default="video"
+    )
+
+    is_published = models.BooleanField(
+        default=True
     )
 
     # Video

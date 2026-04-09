@@ -1,0 +1,330 @@
+{% extends "teacher/base.html" %}
+{% block title %}Draft Content | Teacher{% endblock %}
+
+{% block content %}
+
+<style>
+.draft-page {
+    width: 100%;
+}
+
+.draft-hero {
+    width: 100%;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    padding: 38px 36px;
+    border-radius: 22px;
+    margin-bottom: 28px;
+    box-shadow: 0 14px 32px rgba(37, 99, 235, 0.18);
+}
+
+.draft-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #eff6ff;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 14px;
+}
+
+.draft-hero h1 {
+    margin: 0 0 10px;
+    font-size: 40px;
+    font-weight: 800;
+}
+
+.draft-hero p {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #dbeafe;
+    max-width: 900px;
+}
+
+.section-block {
+    margin-bottom: 28px;
+}
+
+.section-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+}
+
+.section-head {
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.section-title {
+    margin: 0 0 6px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.section-subtitle {
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+th,
+td {
+    padding: 16px 20px;
+    text-align: left;
+    border-bottom: 1px solid #eef2f7;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background: #fbfdff;
+}
+
+.item-title {
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.5;
+}
+
+.item-subtext {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badge-hidden {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-course {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.badge-module {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #16a34a;
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: 0.2s ease;
+}
+
+.action-btn:hover {
+    background: #15803d;
+}
+
+.inline-form {
+    margin: 0;
+}
+
+.empty-box {
+    padding: 28px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 15px;
+}
+
+@media (max-width: 768px) {
+    .draft-hero {
+        padding: 28px 22px;
+        border-radius: 18px;
+    }
+
+    .draft-hero h1 {
+        font-size: 32px;
+    }
+
+    .draft-hero p {
+        font-size: 15px;
+    }
+
+    .section-head {
+        padding: 20px 20px 14px;
+    }
+
+    .section-title {
+        font-size: 22px;
+    }
+}
+</style>
+
+<div class="draft-page">
+
+    <div class="draft-hero">
+        <div class="draft-hero-badge">🗂 Draft Manager</div>
+        <h1>Draft & Hidden Content</h1>
+        <p>
+            Manage courses and modules that are not yet visible to students.
+            You can publish them later when your content is ready.
+        </p>
+    </div>
+
+    <div class="section-block">
+        <div class="section-card">
+            <div class="section-head">
+                <h2 class="section-title">Hidden Courses</h2>
+                <p class="section-subtitle">
+                    These courses are saved, but students cannot see them until you publish them.
+                </p>
+            </div>
+
+            {% if hidden_courses %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in hidden_courses %}
+                        <tr>
+                            <td>
+                                <div class="item-title">{{ course.title }}</div>
+                                <div class="item-subtext">{{ course.short_name }}</div>
+                            </td>
+                            <td>
+                                {% if course.category %}
+                                    {{ course.category.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-hidden">Hidden</span>
+                            </td>
+                            <td>
+                                <form method="post" action="{% url 'teacher:toggle_course' course.id %}" class="inline-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="action-btn">Publish Course</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-box">
+                No hidden courses found.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="section-block">
+        <div class="section-card">
+            <div class="section-head">
+                <h2 class="section-title">Unpublished Modules</h2>
+                <p class="section-subtitle">
+                    These modules are saved inside your course, but students cannot access them yet.
+                </p>
+            </div>
+
+            {% if unpublished_modules %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Module</th>
+                            <th>Course</th>
+                            <th>Section</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for module in unpublished_modules %}
+                        <tr>
+                            <td>
+                                <div class="item-title">{{ module.title }}</div>
+                            </td>
+                            <td>{{ module.section.course.title }}</td>
+                            <td>{{ module.section.title }}</td>
+                            <td>
+                                <span class="badge badge-module">{{ module.type|title }}</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-hidden">Unpublished</span>
+                            </td>
+                            <td>
+                                <form method="post" action="{% url 'teacher:toggle_module' module.id %}" class="inline-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="action-btn">Publish Module</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-box">
+                No unpublished modules found.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

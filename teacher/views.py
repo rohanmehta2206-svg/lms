@@ -1,4 +1,5 @@
 import os
+import profile
 import time
 import hmac
 import hashlib
@@ -7,6 +8,7 @@ import requests
 import json
 import re
 
+from accounts.models import UserProfile
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
@@ -20,6 +22,9 @@ from .moodle_api import (
     create_moodle_course,
     sync_django_category_with_moodle,
     update_moodle_user_profile_from_django_user,
+    enroll_user_to_course,
+    get_moodle_teacher_role,
+    enroll_admin_to_course,
 )
 
 # ==========================================
@@ -29,9 +34,7 @@ from .moodle_api import (
 MOODLE_URL = "http://127.0.0.1/moodle/webservice/rest/server.php"
 MOODLE_TOKEN = "53a8b7519e7d735edc9b6423e84f2b54"
 
-# CHANGE THESE TWO VALUES TO YOUR REAL MOODLE IDs
-MOODLE_AUTO_ENROLL_USER_ID = 2
-MOODLE_AUTO_ENROLL_ROLE_ID = 3
+
 
 # ==========================================
 # SECURE STREAMING CONFIG
@@ -852,11 +855,13 @@ def normalize_quiz_rows(request):
 
 @login_required
 def teacher_dashboard(request):
+    teacher_courses = Course.objects.filter(teacher=request.user)
+
     context = {
-        "total_courses": Course.objects.count(),
-        "total_sections": Section.objects.count(),
-        "published_courses": Course.objects.filter(is_published=True).count(),
-        "draft_courses": Course.objects.filter(is_published=False).count(),
+        "total_courses": teacher_courses.count(),
+        "total_sections": Section.objects.filter(course__teacher=request.user).count(),
+        "published_courses": teacher_courses.filter(is_published=True).count(),
+        "draft_courses": teacher_courses.filter(is_published=False).count(),
         "active_students": 0,
         "security_alerts": 0,
     }
@@ -869,8 +874,22 @@ def teacher_dashboard(request):
 
 @login_required
 def course_list(request):
-    courses = Course.objects.all()
+    courses = Course.objects.filter(teacher=request.user)
     return render(request, "teacher/course_list.html", {"courses": courses})
+
+@login_required
+def toggle_course_publish(request, course_id):
+    course = get_object_or_404(Course, id=course_id, teacher=request.user)
+
+    course.is_published = not course.is_published
+    course.save(update_fields=["is_published"])
+
+    if course.is_published:
+        messages.success(request, f"Course '{course.title}' is now published.")
+    else:
+        messages.success(request, f"Course '{course.title}' is now hidden from students.")
+
+    return redirect("teacher:course_list")
 
 
 # ==========================================
@@ -880,10 +899,14 @@ def course_list(request):
 @login_required
 def create_course(request):
     if request.method == "POST":
+        print("CURRENT LOGGED USER:", request.user.username)
         course_form = CourseForm(request.POST, request.FILES)
 
         if course_form.is_valid():
+            print("CREATE COURSE FORM VALID")
+
             course = course_form.save(commit=False)
+            course.teacher = request.user
             selected_category = course.category
 
             if not selected_category:
@@ -919,17 +942,57 @@ def create_course(request):
 
                 course.save()
 
-                enroll_result = enroll_user_in_moodle_course(
-                    moodle_id,
-                    MOODLE_AUTO_ENROLL_USER_ID,
-                    MOODLE_AUTO_ENROLL_ROLE_ID
-                )
+                print("CURRENT LOGGED USER:", request.user.username)
 
-                if enroll_result.get("success") is False and enroll_result.get("status") != "success":
-                    messages.warning(
+                profile, created = UserProfile.objects.get_or_create(user=request.user)
+
+                if created:
+                 print("NEW USER PROFILE CREATED FOR:", request.user.username)
+
+                teacher_moodle_user_id = profile.moodle_user_id
+
+                print("TEACHER MOODLE USER ID:", teacher_moodle_user_id)
+                print("MOODLE COURSE ID:", moodle_id)
+
+                # Teacher enroll
+                if teacher_moodle_user_id:
+                    sync_ok, sync_error = update_moodle_user_profile_from_django_user(request.user)
+                    print("TEACHER SYNC:", sync_ok, sync_error)
+
+                    if not sync_ok:
+                        messages.warning(
                         request,
-                        f"Course created, but auto enrollment failed: {enroll_result.get('error', enroll_result)}"
+                        f"Course created, but teacher Moodle profile sync failed: {sync_error}"
                     )
+
+                        enroll_ok, enroll_error = enroll_user_to_course(
+                            user_id=teacher_moodle_user_id,
+                            course_id=moodle_id,
+                            role_id=get_moodle_teacher_role()
+                        )
+                        print("TEACHER ENROLL:", enroll_ok, enroll_error)
+
+                        if not enroll_ok:
+                            messages.warning(
+                            request,
+                            f"Course created, but teacher auto enrollment failed: {enroll_error}"
+                        )
+                    else:
+                        print("TEACHER MOODLE USER ID IS MISSING")
+                        messages.warning(
+                        request,
+                        f"Course created, but teacher Moodle user id is missing in UserProfile, so teacher auto enrollment was skipped."
+                    )
+
+                        # Admin enroll should run always
+                        admin_ok, admin_error = enroll_admin_to_course(moodle_id)
+                        print("ADMIN ENROLL:", admin_ok, admin_error)
+
+                        if not admin_ok:
+                            messages.warning(
+                            request,
+                            f"Course created, but admin auto enrollment failed: {admin_error}"
+                        )
 
                 data = {
                     "wstoken": MOODLE_TOKEN,
@@ -989,11 +1052,14 @@ def create_course(request):
 
             return render(request, "teacher/create_course.html", {"course_form": course_form})
 
+        else:
+            print("CREATE COURSE FORM ERRORS:", course_form.errors)
+            return render(request, "teacher/create_course.html", {"course_form": course_form})
+
     else:
         course_form = CourseForm()
 
     return render(request, "teacher/create_course.html", {"course_form": course_form})
-
 
 # ==========================================
 # UPDATE SECTION
@@ -1001,7 +1067,7 @@ def create_course(request):
 
 @login_required
 def update_section(request, section_id):
-    section = get_object_or_404(Section, id=section_id)
+    section = get_object_or_404(Section, id=section_id, course__teacher=request.user)
 
     if request.method == "POST":
         new_title = (request.POST.get("title") or "").strip()
@@ -1041,7 +1107,7 @@ def update_section(request, section_id):
 
 @login_required
 def course_detail(request, course_id):
-    course = get_object_or_404(Course, id=course_id)
+    course = get_object_or_404(Course, id=course_id, teacher=request.user)
     sections = course.sections.all().order_by("order")
 
     return render(
@@ -1057,7 +1123,7 @@ def course_detail(request, course_id):
 
 @xframe_options_exempt
 def play_module(request, module_id):
-    module = get_object_or_404(Module, id=module_id)
+    module = get_object_or_404(Module, id=module_id, section__course__teacher=request.user)
 
     secure_mpd_url = None
     if module.video_mpd:
@@ -1083,11 +1149,12 @@ def play_module(request, module_id):
 
 @login_required
 def module_builder(request, section_id):
-    section = get_object_or_404(Section, id=section_id)
+    section = get_object_or_404(Section, id=section_id, course__teacher=request.user)
 
     if request.method == "POST":
         content_type = request.POST.get("type")
         title = (request.POST.get("title") or "").strip()
+        is_published = request.POST.get("is_published", "true") == "true"
 
         if not title:
             messages.error(request, "Title is required.")
@@ -1096,7 +1163,8 @@ def module_builder(request, section_id):
         module = Module.objects.create(
             section=section,
             title=title,
-            type=content_type
+            type=content_type,
+            is_published=is_published
         )
 
         try:
@@ -1316,6 +1384,46 @@ def module_builder(request, section_id):
         "teacher/module_builder.html",
         {"section": section, "modules": modules}
     )
+
+@login_required
+def toggle_module_publish(request, module_id):
+    module = get_object_or_404(
+        Module,
+        id=module_id,
+        section__course__teacher=request.user
+    )
+
+    module.is_published = not module.is_published
+    module.save(update_fields=["is_published"])
+
+    if module.is_published:
+        messages.success(request, f"Module '{module.title}' is now published.")
+    else:
+        messages.success(request, f"Module '{module.title}' is now hidden from students.")
+
+    return redirect("teacher:module_builder", section_id=module.section.id)
+
+@login_required
+def draft_content(request):
+    hidden_courses = Course.objects.filter(
+        teacher=request.user,
+        is_published=False
+    ).order_by("-created_at")
+
+    unpublished_modules = Module.objects.filter(
+        section__course__teacher=request.user,
+        is_published=False
+    ).select_related(
+        "section",
+        "section__course"
+    ).order_by("-created_at")
+
+    context = {
+        "hidden_courses": hidden_courses,
+        "unpublished_modules": unpublished_modules,
+    }
+
+    return render(request, "teacher/draft_content.html", context)
 
 
 # ==========================================

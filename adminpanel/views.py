@@ -49,6 +49,15 @@ def _get_user_sync_status(user):
     return 'Synced' if _get_moodle_user_id(user) else 'Not Synced'
 
 
+def _get_course_teacher_name(course):
+    teacher = getattr(course, 'teacher', None)
+    if not teacher:
+        return "Not Assigned"
+
+    full_name = teacher.get_full_name().strip()
+    return full_name if full_name else teacher.username
+
+
 @login_required
 def admin_dashboard(request):
     admin_check = _admin_required_redirect(request)
@@ -313,7 +322,7 @@ def course_management(request):
     if admin_check:
         return admin_check
 
-    courses = Course.objects.all().order_by('-id')
+    courses = Course.objects.select_related('category', 'teacher').all().order_by('-id')
 
     course_list = []
     published_count = 0
@@ -345,6 +354,7 @@ def course_management(request):
             'short_name': getattr(course, 'short_name', ''),
             'course_code': getattr(course, 'course_code', ''),
             'category_name': category_name,
+            'teacher_name': _get_course_teacher_name(course),
             'description': getattr(course, 'description', ''),
             'is_published': is_published,
             'moodle_course_id': moodle_course_id,

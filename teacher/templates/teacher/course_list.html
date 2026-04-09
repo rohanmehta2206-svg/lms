@@ -43,6 +43,7 @@
     margin: 0;
     font-size: 17px;
     color: #dbeafe;
+    line-height: 1.7;
 }
 
 .top-bar {
@@ -51,17 +52,20 @@
     align-items: center;
     margin-bottom: 24px;
     flex-wrap: wrap;
+    gap: 16px;
 }
 
 .top-left h2 {
     margin: 0;
     font-size: 32px;
     font-weight: 800;
+    color: #111827;
 }
 
 .top-left p {
     margin: 6px 0 0;
     color: #64748b;
+    font-size: 15px;
 }
 
 .create-btn {
@@ -93,6 +97,9 @@
     overflow: hidden;
     border: 1px solid #e5e7eb;
     transition: 0.2s;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
 }
 
 .course-card:hover {
@@ -119,31 +126,42 @@
 
 .course-body {
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 .course-title {
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 800;
     margin-bottom: 8px;
+    color: #111827;
+    line-height: 1.4;
 }
 
 .course-desc {
     font-size: 14px;
     color: #6b7280;
     margin-bottom: 14px;
+    line-height: 1.7;
+    min-height: 48px;
 }
 
-.course-footer {
+.status-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
 }
 
 .status {
     font-size: 13px;
-    font-weight: 600;
-    padding: 6px 10px;
-    border-radius: 20px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
 }
 
 .status.published {
@@ -156,10 +174,25 @@
     background: #fee2e2;
 }
 
+.visibility-note {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+.course-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
 .open-btn {
     color: #2563eb;
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 14px;
 }
 
@@ -172,6 +205,32 @@
     padding: 40px;
     background: white;
     border-radius: 16px;
+    border: 1px dashed #cbd5e1;
+    color: #64748b;
+    font-size: 15px;
+}
+
+@media (max-width: 768px) {
+    .course-hero {
+        padding: 28px 22px;
+        border-radius: 18px;
+    }
+
+    .course-hero h1 {
+        font-size: 32px;
+    }
+
+    .course-hero p {
+        font-size: 15px;
+    }
+
+    .top-left h2 {
+        font-size: 26px;
+    }
+
+    .course-grid {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
 
@@ -180,13 +239,13 @@
     <div class="course-hero">
         <div class="course-hero-badge">📘 Course Panel</div>
         <h1>Manage Courses</h1>
-        <p>View and manage all your courses in one place.</p>
+        <p>View and manage all your courses in one place. Hidden courses stay visible to you, but students cannot see them until you publish them.</p>
     </div>
 
     <div class="top-bar">
         <div class="top-left">
             <h2>Your Courses</h2>
-            <p>Organize and manage your learning content.</p>
+            <p>Organize, review, and control the visibility of your learning content.</p>
         </div>
 
         <a href="{% url 'teacher:create_course' %}" class="create-btn">
@@ -202,9 +261,9 @@
 
             <div class="course-image-wrap">
                 {% if course.image %}
-                <img src="{{ course.image.url }}" class="course-image">
+                    <img src="{{ course.image.url }}" class="course-image" alt="{{ course.title }}">
                 {% else %}
-                <img src="https://via.placeholder.com/600x300?text=Course+Image" class="course-image">
+                    <img src="https://via.placeholder.com/600x300?text=Course+Image" class="course-image" alt="Course Image">
                 {% endif %}
             </div>
 
@@ -216,18 +275,20 @@
                     {{ course.description|truncatechars:80 }}
                 </div>
 
-                <div class="course-footer">
-
+                <div class="status-row">
                     {% if course.is_published %}
-                    <span class="status published">Published</span>
+                        <span class="status published">Published</span>
+                        <span class="visibility-note">Visible to students</span>
                     {% else %}
-                    <span class="status unpublished">Unpublished</span>
+                        <span class="status unpublished">Hidden</span>
+                        <span class="visibility-note">Only teacher/admin can see this course</span>
                     {% endif %}
+                </div>
 
+                <div class="course-footer">
                     <a href="{% url 'teacher:course_detail' course.id %}" class="open-btn">
-                        Open →
+                        Open Course →
                     </a>
-
                 </div>
 
             </div>

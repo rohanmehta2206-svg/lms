@@ -49,7 +49,7 @@
 
 .top-grid {
     display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
+    grid-template-columns: 1.08fr 0.92fr;
     gap: 24px;
     margin-bottom: 24px;
     align-items: stretch;
@@ -75,15 +75,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 26px;
+    padding: 0;
 }
 
 .course-banner img {
-    max-width: 100%;
-    max-height: 360px;
-    width: auto;
-    height: auto;
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+    object-fit: cover;
     display: block;
 }
 
@@ -91,6 +90,7 @@
     color: #94a3b8;
     font-size: 16px;
     text-align: center;
+    padding: 24px;
 }
 
 .info-card {
@@ -121,6 +121,7 @@
     font-size: 14px;
     color: #64748b;
     line-height: 1.7;
+    white-space: pre-wrap;
 }
 
 .status-badge {
@@ -142,6 +143,45 @@
 .draft {
     background: #fee2e2;
     color: #b91c1c;
+}
+
+.action-row {
+    margin-bottom: 18px;
+}
+
+.toggle-form {
+    margin: 0;
+}
+
+.toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.toggle-btn.publish {
+    background: #16a34a;
+    color: white;
+}
+
+.toggle-btn.publish:hover {
+    background: #15803d;
+}
+
+.toggle-btn.unpublish {
+    background: #ef4444;
+    color: white;
+}
+
+.toggle-btn.unpublish:hover {
+    background: #dc2626;
 }
 
 .info-list {
@@ -358,11 +398,10 @@
 
     .course-banner {
         min-height: 260px;
-        padding: 20px;
     }
 
     .course-banner img {
-        max-height: 240px;
+        min-height: 260px;
     }
 
     .info-card,
@@ -395,7 +434,7 @@
         <div class="course-banner-card">
             <div class="course-banner">
                 {% if course.image %}
-                    <img src="{{ course.image.url }}">
+                    <img src="{{ course.image.url }}" alt="{{ course.title }}">
                 {% else %}
                     <div class="no-banner">
                         No Thumbnail Uploaded
@@ -407,7 +446,7 @@
         <div class="info-card">
             <div class="info-header">
                 <div class="info-title-wrap">
-                    <h2>{{ course.title }}</h2>
+                    <h2>Course Information</h2>
                     <p class="info-subtext">
                         {{ course.description|default:"No description provided." }}
                     </p>
@@ -416,8 +455,19 @@
                 {% if course.is_published %}
                     <span class="status-badge published">✅ Published</span>
                 {% else %}
-                    <span class="status-badge draft">📝 Draft</span>
+                    <span class="status-badge draft">📝 Hidden</span>
                 {% endif %}
+            </div>
+
+            <div class="action-row">
+                <form method="post" action="{% url 'teacher:toggle_course' course.id %}" class="toggle-form">
+                    {% csrf_token %}
+                    {% if course.is_published %}
+                        <button type="submit" class="toggle-btn unpublish">Unpublish Course</button>
+                    {% else %}
+                        <button type="submit" class="toggle-btn publish">Publish Course</button>
+                    {% endif %}
+                </form>
             </div>
 
             <div class="info-list">

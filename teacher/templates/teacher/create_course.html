@@ -163,6 +163,29 @@
     line-height: 1.6;
 }
 
+.visibility-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 10px;
+}
+
+.visibility-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 10px;
+}
+
+.visibility-list {
+    margin: 0;
+    padding-left: 18px;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
 .custom-file-wrapper {
     border: 2px dashed #d1d5db;
     padding: 34px 24px;
@@ -342,6 +365,15 @@
                         <div class="form-row">
                             {{ course_form.is_published.label_tag }}
                             {{ course_form.is_published }}
+
+                            <div class="visibility-box">
+                                <div class="visibility-title">Course Visibility Flow</div>
+                                <ul class="visibility-list">
+                                    <li><strong>Published / Show</strong> → students can see this course.</li>
+                                    <li><strong>Hidden / Unpublished</strong> → only teacher and admin can manage it.</li>
+                                    <li>You can publish hidden courses later after adding sections and modules.</li>
+                                </ul>
+                            </div>
                         </div>
 
                         <div class="form-row inline-fields">

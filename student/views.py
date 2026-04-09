@@ -115,7 +115,10 @@ def get_course_sections(course):
 # =====================================
 def get_ordered_course_modules(course):
     return list(
-        Module.objects.filter(section__course=course)
+        Module.objects.filter(
+            section__course=course,
+            is_published=True
+        )
         .select_related("section", "section__course")
         .order_by("section__order", "order", "id")
     )
@@ -123,10 +126,11 @@ def get_ordered_course_modules(course):
 
 def get_completed_module_ids(user, course):
     course_module_ids = list(
-        Module.objects.filter(
-            section__course=course
-        ).values_list("id", flat=True).distinct()
-    )
+    Module.objects.filter(
+        section__course=course,
+        is_published=True
+    ).values_list("id", flat=True).distinct()
+)
 
     return set(
         StudentModuleProgress.objects.filter(
@@ -217,9 +221,9 @@ def get_course_progress_data(user, course, sections):
 
     for section in sections:
         section_module_ids = list(
-            section.modules.values_list("id", flat=True).distinct()
-        )
-        module_ids.extend(section_module_ids)
+        section.modules.filter(is_published=True).values_list("id", flat=True).distinct()
+    )
+    module_ids.extend(section_module_ids)
 
     module_ids = list(dict.fromkeys(module_ids))
     total_modules = len(module_ids)
@@ -977,7 +981,9 @@ def build_course_state_for_user(user, course):
     modules_payload = []
 
     for section in sections:
-        ordered_modules = list(section.modules.all().order_by("order", "id"))
+        ordered_modules = list(
+        section.modules.filter(is_published=True).order_by("order", "id")
+    )
 
         for module in ordered_modules:
             latest_attempt = get_latest_quiz_attempt(user, module) if module.type == "quiz" else None
@@ -1356,7 +1362,9 @@ def view_course(request, course_id):
     sections = get_course_sections(course)
 
     for section in sections:
-        section.modules_list = list(section.modules.all().order_by("order", "id"))
+        section.modules_list = list(
+            section.modules.filter(is_published=True).order_by("order", "id")
+        )
 
     already_enrolled = is_student_enrolled(request.user, course)
 
@@ -1778,7 +1786,7 @@ def material_page(request, module_id):
 # =====================================
 @login_required
 def mark_module_complete(request, module_id):
-    module = get_object_or_404(Module, id=module_id)
+    module = get_object_or_404(Module, id=module_id, is_published=True)
     course = module.section.course
     is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
 

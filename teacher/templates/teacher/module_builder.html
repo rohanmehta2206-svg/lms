@@ -242,7 +242,14 @@
     font-size: 24px;
     color: #0f172a;
     line-height: 1.3;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+}
+
+.activity-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
 .activity-type {
@@ -256,6 +263,25 @@
     border-radius: 999px;
     display: inline-flex;
     align-items: center;
+}
+
+.status-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status-published {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-unpublished {
+    background: #fee2e2;
+    color: #991b1b;
 }
 
 .video-box {
@@ -401,6 +427,13 @@
     text-align: center;
 }
 
+.publish-note {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.6;
+}
+
 @media (max-width: 900px) {
     .context-grid,
     .form-grid {
@@ -482,6 +515,17 @@
                 <div class="form-group">
                     <label>Title</label>
                     <input type="text" name="title" required placeholder="Enter content title">
+                </div>
+
+                <div class="form-group">
+                    <label>Publish Status</label>
+                    <select name="is_published" required>
+                        <option value="true" selected>Published</option>
+                        <option value="false">Unpublished</option>
+                    </select>
+                    <div class="publish-note">
+                        Published content is visible to students. Unpublished content is saved for teacher/admin only.
+                    </div>
                 </div>
 
                 <div class="form-group full-width">
@@ -575,7 +619,15 @@ D. Option 4"></textarea>
                 <div class="activity-head">
                     <div>
                         <div class="activity-title">{{ module.title }}</div>
-                        <div class="activity-type">{{ module.type|title }}</div>
+                        <div class="activity-meta">
+                            <div class="activity-type">{{ module.type|title }}</div>
+
+                            {% if module.is_published %}
+                                <span class="status-chip status-published">Published</span>
+                            {% else %}
+                                <span class="status-chip status-unpublished">Unpublished</span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 

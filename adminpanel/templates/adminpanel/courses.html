@@ -69,19 +69,21 @@
     table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 900px;
+        min-width: 1050px;
     }
 
     th, td {
         padding: 16px;
         text-align: left;
         font-size: 14px;
+        vertical-align: middle;
     }
 
     th {
         background: #f8fafc;
         font-weight: 700;
         color: #475569;
+        white-space: nowrap;
     }
 
     tr {
@@ -92,11 +94,18 @@
         background: #fbfdff;
     }
 
+    .teacher-name {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
     .badge {
         padding: 6px 12px;
         border-radius: 999px;
         font-size: 12px;
         font-weight: 700;
+        display: inline-block;
+        white-space: nowrap;
     }
 
     .published {
@@ -141,7 +150,6 @@
 
 {% block content %}
 
-<!-- Stats -->
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-label">Total Courses</div>
@@ -176,10 +184,9 @@
     </div>
 </div>
 
-<!-- Table -->
 <div class="section-block">
     <div class="section-title">All Courses</div>
-    <div class="section-subtitle">Track publishing status and Moodle synchronization of all courses.</div>
+    <div class="section-subtitle">Track publishing status, teacher ownership, and Moodle synchronization of all courses.</div>
 
     <div class="table-card">
         <div class="table-wrap">
@@ -187,6 +194,7 @@
                 <thead>
                     <tr>
                         <th>Title</th>
+                        <th>Teacher Name</th>
                         <th>Short Name</th>
                         <th>Course Code</th>
                         <th>Category</th>
@@ -200,6 +208,7 @@
                     {% for course in courses %}
                     <tr>
                         <td>{{ course.title }}</td>
+                        <td class="teacher-name">{{ course.teacher_name|default:"Not Assigned" }}</td>
                         <td>{{ course.short_name }}</td>
                         <td>{{ course.course_code }}</td>
                         <td>{{ course.category_name|default:"-" }}</td>
@@ -231,7 +240,7 @@
 
                     {% empty %}
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <div class="empty-box">No courses found</div>
                         </td>
                     </tr>
