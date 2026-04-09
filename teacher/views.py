@@ -1123,7 +1123,7 @@ def course_detail(request, course_id):
 
 @xframe_options_exempt
 def play_module(request, module_id):
-    module = get_object_or_404(Module, id=module_id, section__course__teacher=request.user)
+    module = get_object_or_404(Module, id=module_id, type="video")
 
     secure_mpd_url = None
     if module.video_mpd:
@@ -1140,7 +1140,7 @@ def play_module(request, module_id):
             "module": module,
             "secure_mpd_url": secure_mpd_url,
         }
-    )
+)
 
 
 # ==========================================
