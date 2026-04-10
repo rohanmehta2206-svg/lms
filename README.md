@@ -154,10 +154,14 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
+
 ### 3. Install Dependencies
 
+Install all required Python packages using the provided `requirements.txt` file for exact version compatibility:
+
 ```bash
-pip install django psycopg2-binary pillow requests
+# Windows/Linux/macOS
+pip install -r requirements.txt
 ```
 
 ### 4. Configure Database
@@ -206,6 +210,7 @@ python manage.py createsuperuser
 python manage.py collectstatic
 ```
 
+
 ### 9. Start Development Server
 
 ```bash
@@ -213,6 +218,36 @@ python manage.py runserver
 ```
 
 Visit: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+
+---
+
+## 🚀 Quick Start on a New PC
+
+1. **Clone or copy the project folder** to your PC.
+2. **Install Python 3.10+** and [PostgreSQL 13+](https://www.postgresql.org/download/).
+3. **Create and activate a virtual environment:**
+    - Windows:  
+      `python -m venv venv && venv\Scripts\activate`
+    - Linux/macOS:  
+      `python3 -m venv venv && source venv/bin/activate`
+4. **Install dependencies:**
+    - `pip install -r requirements.txt`
+5. **Set up PostgreSQL database:**
+    - Create user and database as shown in [Database Configuration](#database-configuration).
+6. **Configure `instructor/settings.py`** for your database and Moodle settings.
+7. **Run migrations:**
+    - `python manage.py makemigrations`
+    - `python manage.py migrate`
+8. **Create a superuser:**
+    - `python manage.py createsuperuser`
+9. **Collect static files:**
+    - `python manage.py collectstatic`
+10. **Run the server:**
+     - `python manage.py runserver`
+11. **Access the app:**
+     - Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser.
+
+> For Moodle integration, ensure your Moodle instance is running and configured as described below.
 
 ---
 
