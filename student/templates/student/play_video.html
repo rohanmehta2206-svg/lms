@@ -334,6 +334,66 @@
         cursor: pointer;
     }
 
+    .timeline-preview {
+        position: absolute;
+        left: 0;
+        bottom: 26px;
+        transform: translateX(-50%);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        z-index: 30;
+        pointer-events: none;
+    }
+
+    .timeline-preview.show {
+        display: flex;
+    }
+
+    .timeline-preview-canvas-wrap {
+        background: rgba(15, 23, 42, 0.96);
+        border: 1px solid rgba(255,255,255,0.16);
+        border-radius: 12px;
+        padding: 6px;
+        box-shadow: 0 16px 34px rgba(0,0,0,0.35);
+    }
+
+    .timeline-preview-canvas {
+        width: 190px;
+        height: 108px;
+        display: block;
+        border-radius: 8px;
+        background: #020617;
+    }
+
+    .timeline-preview-time {
+        min-width: 58px;
+        text-align: center;
+        background: rgba(15, 23, 42, 0.96);
+        color: #f8fafc;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .timeline-preview-fallback {
+        width: 190px;
+        height: 108px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #cbd5e1;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: center;
+        padding: 12px;
+        line-height: 1.5;
+    }
+
     .lesson-bottom {
         padding: 30px;
     }
@@ -902,7 +962,14 @@
                         <div class="timeline-note">Backward drag allowed • forward drag blocked</div>
                     </div>
 
-                    <div class="timeline-track-wrap">
+                    <div class="timeline-track-wrap" id="timelineTrackWrap">
+                        <div class="timeline-preview" id="timelinePreview">
+                            <div class="timeline-preview-canvas-wrap">
+                                <canvas id="timelinePreviewCanvas" class="timeline-preview-canvas" width="190" height="108"></canvas>
+                                <div id="timelinePreviewFallback" class="timeline-preview-fallback" style="display:none;">Thumbnail preview will appear here.</div>
+                            </div>
+                            <div class="timeline-preview-time" id="timelinePreviewTime">00:00</div>
+                        </div>
                         <div class="timeline-bg"></div>
                         <div class="timeline-watched" id="timelineWatched"></div>
                         <div class="timeline-current" id="timelineCurrent"></div>
@@ -1089,8 +1156,19 @@
         const continueBtn = document.getElementById("continueBtn");
         const qualitySelector = document.getElementById("qualitySelector");
         const qualityStatus = document.getElementById("qualityStatus");
+        const timelineTrackWrap = document.getElementById("timelineTrackWrap");
+        const timelinePreview = document.getElementById("timelinePreview");
+        const timelinePreviewCanvas = document.getElementById("timelinePreviewCanvas");
+        const timelinePreviewTime = document.getElementById("timelinePreviewTime");
+        const timelinePreviewFallback = document.getElementById("timelinePreviewFallback");
+        const timelinePreviewContext = timelinePreviewCanvas ? timelinePreviewCanvas.getContext("2d") : null;
 
-       
+        const spriteUrl = "{{ thumbnail_sprite_url|default:''|escapejs }}";
+        const spriteThumbWidth = Number("{{ thumbnail_width|default:160 }}") || 160;
+        const spriteThumbHeight = Number("{{ thumbnail_height|default:90 }}") || 90;
+        const spriteColumns = Number("{{ thumbnail_columns|default:5 }}") || 5;
+        const spriteInterval = Number("{{ thumbnail_interval|default:1 }}") || 1;
+
 
 // ================= TAB SWITCH DETECTION =================
 
@@ -1256,6 +1334,9 @@ setTimeout(startWebcam, 5000);
         let serverWatchedSeconds = Math.max(0, initialWatchedSeconds);
         let serverMaxPositionReached = 0;
         let serverCompleted = alreadyCompleted;
+        let previewSpriteImage = null;
+        let previewSpriteLoaded = false;
+        let previewSpriteFailed = false;
 
         function getCookie(name) {
             let cookieValue = null;
@@ -1280,6 +1361,93 @@ setTimeout(startWebcam, 5000);
         }
         function formatSecondsLabel(seconds) {
             return Math.max(0, Math.floor(seconds || 0)) + " sec";
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
+        function hideTimelinePreview() {
+            if (timelinePreview) {
+                timelinePreview.classList.remove("show");
+            }
+        }
+
+        function initializeTimelinePreviewSprite() {
+            if (!spriteUrl) {
+                previewSpriteFailed = true;
+                return;
+            }
+
+            previewSpriteImage = new Image();
+            previewSpriteImage.onload = function () {
+                previewSpriteLoaded = true;
+                previewSpriteFailed = false;
+            };
+            previewSpriteImage.onerror = function () {
+                previewSpriteLoaded = false;
+                previewSpriteFailed = true;
+                console.warn("Timeline preview sprite could not be loaded.");
+            };
+            previewSpriteImage.src = spriteUrl;
+        }
+
+        function drawTimelinePreviewFrame(previewSeconds) {
+            if (!timelinePreviewCanvas || !timelinePreviewContext || !timelinePreviewFallback) {
+                return;
+            }
+
+            if (!previewSpriteLoaded || !previewSpriteImage) {
+                timelinePreviewContext.clearRect(0, 0, timelinePreviewCanvas.width, timelinePreviewCanvas.height);
+                timelinePreviewCanvas.style.display = "none";
+                timelinePreviewFallback.style.display = "flex";
+                timelinePreviewFallback.textContent = previewSpriteFailed
+                    ? "Preview image not available yet."
+                    : "Preparing preview...";
+                return;
+            }
+
+            const frameIndex = Math.max(0, Math.floor(previewSeconds / spriteInterval));
+            const safeColumns = Math.max(1, spriteColumns);
+            const sourceX = (frameIndex % safeColumns) * spriteThumbWidth;
+            const sourceY = Math.floor(frameIndex / safeColumns) * spriteThumbHeight;
+
+            timelinePreviewFallback.style.display = "none";
+            timelinePreviewCanvas.style.display = "block";
+            timelinePreviewContext.clearRect(0, 0, timelinePreviewCanvas.width, timelinePreviewCanvas.height);
+            timelinePreviewContext.drawImage(
+                previewSpriteImage,
+                sourceX,
+                sourceY,
+                spriteThumbWidth,
+                spriteThumbHeight,
+                0,
+                0,
+                timelinePreviewCanvas.width,
+                timelinePreviewCanvas.height
+            );
+        }
+
+        function showTimelinePreview(clientX) {
+            if (!timelineTrackWrap || !timelinePreview || !video || !video.duration) {
+                return;
+            }
+
+            const rect = timelineTrackWrap.getBoundingClientRect();
+            const relativeX = clamp(clientX - rect.left, 0, rect.width);
+            const hoverRatio = rect.width ? (relativeX / rect.width) : 0;
+            const hoverSeconds = clamp(hoverRatio * video.duration, 0, video.duration || 0);
+
+            if (timelinePreviewTime) {
+                timelinePreviewTime.textContent = formatTime(hoverSeconds);
+            }
+
+            drawTimelinePreviewFrame(hoverSeconds);
+
+            const previewWidth = timelinePreview.offsetWidth || 202;
+            const previewLeft = clamp(relativeX, previewWidth / 2, Math.max(previewWidth / 2, rect.width - previewWidth / 2));
+            timelinePreview.style.left = previewLeft + "px";
+            timelinePreview.classList.add("show");
         }
 
         function updateTimeDisplay() {
@@ -1782,6 +1950,29 @@ setTimeout(startWebcam, 5000);
                     isTimelineDragging = true;
                 });
 
+                timelineSlider.addEventListener("mousemove", function (event) {
+                    showTimelinePreview(event.clientX);
+                });
+
+                timelineSlider.addEventListener("mouseenter", function (event) {
+                    showTimelinePreview(event.clientX);
+                });
+
+                timelineSlider.addEventListener("mouseleave", function () {
+                    hideTimelinePreview();
+                });
+
+                timelineSlider.addEventListener("touchmove", function (event) {
+                    if (event.touches && event.touches.length > 0) {
+                        showTimelinePreview(event.touches[0].clientX);
+                    }
+                }, { passive: true });
+
+                timelineSlider.addEventListener("touchend", function () {
+                    hideTimelinePreview();
+                    isTimelineDragging = false;
+                });
+
                 timelineSlider.addEventListener("input", function () {
                     const target = parseFloat(timelineSlider.value || "0");
 
@@ -1818,10 +2009,6 @@ setTimeout(startWebcam, 5000);
                 timelineSlider.addEventListener("mouseup", function () {
                     isTimelineDragging = false;
                 });
-
-                timelineSlider.addEventListener("touchend", function () {
-                    isTimelineDragging = false;
-                });
             }
 
             video.addEventListener("loadedmetadata", function () {
@@ -1830,6 +2017,7 @@ setTimeout(startWebcam, 5000);
                 updatePlayState();
                 updateTimeline();
                 updateWatchProgressUI(Math.max(localWatchedPercent, serverWatchedPercent));
+                initializeTimelinePreviewSprite();
 
                 if (serverCompleted) {
                     setCompletedUI();

@@ -64,6 +64,131 @@ def get_real_material_path(field_file):
     return None
 
 
+
+# =====================================
+# HELPER: VIDEO THUMBNAIL SPRITE PREVIEW
+# =====================================
+def _module_has_field(instance, field_name):
+    try:
+        instance._meta.get_field(field_name)
+        return True
+    except Exception:
+        return False
+
+
+def get_video_sprite_metadata(request, module):
+    """
+    Build sprite preview data for student/play_video.html.
+    Works even if Module model does not yet have dedicated sprite fields.
+    """
+    data = {
+        "thumbnail_sprite_url": "",
+        "thumbnail_width": 160,
+        "thumbnail_height": 90,
+        "thumbnail_columns": 5,
+        "thumbnail_interval": 1,
+        "thumbnail_available": False,
+    }
+
+    if not module or not getattr(module, "video_mpd", None):
+        return data
+
+    def build_student_sprite_url(raw_value):
+        raw_value = str(raw_value or "").strip()
+        if not raw_value:
+            return ""
+
+        normalized_value = raw_value.replace("\\", "/")
+
+        if normalized_value.startswith(("http://", "https://", "/stream/")):
+            return normalized_value
+
+        media_url = str(getattr(settings, "MEDIA_URL", "/media/") or "/media/")
+        if normalized_value.startswith(media_url):
+            return normalized_value
+
+        if normalized_value.startswith("/"):
+            return normalized_value
+
+        return build_signed_stream_url(
+            request=request,
+            path=normalized_value,
+            user_id=getattr(request.user, "id", 0) or 0,
+        )
+
+    # 1) Try model fields first if they exist
+    possible_sprite_field_names = ["thumbnail_sprite", "thumbnail_sprite_url", "video_sprite"]
+    for field_name in possible_sprite_field_names:
+        if _module_has_field(module, field_name):
+            field_value = getattr(module, field_name, None)
+            if field_value:
+                try:
+                    candidate_value = field_value.url
+                except Exception:
+                    candidate_value = str(field_value)
+
+                data["thumbnail_sprite_url"] = build_student_sprite_url(candidate_value)
+                if data["thumbnail_sprite_url"]:
+                    break
+
+    for field_name, key, default_value in [
+        ("thumbnail_width", "thumbnail_width", 160),
+        ("thumbnail_height", "thumbnail_height", 90),
+        ("thumbnail_columns", "thumbnail_columns", 5),
+        ("thumbnail_interval", "thumbnail_interval", 1),
+    ]:
+        if _module_has_field(module, field_name):
+            try:
+                raw_value = getattr(module, field_name, default_value)
+                data[key] = int(raw_value or default_value)
+            except Exception:
+                data[key] = default_value
+
+    # 2) Fallback: detect thumb_sprite.jpg in same folder as stream.mpd
+    if not data["thumbnail_sprite_url"]:
+        normalized_mpd = str(module.video_mpd).replace("\\", "/")
+        sprite_relative = normalized_mpd.rsplit("/", 1)[0] + "/thumb_sprite.jpg" if "/" in normalized_mpd else "thumb_sprite.jpg"
+
+        possible_sprite_paths = []
+        base_storage = getattr(settings, "LMS_STORAGE_PATH", None)
+        if base_storage:
+            possible_sprite_paths.append(os.path.join(base_storage, sprite_relative.replace("/", os.sep)))
+
+        possible_sprite_paths.append(os.path.join(r"C:\lms_storage", sprite_relative.replace("/", os.sep)))
+        possible_sprite_paths.append(os.path.join(settings.MEDIA_ROOT, sprite_relative.replace("/", os.sep)))
+
+        for sprite_path in possible_sprite_paths:
+            if sprite_path and os.path.exists(sprite_path):
+                media_root = getattr(settings, "MEDIA_ROOT", "")
+                if media_root:
+                    try:
+                        common_root = os.path.commonpath([os.path.abspath(sprite_path), os.path.abspath(media_root)])
+                    except Exception:
+                        common_root = None
+                    if common_root and common_root == os.path.abspath(media_root):
+                        rel = os.path.relpath(sprite_path, media_root).replace("\\", "/")
+                        data["thumbnail_sprite_url"] = f"{settings.MEDIA_URL}{rel}"
+                        break
+
+                lms_storage_path = getattr(settings, "LMS_STORAGE_PATH", None) or r"C:\lms_storage"
+                try:
+                    common_storage = os.path.commonpath([os.path.abspath(sprite_path), os.path.abspath(lms_storage_path)])
+                except Exception:
+                    common_storage = None
+
+                if common_storage and common_storage == os.path.abspath(lms_storage_path):
+                    rel = os.path.relpath(sprite_path, lms_storage_path).replace("\\", "/")
+                    data["thumbnail_sprite_url"] = build_signed_stream_url(
+                        request=request,
+                        path=rel,
+                        user_id=getattr(request.user, "id", 0) or 0,
+                    )
+                    break
+
+    data["thumbnail_available"] = bool(data["thumbnail_sprite_url"])
+    return data
+
+
 # =====================================
 # HELPER: ENROLLMENT CHECK
 # =====================================
@@ -1566,6 +1691,18 @@ def play_video(request, module_id):
     ).exists()
 
     watch_progress, _ = get_or_create_video_watch_progress(request.user, module)
+    sprite_data = get_video_sprite_metadata(request, module)
+
+    # If sprite is stored inside LMS storage, rebuild signed URL for current user.
+    sprite_url = sprite_data.get("thumbnail_sprite_url") or ""
+    if sprite_url.startswith("/stream/") and module.video_mpd:
+        sprite_relative = str(module.video_mpd).replace("\\", "/")
+        sprite_relative = sprite_relative.rsplit("/", 1)[0] + "/thumb_sprite.jpg" if "/" in sprite_relative else "thumb_sprite.jpg"
+        sprite_url = build_signed_stream_url(
+            request=request,
+            path=sprite_relative,
+            user_id=request.user.id
+        )
 
     context = {
         "module": module,
@@ -1578,6 +1715,12 @@ def play_video(request, module_id):
         "watched_seconds": round(float(watch_progress.watched_seconds or 0), 2),
         "required_watch_percent": 90,
         "heartbeat_url": f"/student/video-heartbeat/{module.id}/",
+        "thumbnail_sprite_url": sprite_url,
+        "thumbnail_width": int(sprite_data.get("thumbnail_width") or 160),
+        "thumbnail_height": int(sprite_data.get("thumbnail_height") or 90),
+        "thumbnail_columns": int(sprite_data.get("thumbnail_columns") or 5),
+        "thumbnail_interval": int(sprite_data.get("thumbnail_interval") or 1),
+        "thumbnail_available": bool(sprite_url),
     }
     return render(request, "student/play_video.html", context)
 

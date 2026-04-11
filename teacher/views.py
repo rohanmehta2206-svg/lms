@@ -7,6 +7,10 @@ import subprocess
 import requests
 import json
 import re
+import math
+from glob import glob
+
+from PIL import Image
 
 from accounts.models import UserProfile
 from django.shortcuts import render, redirect, get_object_or_404
@@ -849,6 +853,172 @@ def normalize_quiz_rows(request):
     return rows
 
 
+
+
+def get_ffmpeg_binary():
+    custom_path = getattr(settings, "FFMPEG_BINARY", None)
+    if custom_path:
+        return custom_path
+
+    windows_default = r"C:\ffmpeg\bin\ffmpeg.exe"
+    if os.path.exists(windows_default):
+        return windows_default
+
+    return "ffmpeg"
+
+
+def run_ffmpeg(command, cwd=None):
+    return subprocess.run(command, cwd=cwd, capture_output=True, text=True)
+
+
+def build_module_storage_paths(section, module):
+    course_name = str(section.course.title or "course").strip().replace(" ", "_")
+    section_name = f"section_{section.id}"
+    module_name = f"module_{module.id}"
+    relative_folder = os.path.join(course_name, section_name, module_name).replace("\\", "/")
+    base_path = settings.LMS_STORAGE_PATH
+    folder_path = os.path.join(base_path, course_name, section_name, module_name)
+    return {
+        "course_name": course_name,
+        "section_name": section_name,
+        "module_name": module_name,
+        "relative_folder": relative_folder,
+        "folder_path": folder_path,
+    }
+
+
+def create_dash_stream(original_mp4, folder_path, ffmpeg_path):
+    command = [
+        ffmpeg_path,
+        "-y",
+        "-i", os.path.basename(original_mp4),
+        "-c:v", "libx264",
+        "-preset", "veryfast",
+        "-pix_fmt", "yuv420p",
+        "-c:a", "aac",
+        "-b:a", "128k",
+        "-f", "dash",
+        "stream.mpd",
+    ]
+    return run_ffmpeg(command, cwd=folder_path)
+
+
+def create_thumbnail_sprite(
+    original_mp4,
+    folder_path,
+    ffmpeg_path,
+    thumb_width=160,
+    thumb_height=90,
+    interval=1,
+    columns=5,
+):
+    thumbs_dir = os.path.join(folder_path, "thumb_frames")
+    os.makedirs(thumbs_dir, exist_ok=True)
+
+    frame_pattern = os.path.join(thumbs_dir, "thumb_%05d.jpg")
+    fps_value = 1 / max(interval, 1)
+
+    thumbs_command = [
+        ffmpeg_path,
+        "-y",
+        "-i", os.path.basename(original_mp4),
+        "-vf", f"fps={fps_value},scale={thumb_width}:{thumb_height}:force_original_aspect_ratio=decrease,pad={thumb_width}:{thumb_height}:(ow-iw)/2:(oh-ih)/2:black",
+        "-q:v", "3",
+        frame_pattern,
+    ]
+
+    thumbs_result = run_ffmpeg(thumbs_command, cwd=folder_path)
+    if thumbs_result.returncode != 0:
+        return {"success": False, "error": thumbs_result.stderr or "Thumbnail frame generation failed."}
+
+    frame_files = sorted(glob(os.path.join(thumbs_dir, "thumb_*.jpg")))
+    if not frame_files:
+        return {"success": False, "error": "No thumbnail frames were generated."}
+
+    total_frames = len(frame_files)
+    rows = math.ceil(total_frames / max(columns, 1))
+    sprite_width = thumb_width * columns
+    sprite_height = thumb_height * rows
+    sprite_path = os.path.join(folder_path, "thumb_sprite.jpg")
+
+    sprite = Image.new("RGB", (sprite_width, sprite_height), color=(0, 0, 0))
+    for index, frame_file in enumerate(frame_files):
+        with Image.open(frame_file) as frame:
+            frame = frame.convert("RGB")
+            x = (index % columns) * thumb_width
+            y = (index // columns) * thumb_height
+            sprite.paste(frame, (x, y))
+
+    sprite.save(sprite_path, format="JPEG", quality=88)
+
+    return {
+        "success": True,
+        "sprite_filename": "thumb_sprite.jpg",
+        "thumb_width": thumb_width,
+        "thumb_height": thumb_height,
+        "interval": interval,
+        "columns": columns,
+        "total_frames": total_frames,
+    }
+
+
+def save_video_sprite_metadata(module, relative_folder, sprite_result):
+    changed_fields = []
+    field_map = {
+        "thumbnail_sprite": os.path.join(relative_folder, sprite_result["sprite_filename"]).replace("\\", "/"),
+        "thumbnail_width": sprite_result["thumb_width"],
+        "thumbnail_height": sprite_result["thumb_height"],
+        "thumbnail_interval": sprite_result["interval"],
+        "thumbnail_columns": sprite_result["columns"],
+        "thumbnail_total_frames": sprite_result["total_frames"],
+    }
+
+    for field_name, value in field_map.items():
+        if hasattr(module, field_name):
+            setattr(module, field_name, value)
+            changed_fields.append(field_name)
+
+    if changed_fields:
+        module.save(update_fields=changed_fields)
+
+
+def get_module_sprite_preview_context(request, module):
+    context = {
+        "thumbnail_sprite_url": "",
+        "thumbnail_width": 160,
+        "thumbnail_height": 90,
+        "thumbnail_columns": 5,
+        "thumbnail_interval": 1,
+    }
+
+    sprite_relative = getattr(module, "thumbnail_sprite", "") or ""
+    if not sprite_relative and getattr(module, "video_mpd", ""):
+        base_folder = os.path.dirname(normalize_stream_path(module.video_mpd))
+        possible_sprite = f"{base_folder}/thumb_sprite.jpg"
+        storage_base = settings.LMS_STORAGE_PATH
+        safe_ok, absolute_path = is_safe_storage_path(storage_base, possible_sprite)
+        if safe_ok and os.path.exists(absolute_path):
+            sprite_relative = possible_sprite
+
+    if sprite_relative:
+        context["thumbnail_sprite_url"] = build_signed_stream_url(
+            request=request,
+            path=sprite_relative,
+            user_id=getattr(request.user, "id", 0) or 0
+        )
+
+    for field_name, context_key, default_value in [
+        ("thumbnail_width", "thumbnail_width", 160),
+        ("thumbnail_height", "thumbnail_height", 90),
+        ("thumbnail_columns", "thumbnail_columns", 5),
+        ("thumbnail_interval", "thumbnail_interval", 1),
+    ]:
+        raw_value = getattr(module, field_name, None)
+        context[context_key] = raw_value if raw_value not in [None, ""] else default_value
+
+    return context
+
+
 # ==========================================
 # TEACHER DASHBOARD
 # ==========================================
@@ -1177,51 +1347,48 @@ def module_builder(request, section_id):
                     messages.error(request, "Please choose a video file.")
                     return redirect("teacher:module_builder", section_id=section.id)
 
-                course_name = section.course.title.replace(" ", "_")
-                section_name = f"section_{section.id}"
-                module_name = f"module_{module.id}"
-
-                base_path = settings.LMS_STORAGE_PATH
-                folder_path = os.path.join(base_path, course_name, section_name, module_name)
+                storage_paths = build_module_storage_paths(section, module)
+                relative_folder = storage_paths["relative_folder"]
+                folder_path = storage_paths["folder_path"]
                 os.makedirs(folder_path, exist_ok=True)
 
                 original_mp4 = os.path.join(folder_path, "original.mp4")
-
                 with open(original_mp4, "wb+") as f:
                     for chunk in video.chunks():
                         f.write(chunk)
 
-                ffmpeg_path = "C:\\ffmpeg\\bin\\ffmpeg.exe"
+                ffmpeg_path = get_ffmpeg_binary()
 
-                command = [
-                    ffmpeg_path,
-                    "-i", "original.mp4",
-                    "-c:v", "libx264",
-                    "-preset", "veryfast",
-                    "-pix_fmt", "yuv420p",
-                    "-c:a", "aac",
-                    "-b:a", "128k",
-                    "-f", "dash",
-                    "stream.mpd"
-                ]
-
-                result = subprocess.run(command, cwd=folder_path, capture_output=True, text=True)
-
-                if result.returncode != 0:
-                    print("FFmpeg Error:", result.stderr)
+                dash_result = create_dash_stream(original_mp4, folder_path, ffmpeg_path)
+                if dash_result.returncode != 0:
+                    print("FFmpeg DASH Error:", dash_result.stderr)
                     module.delete()
                     messages.error(request, "Video conversion failed.")
                     return redirect("teacher:module_builder", section_id=section.id)
 
                 mpd_path = os.path.join(folder_path, "stream.mpd")
-
                 if not os.path.exists(mpd_path):
                     module.delete()
                     messages.error(request, "MPD file was not created.")
                     return redirect("teacher:module_builder", section_id=section.id)
 
-                module.video_mpd = os.path.join(course_name, section_name, module_name, "stream.mpd").replace("\\", "/")
-                module.save()
+                sprite_result = create_thumbnail_sprite(
+                    original_mp4=original_mp4,
+                    folder_path=folder_path,
+                    ffmpeg_path=ffmpeg_path,
+                    thumb_width=160,
+                    thumb_height=90,
+                    interval=1,
+                    columns=5,
+                )
+                if not sprite_result.get("success"):
+                    print("Thumbnail sprite generation failed:", sprite_result.get("error"))
+                else:
+                    save_video_sprite_metadata(module, relative_folder, sprite_result)
+                    print("Thumbnail sprite created successfully:", os.path.join(folder_path, sprite_result["sprite_filename"]))
+
+                module.video_mpd = os.path.join(relative_folder, "stream.mpd").replace("\\", "/")
+                module.save(update_fields=["video_mpd"])
 
                 player_url = request.build_absolute_uri(f"/play-module/{module.id}/")
 
@@ -1241,7 +1408,10 @@ def module_builder(request, section_id):
                     print("Video module recover mapping:", recover_ok, recover_message)
 
                 if moodle_result_ok(moodle_result):
-                    messages.success(request, "Video uploaded successfully in Django and Moodle.")
+                    if sprite_result.get("success"):
+                        messages.success(request, "Video uploaded successfully in Django and Moodle. Thumbnail preview sprite was also created.")
+                    else:
+                        messages.warning(request, f"Video uploaded in Django and Moodle, but thumbnail preview sprite failed: {sprite_result.get('error', 'Unknown error')}")
                 else:
                     messages.warning(
                         request,
