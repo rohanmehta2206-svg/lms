@@ -221,9 +221,11 @@ def get_course_progress_data(user, course, sections):
 
     for section in sections:
         section_module_ids = list(
-        section.modules.filter(is_published=True).values_list("id", flat=True).distinct()
-    )
-    module_ids.extend(section_module_ids)
+            section.modules.filter(
+                is_published=True
+            ).values_list("id", flat=True).distinct()
+        )
+        module_ids.extend(section_module_ids)
 
     module_ids = list(dict.fromkeys(module_ids))
     total_modules = len(module_ids)
@@ -1078,7 +1080,7 @@ def get_dashboard_continue_learning(user):
     return None
 
 
-def get_dashboard_recent_activity(user):
+def get_dashboard_recent_activity(user): 
     recent_progress = (
         StudentModuleProgress.objects.filter(
             student=user,
@@ -1722,6 +1724,7 @@ def take_quiz(request, module_id):
                 "total_questions": quiz_result["total_questions"],
                 "score_percent": quiz_result["score_percent"],
             },
+            "latest_attempt": None,
         }
         return render(request, "student/take_quiz.html", context)
 
@@ -1734,7 +1737,7 @@ def take_quiz(request, module_id):
     latest_attempt = get_latest_quiz_attempt(request.user, module)
 
     for question in questions:
-        question.selected_answer = ""
+        question.selected_answer = None
         question.correct_answer = (question.answer or "").strip()
         question.is_correct = False
 
@@ -1744,11 +1747,8 @@ def take_quiz(request, module_id):
         "section": module.section,
         "questions": questions,
         "is_completed": is_completed,
-        "quiz_result": {
-            "correct_answers": latest_attempt.correct_answers,
-            "total_questions": latest_attempt.total_questions,
-            "score_percent": latest_attempt.score_percent,
-        } if latest_attempt else None,
+        "quiz_result": None,
+        "latest_attempt": latest_attempt,
     }
     return render(request, "student/take_quiz.html", context)
 

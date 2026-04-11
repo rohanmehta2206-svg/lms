@@ -279,4 +279,4 @@ def register_view(request):
 def logout_view(request):
     request.session.pop("moodle_user_id", None)
     logout(request)
-    return redirect("accounts:login")
+    return redirect("core:home")

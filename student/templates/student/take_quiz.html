@@ -323,6 +323,24 @@
                         ({{ quiz_result.score_percent }}%).
                     </p>
                 </div>
+            {% elif is_completed and latest_attempt %}
+                <div class="result-box
+                    {% if latest_attempt.score_percent >= 80 %}
+                        score-good
+                    {% elif latest_attempt.score_percent >= 50 %}
+                        score-average
+                    {% else %}
+                        score-low
+                    {% endif %}
+                ">
+                    <h3>Latest Quiz Score</h3>
+                    <p>
+                        You already completed this quiz with a score of
+                        <strong>{{ latest_attempt.correct_answers }}</strong> out of
+                        <strong>{{ latest_attempt.total_questions }}</strong>
+                        ({{ latest_attempt.score_percent }}%).
+                    </p>
+                </div>
             {% endif %}
 
             {% if questions %}
@@ -363,8 +381,8 @@
                                                     type="radio"
                                                     name="question_{{ question.id }}"
                                                     value="{{ option }}"
-                                                    {% if question.selected_answer == option %}checked{% endif %}
-                                                    {% if is_completed %}disabled{% endif %}
+                                                    {% if quiz_result and question.selected_answer == option %}checked{% endif %}
+                                                    {% if is_completed and not quiz_result %}disabled{% endif %}
                                                 >
                                                 <span>{{ option }}</span>
                                             </label>
@@ -380,8 +398,8 @@
                                             type="radio"
                                             name="question_{{ question.id }}"
                                             value="True"
-                                            {% if question.selected_answer == "True" %}checked{% endif %}
-                                            {% if is_completed %}disabled{% endif %}
+                                            {% if quiz_result and question.selected_answer == "True" %}checked{% endif %}
+                                            {% if is_completed and not quiz_result %}disabled{% endif %}
                                         >
                                         True
                                     </label>
@@ -390,8 +408,8 @@
                                             type="radio"
                                             name="question_{{ question.id }}"
                                             value="False"
-                                            {% if question.selected_answer == "False" %}checked{% endif %}
-                                            {% if is_completed %}disabled{% endif %}
+                                            {% if quiz_result and question.selected_answer == "False" %}checked{% endif %}
+                                            {% if is_completed and not quiz_result %}disabled{% endif %}
                                         >
                                         False
                                     </label>
