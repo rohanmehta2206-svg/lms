@@ -119,7 +119,7 @@
         font-size: 14px;
         font-weight: 600;
         outline: none;
-        min-width: 150px;
+        min-width: 170px;
     }
 
     .quality-select:focus {
@@ -489,7 +489,7 @@
         line-height: 1.6;
     }
 
-        .tracking-grid {
+    .tracking-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(160px, 1fr));
         gap: 14px;
@@ -705,190 +705,189 @@
             width: 100%;
         }
     }
-    /* ================= ANTI-CHEATING UI ================= */
 
-.anti-cheat-bar {
-    margin-top: 18px;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
+    .anti-cheat-bar {
+        margin-top: 18px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
 
-.anti-cheat-chip {
-    background: #f8fafc;
-    border: 1px solid #cbd5e1;
-    color: #0f172a;
-    padding: 10px 14px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: 700;
-}
+    .anti-cheat-chip {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        color: #0f172a;
+        padding: 10px 14px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+    }
 
-.anti-cheat-chip.warn {
-    background: #fff7ed;
-    border-color: #fdba74;
-    color: #9a3412;
-}
+    .anti-cheat-chip.warn {
+        background: #fff7ed;
+        border-color: #fdba74;
+        color: #9a3412;
+    }
 
-.anti-cheat-chip.good {
-    background: #ecfdf5;
-    border-color: #86efac;
-    color: #166534;
-}
+    .anti-cheat-chip.good {
+        background: #ecfdf5;
+        border-color: #86efac;
+        color: #166534;
+    }
 
-.micro-quiz-overlay,
-.webcam-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.72);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    padding: 20px;
-}
+    .micro-quiz-overlay,
+    .webcam-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.72);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
+    }
 
-.micro-quiz-overlay.show,
-.webcam-overlay.show {
-    display: flex;
-}
+    .micro-quiz-overlay.show,
+    .webcam-overlay.show {
+        display: flex;
+    }
 
-.micro-quiz-card,
-.webcam-card {
-    width: 100%;
-    max-width: 700px;
-    background: #ffffff;
-    border-radius: 18px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-    overflow: hidden;
-    border: 1px solid #e5e7eb;
-}
+    .micro-quiz-card,
+    .webcam-card {
+        width: 100%;
+        max-width: 700px;
+        background: #ffffff;
+        border-radius: 18px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
 
-.micro-quiz-header,
-.webcam-header {
-    padding: 22px 24px;
-    background: linear-gradient(135deg, #2563eb, #1e40af);
-    color: white;
-}
+    .micro-quiz-header,
+    .webcam-header {
+        padding: 22px 24px;
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        color: white;
+    }
 
-.micro-quiz-header h3,
-.webcam-header h3 {
-    margin: 0 0 6px 0;
-    font-size: 22px;
-    color: white;
-}
+    .micro-quiz-header h3,
+    .webcam-header h3 {
+        margin: 0 0 6px 0;
+        font-size: 22px;
+        color: white;
+    }
 
-.micro-quiz-header p,
-.webcam-header p {
-    margin: 0;
-    font-size: 14px;
-    color: rgba(255,255,255,0.95);
-    line-height: 1.6;
-}
+    .micro-quiz-header p,
+    .webcam-header p {
+        margin: 0;
+        font-size: 14px;
+        color: rgba(255,255,255,0.95);
+        line-height: 1.6;
+    }
 
-.micro-quiz-body,
-.webcam-body {
-    padding: 24px;
-}
+    .micro-quiz-body,
+    .webcam-body {
+        padding: 24px;
+    }
 
-.micro-quiz-question {
-    font-size: 20px;
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 18px;
-    line-height: 1.6;
-}
+    .micro-quiz-question {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 18px;
+        line-height: 1.6;
+    }
 
-.micro-quiz-options {
-    display: grid;
-    gap: 12px;
-}
+    .micro-quiz-options {
+        display: grid;
+        gap: 12px;
+    }
 
-.micro-quiz-option {
-    display: block;
-    width: 100%;
-    text-align: left;
-    border: 1px solid #dbeafe;
-    background: #f8fbff;
-    color: #111827;
-    padding: 14px 16px;
-    border-radius: 12px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
+    .micro-quiz-option {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: 1px solid #dbeafe;
+        background: #f8fbff;
+        color: #111827;
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
 
-.micro-quiz-option:hover {
-    background: #eff6ff;
-    border-color: #2563eb;
-}
+    .micro-quiz-option:hover {
+        background: #eff6ff;
+        border-color: #2563eb;
+    }
 
-.micro-quiz-footer,
-.webcam-footer {
-    padding: 18px 24px 24px;
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-}
+    .micro-quiz-footer,
+    .webcam-footer {
+        padding: 18px 24px 24px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
 
-.quiz-status-box {
-    margin-top: 18px;
-    padding: 14px 16px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    display: none;
-}
+    .quiz-status-box {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        display: none;
+    }
 
-.quiz-status-box.success {
-    display: block;
-    background: #ecfdf5;
-    color: #166534;
-    border: 1px solid #86efac;
-}
+    .quiz-status-box.success {
+        display: block;
+        background: #ecfdf5;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
 
-.quiz-status-box.error {
-    display: block;
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fca5a5;
-}
+    .quiz-status-box.error {
+        display: block;
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
 
-.webcam-preview-wrap {
-    display: grid;
-    gap: 16px;
-}
+    .webcam-preview-wrap {
+        display: grid;
+        gap: 16px;
+    }
 
-.webcam-video-preview,
-.webcam-canvas-preview {
-    width: 100%;
-    background: #000;
-    border-radius: 14px;
-    border: 1px solid #e5e7eb;
-}
+    .webcam-video-preview,
+    .webcam-canvas-preview {
+        width: 100%;
+        background: #000;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+    }
 
-.webcam-video-preview {
-    max-height: 320px;
-}
+    .webcam-video-preview {
+        max-height: 320px;
+    }
 
-.webcam-note {
-    font-size: 14px;
-    color: #4b5563;
-    line-height: 1.7;
-}
+    .webcam-note {
+        font-size: 14px;
+        color: #4b5563;
+        line-height: 1.7;
+    }
 
-.snapshot-status {
-    margin-top: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #2563eb;
-}
+    .snapshot-status {
+        margin-top: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #2563eb;
+    }
 
-.hidden-canvas {
-    display: none;
-}
+    .hidden-canvas {
+        display: none;
+    }
 </style>
 
 <div class="lesson-page full-width">
@@ -932,6 +931,7 @@
                         <option value="auto">Auto</option>
                     </select>
                     <span class="quality-status" id="qualityStatus">Quality: Auto</span>
+                    <span class="quality-status" id="renderedQualityStatus">Rendered: --</span>
                 </div>
 
                 <div class="toolbar-right">
@@ -1017,7 +1017,7 @@
             </div>
 
             {% if mpd_url %}
-                        <div class="watch-progress-box">
+            <div class="watch-progress-box">
                 <div class="watch-progress-top">
                     <div class="watch-progress-label">Video Watch Progress</div>
                     <div class="watch-progress-value" id="watchPercentText">
@@ -1078,9 +1078,8 @@
                 <div class="watch-note">
                     Watch at least <strong>{{ required_watch_percent }}%</strong> of the video. Backward drag is allowed, but forward drag is blocked beyond the watched point.
                 </div>
-                <div class="anti-cheat-bar">
-                    
 
+                <div class="anti-cheat-bar">
                     <span class="anti-cheat-chip" id="tabSwitchStatus">
                         Browser Focus: Active
                     </span>
@@ -1117,8 +1116,6 @@
 </div>
 
 {% if mpd_url %}
-
-
 <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -1156,6 +1153,7 @@
         const continueBtn = document.getElementById("continueBtn");
         const qualitySelector = document.getElementById("qualitySelector");
         const qualityStatus = document.getElementById("qualityStatus");
+        const renderedQualityStatus = document.getElementById("renderedQualityStatus");
         const timelineTrackWrap = document.getElementById("timelineTrackWrap");
         const timelinePreview = document.getElementById("timelinePreview");
         const timelinePreviewCanvas = document.getElementById("timelinePreviewCanvas");
@@ -1169,158 +1167,6 @@
         const spriteColumns = Number("{{ thumbnail_columns|default:5 }}") || 5;
         const spriteInterval = Number("{{ thumbnail_interval|default:1 }}") || 1;
 
-
-// ================= TAB SWITCH DETECTION =================
-
-document.addEventListener("visibilitychange", function () {
-    if (document.hidden) {
-        video.pause();
-
-        const tabSwitchStatus = document.getElementById("tabSwitchStatus");
-        if (tabSwitchStatus) {
-            tabSwitchStatus.textContent = "Browser Focus: Switched";
-            tabSwitchStatus.classList.add("warn");
-            tabSwitchStatus.classList.remove("good");
-        }
-
-        fetch(tabSwitchLogUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken"),
-                "X-Requested-With": "XMLHttpRequest"
-            },
-            body: JSON.stringify({
-                current_time: video.currentTime || 0,
-                note: "Browser tab switch detected during video playback."
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Tab switch logged:", data);
-        })
-        .catch(error => {
-            console.error("Tab switch log failed:", error);
-        });
-
-        alert("⚠️ Tab switching detected. Please stay on the video.");
-    } else {
-        const tabSwitchStatus = document.getElementById("tabSwitchStatus");
-        if (tabSwitchStatus) {
-            tabSwitchStatus.textContent = "Browser Focus: Active";
-            tabSwitchStatus.classList.remove("warn");
-            tabSwitchStatus.classList.add("good");
-        }
-    }
-});
-
-// ================= WEBCAM SAVE TO DJANGO =================
-
-function startWebcam() {
-    const allow = confirm("Allow webcam for verification?");
-
-    if (!allow) {
-        const webcamStatus = document.getElementById("webcamStatus");
-        if (webcamStatus) {
-            webcamStatus.textContent = "Webcam: Skipped";
-            webcamStatus.classList.add("warn");
-        }
-        return;
-    }
-
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function (stream) {
-            const webcamStatus = document.getElementById("webcamStatus");
-            if (webcamStatus) {
-                webcamStatus.textContent = "Webcam: Active";
-                webcamStatus.classList.add("good");
-                webcamStatus.classList.remove("warn");
-            }
-
-            const videoPreview = document.createElement("video");
-            videoPreview.autoplay = true;
-            videoPreview.playsInline = true;
-            videoPreview.muted = true;
-            videoPreview.srcObject = stream;
-
-            videoPreview.style.position = "fixed";
-            videoPreview.style.bottom = "20px";
-            videoPreview.style.right = "20px";
-            videoPreview.style.width = "200px";
-            videoPreview.style.height = "150px";
-            videoPreview.style.objectFit = "cover";
-            videoPreview.style.border = "2px solid white";
-            videoPreview.style.borderRadius = "10px";
-            videoPreview.style.zIndex = "9999";
-            videoPreview.style.background = "#000";
-
-            document.body.appendChild(videoPreview);
-
-            setTimeout(function () {
-                const canvas = document.createElement("canvas");
-                canvas.width = videoPreview.videoWidth || 320;
-                canvas.height = videoPreview.videoHeight || 240;
-
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(videoPreview, 0, 0, canvas.width, canvas.height);
-
-                const imageData = canvas.toDataURL("image/png");
-
-                fetch(webcamSnapshotUrl, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRFToken": getCookie("csrftoken"),
-                        "X-Requested-With": "XMLHttpRequest"
-                    },
-                    body: JSON.stringify({
-                        image: imageData,
-                        current_time: video.currentTime || 0
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Webcam snapshot saved:", data);
-
-                    if (data.success) {
-                        alert("📸 Snapshot captured and saved.");
-                    } else {
-                        alert("Snapshot captured but not saved.");
-                    }
-                })
-                .catch(error => {
-                    console.error("Webcam snapshot save failed:", error);
-                    alert("Snapshot save failed.");
-                })
-                .finally(() => {
-                    stream.getTracks().forEach(track => track.stop());
-                    videoPreview.remove();
-
-                    const webcamStatus = document.getElementById("webcamStatus");
-                    if (webcamStatus) {
-                        webcamStatus.textContent = "Webcam: Saved";
-                        webcamStatus.classList.add("good");
-                        webcamStatus.classList.remove("warn");
-                    }
-                });
-
-            }, 5000);
-        })
-        .catch(function () {
-            const webcamStatus = document.getElementById("webcamStatus");
-            if (webcamStatus) {
-                webcamStatus.textContent = "Webcam: Denied";
-                webcamStatus.classList.add("warn");
-                webcamStatus.classList.remove("good");
-            }
-
-            alert("Webcam permission denied");
-        });
-}
-
-// run after 5 sec
-setTimeout(startWebcam, 5000);
-
         let player = null;
         let completionTriggered = alreadyCompleted;
         let completionRequestSent = false;
@@ -1328,7 +1174,6 @@ setTimeout(startWebcam, 5000);
         let isForcedSeek = false;
         let isTimelineDragging = false;
         let heartbeatInterval = null;
-        let seekStartTime = 0;
         let localWatchedPercent = Math.max(0, initialWatchedPercent);
         let serverWatchedPercent = Math.max(0, initialWatchedPercent);
         let serverWatchedSeconds = Math.max(0, initialWatchedSeconds);
@@ -1337,6 +1182,9 @@ setTimeout(startWebcam, 5000);
         let previewSpriteImage = null;
         let previewSpriteLoaded = false;
         let previewSpriteFailed = false;
+
+        let manualQualityIndex = null;
+        let pendingQualityIndex = null;
 
         function getCookie(name) {
             let cookieValue = null;
@@ -1359,6 +1207,7 @@ setTimeout(startWebcam, 5000);
             const secs = seconds % 60;
             return String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
         }
+
         function formatSecondsLabel(seconds) {
             return Math.max(0, Math.floor(seconds || 0)) + " sec";
         }
@@ -1471,7 +1320,153 @@ setTimeout(startWebcam, 5000);
             }
         }
 
-         function setCompletedUI() {
+        document.addEventListener("visibilitychange", function () {
+            if (document.hidden) {
+                video.pause();
+
+                const tabSwitchStatus = document.getElementById("tabSwitchStatus");
+                if (tabSwitchStatus) {
+                    tabSwitchStatus.textContent = "Browser Focus: Switched";
+                    tabSwitchStatus.classList.add("warn");
+                    tabSwitchStatus.classList.remove("good");
+                }
+
+                fetch(tabSwitchLogUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: JSON.stringify({
+                        current_time: video.currentTime || 0,
+                        note: "Browser tab switch detected during video playback."
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Tab switch logged:", data);
+                })
+                .catch(error => {
+                    console.error("Tab switch log failed:", error);
+                });
+
+                alert("⚠️ Tab switching detected. Please stay on the video.");
+            } else {
+                const tabSwitchStatus = document.getElementById("tabSwitchStatus");
+                if (tabSwitchStatus) {
+                    tabSwitchStatus.textContent = "Browser Focus: Active";
+                    tabSwitchStatus.classList.remove("warn");
+                    tabSwitchStatus.classList.add("good");
+                }
+            }
+        });
+
+        function startWebcam() {
+            const allow = confirm("Allow webcam for verification?");
+
+            if (!allow) {
+                const webcamStatus = document.getElementById("webcamStatus");
+                if (webcamStatus) {
+                    webcamStatus.textContent = "Webcam: Skipped";
+                    webcamStatus.classList.add("warn");
+                }
+                return;
+            }
+
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function (stream) {
+                    const webcamStatus = document.getElementById("webcamStatus");
+                    if (webcamStatus) {
+                        webcamStatus.textContent = "Webcam: Active";
+                        webcamStatus.classList.add("good");
+                        webcamStatus.classList.remove("warn");
+                    }
+
+                    const videoPreview = document.createElement("video");
+                    videoPreview.autoplay = true;
+                    videoPreview.playsInline = true;
+                    videoPreview.muted = true;
+                    videoPreview.srcObject = stream;
+
+                    videoPreview.style.position = "fixed";
+                    videoPreview.style.bottom = "20px";
+                    videoPreview.style.right = "20px";
+                    videoPreview.style.width = "200px";
+                    videoPreview.style.height = "150px";
+                    videoPreview.style.objectFit = "cover";
+                    videoPreview.style.border = "2px solid white";
+                    videoPreview.style.borderRadius = "10px";
+                    videoPreview.style.zIndex = "9999";
+                    videoPreview.style.background = "#000";
+
+                    document.body.appendChild(videoPreview);
+
+                    setTimeout(function () {
+                        const canvas = document.createElement("canvas");
+                        canvas.width = videoPreview.videoWidth || 320;
+                        canvas.height = videoPreview.videoHeight || 240;
+
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(videoPreview, 0, 0, canvas.width, canvas.height);
+
+                        const imageData = canvas.toDataURL("image/png");
+
+                        fetch(webcamSnapshotUrl, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": getCookie("csrftoken"),
+                                "X-Requested-With": "XMLHttpRequest"
+                            },
+                            body: JSON.stringify({
+                                image: imageData,
+                                current_time: video.currentTime || 0
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("Webcam snapshot saved:", data);
+
+                            if (data.success) {
+                                alert("📸 Snapshot captured and saved.");
+                            } else {
+                                alert("Snapshot captured but not saved.");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Webcam snapshot save failed:", error);
+                            alert("Snapshot save failed.");
+                        })
+                        .finally(() => {
+                            stream.getTracks().forEach(track => track.stop());
+                            videoPreview.remove();
+
+                            const webcamStatus = document.getElementById("webcamStatus");
+                            if (webcamStatus) {
+                                webcamStatus.textContent = "Webcam: Saved";
+                                webcamStatus.classList.add("good");
+                                webcamStatus.classList.remove("warn");
+                            }
+                        });
+
+                    }, 5000);
+                })
+                .catch(function () {
+                    const webcamStatus = document.getElementById("webcamStatus");
+                    if (webcamStatus) {
+                        webcamStatus.textContent = "Webcam: Denied";
+                        webcamStatus.classList.add("warn");
+                        webcamStatus.classList.remove("good");
+                    }
+
+                    alert("Webcam permission denied");
+                });
+        }
+
+        setTimeout(startWebcam, 5000);
+
+        function setCompletedUI() {
             serverCompleted = true;
             completionTriggered = true;
 
@@ -1645,42 +1640,40 @@ setTimeout(startWebcam, 5000);
         }
 
         function updateFromServerProgress(data) {
-    if (!data || !data.video_progress) {
-        return;
-    }
+            if (!data || !data.video_progress) {
+                return;
+            }
 
-    const progress = data.video_progress;
+            const progress = data.video_progress;
 
-    serverWatchedPercent = Number(progress.watched_percent || 0);
-    serverWatchedSeconds = Number(progress.watched_seconds || 0);
-    serverMaxPositionReached = Number(progress.max_position_reached || 0);
-    serverCompleted = Boolean(progress.is_completed);
+            serverWatchedPercent = Number(progress.watched_percent || 0);
+            serverWatchedSeconds = Number(progress.watched_seconds || 0);
+            serverMaxPositionReached = Number(progress.max_position_reached || 0);
+            serverCompleted = Boolean(progress.is_completed);
 
-    // 🔥 Update allowed position FIRST
-    if (serverMaxPositionReached > 0) {
-        maxAllowedTime = Math.max(maxAllowedTime, serverMaxPositionReached);
-    } else if (video && video.duration && serverWatchedPercent > 0) {
-        maxAllowedTime = Math.max(maxAllowedTime, (serverWatchedPercent / 100) * video.duration);
-    }
+            if (serverMaxPositionReached > 0) {
+                maxAllowedTime = Math.max(maxAllowedTime, serverMaxPositionReached);
+            } else if (video && video.duration && serverWatchedPercent > 0) {
+                maxAllowedTime = Math.max(maxAllowedTime, (serverWatchedPercent / 100) * video.duration);
+            }
 
-    // 🔥 Update UI AFTER calculation
-    if (watchedSecondsText) {
-        watchedSecondsText.textContent = formatSecondsLabel(serverWatchedSeconds || 0);
-    }
+            if (watchedSecondsText) {
+                watchedSecondsText.textContent = formatSecondsLabel(serverWatchedSeconds || 0);
+            }
 
-    if (allowedPositionText) {
-        allowedPositionText.textContent = formatSecondsLabel(maxAllowedTime || 0);
-    }
+            if (allowedPositionText) {
+                allowedPositionText.textContent = formatSecondsLabel(maxAllowedTime || 0);
+            }
 
-    localWatchedPercent = Math.max(localWatchedPercent, serverWatchedPercent);
+            localWatchedPercent = Math.max(localWatchedPercent, serverWatchedPercent);
 
-    updateWatchProgressUI(localWatchedPercent);
-    updateTimeline();
+            updateWatchProgressUI(localWatchedPercent);
+            updateTimeline();
 
-    if (serverCompleted) {
-        setCompletedUI();
-    }
-}
+            if (serverCompleted) {
+                setCompletedUI();
+            }
+        }
 
         function postHeartbeat(eventType) {
             if (!video || !heartbeatUrl) {
@@ -1796,32 +1789,208 @@ setTimeout(startWebcam, 5000);
             }, 180);
         }
 
+        function getVideoBitrateItems() {
+            if (!player) {
+                return [];
+            }
+
+            let items = [];
+            try {
+                items = player.getBitrateInfoListFor("video") || [];
+            } catch (error) {
+                items = [];
+            }
+
+            if (items && items.length) {
+                return items;
+            }
+
+            try {
+                const tracks = player.getTracksFor("video") || [];
+                for (const track of tracks) {
+                    if (track && Array.isArray(track.bitrateList) && track.bitrateList.length) {
+                        return track.bitrateList.map(function(entry) {
+                            return {
+                                bitrate: entry.bandwidth || entry.bitrate || 0,
+                                width: entry.width || 0,
+                                height: entry.height || 0
+                            };
+                        });
+                    }
+                }
+            } catch (error) {
+                console.log("Track bitrate fallback error:", error);
+            }
+
+            return [];
+        }
+
+        function formatBitrateLabel(item) {
+            if (!item) {
+                return "Quality";
+            }
+
+            const parts = [];
+            if (item.height) {
+                parts.push(item.height + "p");
+            } else if (item.width) {
+                parts.push(item.width + "w");
+            }
+
+            const bitrateValue = item.bitrate || item.bandwidth || 0;
+            if (bitrateValue) {
+                parts.push(Math.round(bitrateValue / 1000) + " kbps");
+            }
+
+            return parts.length ? parts.join(" • ") : "Quality";
+        }
+
+        function isAutoQualityEnabled() {
+            if (!player) {
+                return true;
+            }
+
+            try {
+                if (typeof player.getAutoSwitchQualityFor === "function") {
+                    return !!player.getAutoSwitchQualityFor("video");
+                }
+            } catch (error) {
+                console.log("getAutoSwitchQualityFor error:", error);
+            }
+
+            const settings = player.getSettings() || {};
+            return !!(
+                settings.streaming &&
+                settings.streaming.abr &&
+                settings.streaming.abr.autoSwitchBitrate &&
+                settings.streaming.abr.autoSwitchBitrate.video
+            );
+        }
+
+        function setAutoQualityMode(enabled) {
+            if (!player) {
+                return;
+            }
+
+            try {
+                if (typeof player.setAutoSwitchQualityFor === "function") {
+                    player.setAutoSwitchQualityFor("video", enabled);
+                }
+            } catch (error) {
+                console.log("setAutoSwitchQualityFor error:", error);
+            }
+
+            try {
+                player.updateSettings({
+                    streaming: {
+                        abr: {
+                            autoSwitchBitrate: {
+                                video: enabled
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.log("updateSettings autoSwitchBitrate error:", error);
+            }
+        }
+
+        function applyManualQuality(index) {
+            if (!player) {
+                return;
+            }
+
+            const parsedIndex = parseInt(index, 10);
+            if (Number.isNaN(parsedIndex)) {
+                return;
+            }
+
+            manualQualityIndex = parsedIndex;
+            pendingQualityIndex = parsedIndex;
+
+            setAutoQualityMode(false);
+
+            try {
+                if (typeof player.setRepresentationForTypeByIndex === "function") {
+                    player.setRepresentationForTypeByIndex("video", parsedIndex, true);
+                } else {
+                    player.setQualityFor("video", parsedIndex);
+                }
+            } catch (error) {
+                console.log("Manual quality switch error:", error);
+            }
+
+            if (qualitySelector) {
+                qualitySelector.value = String(parsedIndex);
+            }
+
+            updateQualityUI();
+        }
+
+        function updateRenderedQualityStatus() {
+            if (!renderedQualityStatus || !player) {
+                return;
+            }
+
+            const bitrates = getVideoBitrateItems();
+            let renderedIndex = 0;
+
+            try {
+                renderedIndex = player.getQualityFor("video");
+            } catch (error) {
+                renderedIndex = 0;
+            }
+
+            const renderedItem = bitrates[renderedIndex] || bitrates[0] || null;
+            renderedQualityStatus.textContent = renderedItem
+                ? "Rendered: " + formatBitrateLabel(renderedItem)
+                : "Rendered: --";
+        }
+
         function updateQualityUI() {
             if (!player || !qualityStatus) {
                 return;
             }
 
-            const autoMode = player.getSettings().streaming.abr.autoSwitchBitrate.video;
-            if (autoMode) {
-                qualityStatus.textContent = "Quality: Auto";
-                if (qualitySelector) {
+            const autoMode = isAutoQualityEnabled();
+            const bitrates = getVideoBitrateItems();
+
+            let renderedIndex = 0;
+            try {
+                renderedIndex = player.getQualityFor("video");
+            } catch (error) {
+                renderedIndex = 0;
+            }
+
+            const renderedItem = bitrates[renderedIndex] || bitrates[0] || null;
+
+            if (qualitySelector) {
+                if (autoMode) {
                     qualitySelector.value = "auto";
+                } else if (pendingQualityIndex !== null) {
+                    qualitySelector.value = String(pendingQualityIndex);
+                } else if (manualQualityIndex !== null) {
+                    qualitySelector.value = String(manualQualityIndex);
                 }
-                return;
             }
 
-            const currentIndex = player.getQualityFor("video");
-            const bitrates = player.getBitrateInfoListFor("video") || [];
-            const currentItem = bitrates[currentIndex];
-
-            if (currentItem && currentItem.height) {
-                qualityStatus.textContent = "Quality: " + currentItem.height + "p";
-                if (qualitySelector) {
-                    qualitySelector.value = String(currentIndex);
-                }
+            if (autoMode) {
+                qualityStatus.textContent = renderedItem
+                    ? "Quality: Auto • " + formatBitrateLabel(renderedItem)
+                    : "Quality: Auto";
             } else {
-                qualityStatus.textContent = "Quality: Manual";
+                const selectedItem =
+                    bitrates[pendingQualityIndex] ||
+                    bitrates[manualQualityIndex] ||
+                    renderedItem ||
+                    null;
+
+                qualityStatus.textContent = selectedItem
+                    ? "Quality: Selected • " + formatBitrateLabel(selectedItem)
+                    : "Quality: Manual";
             }
+
+            updateRenderedQualityStatus();
         }
 
         function buildQualityOptions() {
@@ -1829,24 +1998,28 @@ setTimeout(startWebcam, 5000);
                 return;
             }
 
-            const bitrates = player.getBitrateInfoListFor("video") || [];
+            const bitrates = getVideoBitrateItems();
             qualitySelector.innerHTML = '<option value="auto">Auto</option>';
 
             bitrates.forEach(function(item, index) {
-                let label = "Quality " + (index + 1);
-                if (item.height) {
-                    label = item.height + "p";
-                } else if (item.bitrate) {
-                    label = Math.round(item.bitrate / 1000) + " kbps";
-                }
-
                 const option = document.createElement("option");
                 option.value = String(index);
-                option.textContent = label;
+                option.textContent = formatBitrateLabel(item);
                 qualitySelector.appendChild(option);
             });
 
             updateQualityUI();
+        }
+
+        function refreshQualityUIWithRetry(attempt) {
+            buildQualityOptions();
+            const bitrates = getVideoBitrateItems();
+
+            if ((!bitrates || !bitrates.length) && attempt < 8) {
+                window.setTimeout(function () {
+                    refreshQualityUIWithRetry(attempt + 1);
+                }, 500);
+            }
         }
 
         function toggleFullscreen() {
@@ -1876,21 +2049,51 @@ setTimeout(startWebcam, 5000);
             player = dashjs.MediaPlayer().create();
             player.initialize(video, mpdUrl, false);
 
-            player.updateSettings({
-                streaming: {
-                    abr: {
-                        autoSwitchBitrate: {
-                            video: true
-                        }
-                    }
-                }
-            });
+            setAutoQualityMode(true);
 
             player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function () {
-                buildQualityOptions();
+                refreshQualityUIWithRetry(0);
             });
 
-            player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function () {
+            player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, function () {
+                refreshQualityUIWithRetry(0);
+            });
+
+            player.on(dashjs.MediaPlayer.events.CAN_PLAY, function () {
+                refreshQualityUIWithRetry(0);
+            });
+
+            player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, function () {
+                refreshQualityUIWithRetry(0);
+            });
+
+            player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (event) {
+                console.log("QUALITY_CHANGE_REQUESTED:", event);
+            });
+
+            player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (event) {
+                console.log("QUALITY_CHANGE_RENDERED:", event);
+
+                let newIndex = null;
+
+                if (event && typeof event.newQuality !== "undefined") {
+                    newIndex = event.newQuality;
+                } else {
+                    try {
+                        newIndex = player.getQualityFor("video");
+                    } catch (error) {
+                        newIndex = null;
+                    }
+                }
+
+                if (newIndex !== null) {
+                    manualQualityIndex = newIndex;
+
+                    if (pendingQualityIndex === newIndex) {
+                        pendingQualityIndex = null;
+                    }
+                }
+
                 updateQualityUI();
             });
 
@@ -1899,29 +2102,13 @@ setTimeout(startWebcam, 5000);
                     const selectedValue = qualitySelector.value;
 
                     if (selectedValue === "auto") {
-                        player.updateSettings({
-                            streaming: {
-                                abr: {
-                                    autoSwitchBitrate: {
-                                        video: true
-                                    }
-                                }
-                            }
-                        });
+                        manualQualityIndex = null;
+                        pendingQualityIndex = null;
+                        setAutoQualityMode(true);
+                        updateQualityUI();
                     } else {
-                        player.updateSettings({
-                            streaming: {
-                                abr: {
-                                    autoSwitchBitrate: {
-                                        video: false
-                                    }
-                                }
-                            }
-                        });
-                        player.setQualityFor("video", parseInt(selectedValue, 10));
+                        applyManualQuality(selectedValue);
                     }
-
-                    updateQualityUI();
                 });
             }
 
@@ -2044,8 +2231,6 @@ setTimeout(startWebcam, 5000);
                 if (isForcedSeek || isTimelineDragging) {
                     return;
                 }
-
-                seekStartTime = video.currentTime;
 
                 if (video.currentTime > maxAllowedTime + 0.05) {
                     forceBackToAllowedTime();

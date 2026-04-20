@@ -39,7 +39,6 @@ MOODLE_URL = "http://127.0.0.1/moodle/webservice/rest/server.php"
 MOODLE_TOKEN = "53a8b7519e7d735edc9b6423e84f2b54"
 
 
-
 # ==========================================
 # SECURE STREAMING CONFIG
 # ==========================================
@@ -128,6 +127,7 @@ def get_stream_content_type(file_path):
 
     return "application/octet-stream"
 
+
 def inject_stream_token_into_mpd(mpd_text, expires, token):
     """
     Add expires/token into MPD segment references so dash.js requests
@@ -152,21 +152,18 @@ def inject_stream_token_into_mpd(mpd_text, expires, token):
         joiner = "&" if "?" in uri else "?"
         return f"{uri}{joiner}expires={expires}&token={token}"
 
-    # initialization="..."
     mpd_text = re.sub(
         r'(initialization=")([^"]+)(")',
         lambda m: f'{m.group(1)}{add_query(m.group(2))}{m.group(3)}',
         mpd_text
     )
 
-    # media="..."
     mpd_text = re.sub(
         r'(media=")([^"]+)(")',
         lambda m: f'{m.group(1)}{add_query(m.group(2))}{m.group(3)}',
         mpd_text
     )
 
-    # single-quote support if present
     mpd_text = re.sub(
         r"(initialization=')([^']+)(')",
         lambda m: f"{m.group(1)}{add_query(m.group(2))}{m.group(3)}",
@@ -179,7 +176,6 @@ def inject_stream_token_into_mpd(mpd_text, expires, token):
         mpd_text
     )
 
-    # <BaseURL>...</BaseURL> support
     mpd_text = re.sub(
         r'(<BaseURL>)([^<]+)(</BaseURL>)',
         lambda m: f"{m.group(1)}{add_query(m.group(2))}{m.group(3)}",
@@ -203,7 +199,6 @@ def is_safe_storage_path(base_path, relative_path):
 def get_video_module_from_stream_path(path):
     normalized_path = normalize_stream_path(path)
 
-    # 1) BEST MATCH: module id directly from folder name like module_45
     match = re.search(r'/module_(\d+)(?:/|$)', f'/{normalized_path}')
     if match:
         module_id = int(match.group(1))
@@ -215,7 +210,6 @@ def get_video_module_from_stream_path(path):
         if module:
             return module
 
-    # 2) Direct MPD exact path match
     direct_module = Module.objects.filter(
         type="video",
         video_mpd=normalized_path
@@ -224,7 +218,6 @@ def get_video_module_from_stream_path(path):
     if direct_module:
         return direct_module
 
-    # 3) Segment file match by folder -> stream.mpd
     directory = os.path.dirname(normalized_path).replace("\\", "/")
     if directory:
         possible_mpd_path = f"{directory}/stream.mpd"
@@ -236,7 +229,6 @@ def get_video_module_from_stream_path(path):
         if folder_module:
             return folder_module
 
-    # 4) Fallback: endswith match for old saved paths
     all_video_modules = Module.objects.filter(type="video").select_related("section", "section__course")
 
     for module in all_video_modules:
@@ -305,7 +297,6 @@ def request_user_can_access_stream(request, path):
     expires = request.GET.get("expires")
     token = request.GET.get("token")
 
-    # Logged-in Django user flow
     if user and user.is_authenticated:
         if not stream_token_is_valid(path, user.id, expires, token):
             return False, module, "Invalid or expired stream token."
@@ -315,22 +306,17 @@ def request_user_can_access_stream(request, path):
 
         return True, module, "Access granted."
 
-    # Moodle iframe / unsigned Django session but signed URL present
     if stream_token_is_valid(path, 0, expires, token):
         return True, module, "Signed iframe access allowed."
 
     return False, module, "Login required or invalid stream token."
+
 
 # ==========================================
 # MOODLE API FUNCTIONS
 # ==========================================
 
 def create_course_in_moodle(course):
-    """
-    Safe wrapper:
-    - validates or repairs Moodle category mapping
-    - creates course in Moodle using the safe helper from moodle_api.py
-    """
     resolved_category_id, category_error = sync_django_category_with_moodle(course.category)
 
     if category_error:
@@ -444,10 +430,6 @@ def send_thumbnail_to_moodle(course_id, image_url):
 
 
 def get_default_completion_payload():
-    """
-    Default completion settings for non-video modules.
-    These modules can still use view-based completion if needed.
-    """
     return {
         "completion": 2,
         "completionview": 1,
@@ -455,10 +437,6 @@ def get_default_completion_payload():
 
 
 def get_video_completion_payload():
-    """
-    Video completion must be controlled by Django after 90% watch.
-    So Moodle should NOT auto-complete on activity view.
-    """
     return {
         "completion": 2,
         "completionview": 0,
@@ -545,9 +523,6 @@ def send_theory_to_moodle(course_id, section_number, title, content):
 
 
 def send_quiz_to_moodle(course_id, section_number, title, quiz_rows):
-    """
-    Send one quiz title with multiple questions to Moodle as JSON.
-    """
     try:
         cleaned_questions = []
 
@@ -634,7 +609,8 @@ def send_material_to_moodle(course_id, section_number, title, file_url, filename
             "success": False,
             "error": str(e)
         }
-    
+
+
 def normalize_compare_text(value):
     return " ".join(str(value or "").strip().lower().split())
 
@@ -684,13 +660,6 @@ def flatten_moodle_course_modules(course_contents):
 
 
 def recover_moodle_module_mapping(module):
-    """
-    Best-effort recovery for old modules where moodle_cmid was not saved.
-    Match by:
-    - Moodle course id
-    - section number
-    - module title
-    """
     if not module:
         return False, "Module is missing."
 
@@ -755,10 +724,6 @@ def moodle_result_ok(result):
 
 
 def save_moodle_module_mapping(module, moodle_result):
-    """
-    Save Moodle ids returned from plugin/webservice into Django Module.
-    Safe and flexible for different response formats.
-    """
     if not isinstance(moodle_result, dict):
         return
 
@@ -853,8 +818,6 @@ def normalize_quiz_rows(request):
     return rows
 
 
-
-
 def get_ffmpeg_binary():
     custom_path = getattr(settings, "FFMPEG_BINARY", None)
     if custom_path:
@@ -887,20 +850,191 @@ def build_module_storage_paths(section, module):
     }
 
 
+def get_ffprobe_binary(ffmpeg_path):
+    if ffmpeg_path.lower().endswith("ffmpeg.exe"):
+        return ffmpeg_path.replace("ffmpeg.exe", "ffprobe.exe")
+    return ffmpeg_path.replace("ffmpeg", "ffprobe")
+
+
+def media_file_has_audio(input_filename, folder_path, ffmpeg_path):
+    ffprobe_path = get_ffprobe_binary(ffmpeg_path)
+
+    command = [
+        ffprobe_path,
+        "-v", "error",
+        "-select_streams", "a:0",
+        "-show_entries", "stream=index",
+        "-of", "csv=p=0",
+        input_filename,
+    ]
+
+    try:
+        result = run_ffmpeg(command, cwd=folder_path)
+        return result.returncode == 0 and bool((result.stdout or "").strip())
+    except Exception:
+        return False
+
+
+def get_media_dimensions(input_filename, folder_path, ffmpeg_path):
+    ffprobe_path = get_ffprobe_binary(ffmpeg_path)
+
+    command = [
+        ffprobe_path,
+        "-v", "error",
+        "-select_streams", "v:0",
+        "-show_entries", "stream=width,height",
+        "-of", "csv=p=0:s=x",
+        input_filename,
+    ]
+
+    try:
+        result = run_ffmpeg(command, cwd=folder_path)
+        if result.returncode != 0:
+            return None, None
+
+        raw = (result.stdout or "").strip()
+        if not raw or "x" not in raw:
+            return None, None
+
+        width_str, height_str = raw.split("x", 1)
+        return int(width_str), int(height_str)
+    except Exception:
+        return None, None
+
+
+def get_dynamic_renditions(source_width, source_height):
+    all_renditions = [
+        {"name": "v180a", "width": 320, "height": 180, "bitrate": "254k", "maxrate": "320k", "bufsize": "500k", "profile": "baseline"},
+        {"name": "v180b", "width": 320, "height": 180, "bitrate": "507k", "maxrate": "650k", "bufsize": "900k", "profile": "main"},
+        {"name": "v270", "width": 480, "height": 270, "bitrate": "759k", "maxrate": "950k", "bufsize": "1300k", "profile": "main"},
+        {"name": "v360a", "width": 640, "height": 360, "bitrate": "1013k", "maxrate": "1300k", "bufsize": "1800k", "profile": "main"},
+        {"name": "v360b", "width": 640, "height": 360, "bitrate": "1254k", "maxrate": "1600k", "bufsize": "2200k", "profile": "main"},
+        {"name": "v432", "width": 768, "height": 432, "bitrate": "1883k", "maxrate": "2400k", "bufsize": "3200k", "profile": "main"},
+        {"name": "v576", "width": 1024, "height": 576, "bitrate": "3134k", "maxrate": "4000k", "bufsize": "5200k", "profile": "high"},
+        {"name": "v720", "width": 1280, "height": 720, "bitrate": "4952k", "maxrate": "6200k", "bufsize": "8000k", "profile": "high"},
+        {"name": "v1080", "width": 1920, "height": 1080, "bitrate": "9914k", "maxrate": "12000k", "bufsize": "16000k", "profile": "high"},
+    ]
+
+    if not source_width or not source_height:
+        return all_renditions
+
+    filtered = [
+        rendition for rendition in all_renditions
+        if rendition["width"] <= source_width and rendition["height"] <= source_height
+    ]
+
+    if filtered:
+        return filtered
+
+    smallest = min(
+        all_renditions,
+        key=lambda r: abs(r["width"] - source_width) + abs(r["height"] - source_height)
+    )
+    return [smallest]
+
+
 def create_dash_stream(original_mp4, folder_path, ffmpeg_path):
+    """
+    Create a multi-bitrate DASH ladder.
+    Important fix:
+    - only generate renditions up to the source resolution
+    - do not create fake higher qualities by upscaling low-resolution source videos
+    """
+    input_name = os.path.basename(original_mp4)
+    has_audio = media_file_has_audio(input_name, folder_path, ffmpeg_path)
+    source_width, source_height = get_media_dimensions(input_name, folder_path, ffmpeg_path)
+    renditions = get_dynamic_renditions(source_width, source_height)
+
+    print("Source video resolution:", source_width, "x", source_height)
+    print("Selected DASH renditions:", [(r["width"], r["height"], r["bitrate"]) for r in renditions])
+
+    split_targets = ''.join(f'[{r["name"]}src]' for r in renditions)
+    filter_parts = [f'[0:v]split={len(renditions)}{split_targets}']
+
+    for r in renditions:
+        filter_parts.append(
+            f'[{r["name"]}src]scale=w={r["width"]}:h={r["height"]}:force_original_aspect_ratio=decrease,'
+            f'pad={r["width"]}:{r["height"]}:(ow-iw)/2:(oh-ih)/2:black[{r["name"]}]'
+        )
+
     command = [
         ffmpeg_path,
-        "-y",
-        "-i", os.path.basename(original_mp4),
-        "-c:v", "libx264",
-        "-preset", "veryfast",
-        "-pix_fmt", "yuv420p",
-        "-c:a", "aac",
-        "-b:a", "128k",
-        "-f", "dash",
-        "stream.mpd",
+        '-y',
+        '-i', input_name,
+        '-filter_complex', ';'.join(filter_parts),
     ]
-    return run_ffmpeg(command, cwd=folder_path)
+
+    for idx, r in enumerate(renditions):
+        command += [
+            '-map', f'[{r["name"]}]',
+            f'-c:v:{idx}', 'libx264',
+            f'-b:v:{idx}', r['bitrate'],
+            f'-maxrate:v:{idx}', r['maxrate'],
+            f'-bufsize:v:{idx}', r['bufsize'],
+            f'-profile:v:{idx}', r['profile'],
+            f'-preset:v:{idx}', 'veryfast',
+            f'-pix_fmt:v:{idx}', 'yuv420p',
+            f'-g:v:{idx}', '48',
+            f'-keyint_min:v:{idx}', '48',
+            f'-sc_threshold:v:{idx}', '0',
+        ]
+
+    if has_audio:
+        command += [
+            '-map', '0:a:0',
+            '-c:a:0', 'aac',
+            '-b:a:0', '128k',
+            '-ac', '2',
+            '-ar', '48000',
+            '-adaptation_sets', 'id=0,streams=v id=1,streams=a',
+        ]
+    else:
+        command += ['-adaptation_sets', 'id=0,streams=v']
+
+    command += [
+        '-use_timeline', '1',
+        '-use_template', '1',
+        '-seg_duration', '4',
+        '-f', 'dash',
+        'stream.mpd',
+    ]
+
+    result = run_ffmpeg(command, cwd=folder_path)
+
+    if result.returncode != 0:
+        print("Primary DASH ladder failed. Falling back to single rendition.")
+        print(result.stderr)
+
+        fallback_width = 640
+        fallback_height = 360
+
+        if source_width and source_height:
+            fallback_width = min(fallback_width, source_width)
+            fallback_height = min(fallback_height, source_height)
+
+        fallback_command = [
+            ffmpeg_path,
+            '-y',
+            '-i', input_name,
+            '-vf', f'scale=w={fallback_width}:h={fallback_height}:force_original_aspect_ratio=decrease,pad={fallback_width}:{fallback_height}:(ow-iw)/2:(oh-ih)/2:black',
+            '-c:v', 'libx264',
+            '-b:v', '1013k',
+            '-maxrate:v', '1300k',
+            '-bufsize:v', '1800k',
+            '-preset', 'veryfast',
+            '-profile:v', 'main',
+            '-pix_fmt', 'yuv420p',
+            '-g', '48',
+            '-keyint_min', '48',
+            '-sc_threshold', '0',
+        ]
+        if has_audio:
+            fallback_command += ['-c:a', 'aac', '-b:a', '128k']
+        fallback_command += ['-f', 'dash', 'stream.mpd']
+
+        return run_ffmpeg(fallback_command, cwd=folder_path)
+
+    return result
 
 
 def create_thumbnail_sprite(
@@ -1047,6 +1181,7 @@ def course_list(request):
     courses = Course.objects.filter(teacher=request.user)
     return render(request, "teacher/course_list.html", {"courses": courses})
 
+
 @login_required
 def toggle_course_publish(request, course_id):
     course = get_object_or_404(Course, id=course_id, teacher=request.user)
@@ -1117,23 +1252,22 @@ def create_course(request):
                 profile, created = UserProfile.objects.get_or_create(user=request.user)
 
                 if created:
-                 print("NEW USER PROFILE CREATED FOR:", request.user.username)
+                    print("NEW USER PROFILE CREATED FOR:", request.user.username)
 
                 teacher_moodle_user_id = profile.moodle_user_id
 
                 print("TEACHER MOODLE USER ID:", teacher_moodle_user_id)
                 print("MOODLE COURSE ID:", moodle_id)
 
-                # Teacher enroll
                 if teacher_moodle_user_id:
                     sync_ok, sync_error = update_moodle_user_profile_from_django_user(request.user)
                     print("TEACHER SYNC:", sync_ok, sync_error)
 
                     if not sync_ok:
                         messages.warning(
-                        request,
-                        f"Course created, but teacher Moodle profile sync failed: {sync_error}"
-                    )
+                            request,
+                            f"Course created, but teacher Moodle profile sync failed: {sync_error}"
+                        )
 
                         enroll_ok, enroll_error = enroll_user_to_course(
                             user_id=teacher_moodle_user_id,
@@ -1144,25 +1278,24 @@ def create_course(request):
 
                         if not enroll_ok:
                             messages.warning(
-                            request,
-                            f"Course created, but teacher auto enrollment failed: {enroll_error}"
-                        )
+                                request,
+                                f"Course created, but teacher auto enrollment failed: {enroll_error}"
+                            )
                     else:
                         print("TEACHER MOODLE USER ID IS MISSING")
                         messages.warning(
-                        request,
-                        f"Course created, but teacher Moodle user id is missing in UserProfile, so teacher auto enrollment was skipped."
-                    )
+                            request,
+                            "Course created, but teacher Moodle user id is missing in UserProfile, so teacher auto enrollment was skipped."
+                        )
 
-                        # Admin enroll should run always
                         admin_ok, admin_error = enroll_admin_to_course(moodle_id)
                         print("ADMIN ENROLL:", admin_ok, admin_error)
 
                         if not admin_ok:
                             messages.warning(
-                            request,
-                            f"Course created, but admin auto enrollment failed: {admin_error}"
-                        )
+                                request,
+                                f"Course created, but admin auto enrollment failed: {admin_error}"
+                            )
 
                 data = {
                     "wstoken": MOODLE_TOKEN,
@@ -1230,6 +1363,7 @@ def create_course(request):
         course_form = CourseForm()
 
     return render(request, "teacher/create_course.html", {"course_form": course_form})
+
 
 # ==========================================
 # UPDATE SECTION
@@ -1310,7 +1444,7 @@ def play_module(request, module_id):
             "module": module,
             "secure_mpd_url": secure_mpd_url,
         }
-)
+    )
 
 
 # ==========================================
@@ -1338,7 +1472,6 @@ def module_builder(request, section_id):
         )
 
         try:
-            # VIDEO
             if content_type == "video":
                 video = request.FILES.get("video")
 
@@ -1418,7 +1551,6 @@ def module_builder(request, section_id):
                         f"Video saved in Django, but Moodle failed: {moodle_result.get('error', moodle_result)}"
                     )
 
-            # THEORY
             elif content_type == "theory":
                 module.theory = request.POST.get("theory")
                 module.save()
@@ -1442,7 +1574,6 @@ def module_builder(request, section_id):
                         f"Theory saved in Django, but Moodle failed: {moodle_result.get('error', moodle_result)}"
                     )
 
-            # QUIZ
             elif content_type == "quiz":
                 quiz_rows = normalize_quiz_rows(request)
 
@@ -1479,7 +1610,6 @@ def module_builder(request, section_id):
                         f"Quiz saved in Django, but Moodle failed: {moodle_result.get('error', moodle_result)}"
                     )
 
-            # MATERIAL
             elif content_type == "material":
                 material_file = request.FILES.get("material_file")
 
@@ -1555,6 +1685,7 @@ def module_builder(request, section_id):
         {"section": section, "modules": modules}
     )
 
+
 @login_required
 def toggle_module_publish(request, module_id):
     module = get_object_or_404(
@@ -1572,6 +1703,7 @@ def toggle_module_publish(request, module_id):
         messages.success(request, f"Module '{module.title}' is now hidden from students.")
 
     return redirect("teacher:module_builder", section_id=module.section.id)
+
 
 @login_required
 def draft_content(request):
@@ -1618,7 +1750,6 @@ def serve_dash(request, path):
 
     content_type = get_stream_content_type(file_path)
 
-    # MPD file: rewrite segment URLs and attach signed token
     if normalized_path.lower().endswith(".mpd"):
         expires = request.GET.get("expires")
         token = request.GET.get("token")
@@ -1654,6 +1785,7 @@ def serve_dash(request, path):
     response["Cache-Control"] = "no-store"
     return response
 
+
 # ==========================================
 # TEACHER PROFILE
 # ==========================================
@@ -1671,9 +1803,6 @@ def profile_page(request):
         new_password = (request.POST.get("new_password") or "").strip()
         confirm_password = (request.POST.get("confirm_password") or "").strip()
 
-        # ----------------------------------
-        # BASIC PROFILE UPDATE
-        # ----------------------------------
         if username:
             user.username = username
 
@@ -1685,9 +1814,6 @@ def profile_page(request):
             user.first_name = name_parts[0]
             user.last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
 
-        # ----------------------------------
-        # PASSWORD UPDATE
-        # ----------------------------------
         if current_password or new_password or confirm_password:
             if not current_password or not new_password or not confirm_password:
                 messages.error(request, "Please fill all password fields.")
@@ -1701,11 +1827,9 @@ def profile_page(request):
                 messages.error(request, "New passwords do not match.")
                 return redirect("teacher:profile")
 
-            # Save password in Django first
             user.set_password(new_password)
             user.save()
 
-            # Sync password to Moodle
             moodle_ok, moodle_error = update_moodle_user_profile_from_django_user(
                 user,
                 password=new_password
@@ -1724,10 +1848,8 @@ def profile_page(request):
 
             return redirect("accounts:login")
 
-        # Save basic profile in Django
         user.save()
 
-        # Sync basic profile to Moodle
         moodle_ok, moodle_error = update_moodle_user_profile_from_django_user(user)
 
         if moodle_ok:
